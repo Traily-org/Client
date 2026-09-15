@@ -3,24 +3,63 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import '@/global.css';
+import "@/global.css";
 
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 
 export const Colors = {
     light: {
-        text: '#000000',
-        background: '#ffffff',
-        backgroundElement: '#F0F0F3',
-        backgroundSelected: '#E0E1E6',
-        textSecondary: '#60646C',
+        // Backgrounds
+        background: "#F4EEFF",
+        secondaryBackground: "#E4EAF5",
+
+        // Border
+        border: "#D1C4E9",
+
+        // Primary
+        primary: "#FCB002",
+        primaryHover: "#FCB002",
+        primaryText: "#1E1E2F",
+
+        // Secondary
+        secondary: "#C7D8F5",
+        secondaryHover: "#ADC6F0",
+
+        // Disabled
+        disabled: "#D1C4E9",
+        disabledText: "#5F5F63",
+
+        // Danger
+        danger: "#EA412A",
+        dangerHover: "#C9391A",
+        dangerText: "#FFFFFF",
     },
     dark: {
-        text: '#ffffff',
-        background: '#000000',
-        backgroundElement: '#212225',
-        backgroundSelected: '#2E3135',
-        textSecondary: '#B0B4BA',
+        // Backgrounds
+        background: "#1A1626",
+        secondaryBackground: "#241F38",
+
+        // Border
+        border: "#3A3C50",
+
+        // Primary
+        primary: "#FCB002",
+        primaryHover: "#FFCB33",
+        primaryText: "#1E1E2F",
+
+        // Secondary
+        secondary: "#7C93D6",
+        secondaryHover: "#93A8E3",
+        secondaryText: "#FFFFFF",
+
+        // Disabled
+        disabled: "#3A3450",
+        disabledText: "#7A7A85",
+
+        // Danger
+        danger: "#D6492E",
+        dangerHover: "#E93513",
+        dangerText: "#FFFFFF",
     },
 } as const;
 
@@ -29,25 +68,25 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 export const Fonts = Platform.select({
     ios: {
         /** iOS `UIFontDescriptorSystemDesignDefault` */
-        sans: 'system-ui',
+        sans: "system-ui",
         /** iOS `UIFontDescriptorSystemDesignSerif` */
-        serif: 'ui-serif',
+        serif: "ui-serif",
         /** iOS `UIFontDescriptorSystemDesignRounded` */
-        rounded: 'ui-rounded',
+        rounded: "ui-rounded",
         /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-        mono: 'ui-monospace',
+        mono: "ui-monospace",
     },
     default: {
-        sans: 'normal',
-        serif: 'serif',
-        rounded: 'normal',
-        mono: 'monospace',
+        sans: "normal",
+        serif: "serif",
+        rounded: "normal",
+        mono: "monospace",
     },
     web: {
-        sans: 'var(--font-display)',
-        serif: 'var(--font-serif)',
-        rounded: 'var(--font-rounded)',
-        mono: 'var(--font-mono)',
+        sans: "var(--font-display)",
+        serif: "var(--font-serif)",
+        rounded: "var(--font-rounded)",
+        mono: "var(--font-mono)",
     },
 });
 
