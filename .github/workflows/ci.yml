@@ -1,0 +1,78 @@
+name: CI Frontend
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "traily-client/**"
+      - ".github/workflows/ci.yml"
+  push:
+    branches: [develop, main]
+    paths:
+      - "traily-client/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: traily-client
+
+jobs:
+  typecheck:
+    name: Typage (tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+
+  format:
+    name: Formatage (Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run format:check
+
+  test:
+    name: Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Tests
+        run: pnpm run test
+      - name: Couverture (informatif, non bloquant)
+        run: |
+          pnpm run test:coverage || true
