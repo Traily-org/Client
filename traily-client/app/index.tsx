@@ -10,6 +10,12 @@ export default function HomeScreen() {
                 <Link href="/map" className="mt-4 text-center text-blue-600">
                     Voir la carte
                 </Link>
+                <Link
+                    href="/credits"
+                    className="mt-2 text-center text-blue-600"
+                >
+                    Crédits
+                </Link>
             </View>
         </SafeAreaView>
     );

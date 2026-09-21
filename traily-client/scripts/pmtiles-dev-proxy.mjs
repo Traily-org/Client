@@ -99,7 +99,27 @@ export function startPmtilesDevProxy(port = DEFAULT_PORT) {
             });
 
             if (upstream.body) {
-                Readable.fromWeb(upstream.body).pipe(res);
+                const upstreamStream = Readable.fromWeb(upstream.body);
+                // A stream 'error' event with no listener is a crash, not a
+                // rejection the surrounding try/catch can see — this pipe
+                // runs after the handler's promise has already settled. If
+                // the upstream connection drops mid-transfer (as it does
+                // under bursts of parallel range requests), fail just that
+                // one response instead of taking the whole proxy down.
+                upstreamStream.on("error", (error) => {
+                    console.error(
+                        "PMTiles dev proxy: upstream stream error",
+                        error,
+                    );
+                    res.destroy(error);
+                });
+                res.on("error", (error) => {
+                    console.error(
+                        "PMTiles dev proxy: response stream error",
+                        error,
+                    );
+                });
+                upstreamStream.pipe(res);
             } else {
                 res.end();
             }

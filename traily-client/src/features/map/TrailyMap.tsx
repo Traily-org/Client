@@ -5,14 +5,16 @@ import {
     OfflineManager,
     type StyleSpecification,
 } from "@maplibre/maplibre-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { MapModeSwitcher } from "./MapModeSwitcher";
 import {
-    getTrailyMapStyle,
+    getMapStyle,
     MIN_ZOOM,
+    type MapMode,
     PMTILES_URL,
-} from "./style/get-traily-map-style";
+} from "./style/map-styles";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -30,6 +32,7 @@ let ambientCacheConfigured = false;
 
 export function TrailyMap() {
     const [selected, setSelected] = useState(false);
+    const [mode, setMode] = useState<MapMode>("trail");
 
     useEffect(() => {
         if (ambientCacheConfigured) return;
@@ -45,36 +48,49 @@ export function TrailyMap() {
         );
     }
 
+    const mapStyle = useMemo(
+        () =>
+            getMapStyle(mode, `pmtiles://${PMTILES_URL}`) as StyleSpecification,
+        [mode],
+    );
+
     return (
-        <Map
-            style={styles.map}
-            mapStyle={
-                getTrailyMapStyle(
-                    `pmtiles://${PMTILES_URL}`,
-                ) as StyleSpecification
-            }
-        >
-            <Camera
-                initialViewState={{ center: TRAILHEAD.lngLat, zoom: 11 }}
-                minZoom={MIN_ZOOM}
-            />
-            <Marker lngLat={TRAILHEAD.lngLat} anchor="bottom">
-                <Pressable onPress={() => setSelected((prev) => !prev)}>
-                    <View style={styles.pin} />
-                    {selected && (
-                        <View style={styles.popup}>
-                            <Text style={styles.popupTitle}>
-                                {TRAILHEAD.name}
-                            </Text>
-                        </View>
-                    )}
-                </Pressable>
-            </Marker>
-        </Map>
+        <View style={styles.container}>
+            {/* No built-in attribution button or compass — this app renders
+                its own map chrome (MapModeSwitcher). Source attributions
+                still need to live somewhere in the app (a credits/about
+                screen, not on the map itself) to stay compliant with
+                OSM/Protomaps/Esri's terms. */}
+            <Map
+                style={styles.map}
+                mapStyle={mapStyle}
+                attribution={false}
+                compass={false}
+            >
+                <Camera
+                    initialViewState={{ center: TRAILHEAD.lngLat, zoom: 11 }}
+                    minZoom={MIN_ZOOM}
+                />
+                <Marker lngLat={TRAILHEAD.lngLat} anchor="bottom">
+                    <Pressable onPress={() => setSelected((prev) => !prev)}>
+                        <View style={styles.pin} />
+                        {selected && (
+                            <View style={styles.popup}>
+                                <Text style={styles.popupTitle}>
+                                    {TRAILHEAD.name}
+                                </Text>
+                            </View>
+                        )}
+                    </Pressable>
+                </Marker>
+            </Map>
+            <MapModeSwitcher mode={mode} onChange={setMode} />
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: { flex: 1 },
     map: { flex: 1 },
     pin: {
         width: 18,
@@ -92,10 +108,7 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 8,
         backgroundColor: "white",
-        shadowColor: "#000",
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
+        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.15)",
         elevation: 3,
     },
     popupTitle: {

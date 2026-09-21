@@ -1,9 +1,18 @@
 {
     "version": 8,
-    "name": "Traily",
+    "name": "Traily Topo",
     "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
     "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
     "sources": {
+        "esri-hillshade": {
+            "type": "raster",
+            "tiles": [
+                "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}"
+            ],
+            "tileSize": 256,
+            "maxzoom": 16,
+            "attribution": "Sources: Esri, Vantor, Airbus DS, USGS, NGA, NASA, CGIAR, N Robinson, NCEAS, NLS, OS, NMA, Geodatastyrelsen, Rijkswaterstaat, GSA, Geoland, FEMA, Intermap, and the GIS user community"
+        },
         "protomaps": {
             "type": "vector",
             "url": "pmtiles://PLACEHOLDER",
@@ -23,12 +32,18 @@
             }
         },
         {
+            "id": "hillshade",
+            "type": "raster",
+            "source": "esri-hillshade"
+        },
+        {
             "id": "earth",
             "type": "fill",
             "source": "protomaps",
             "source-layer": "earth",
             "paint": {
-                "fill-color": "#f6f1e4"
+                "fill-color": "#f6f1e4",
+                "fill-opacity": 0.35
             }
         },
         {
@@ -49,7 +64,7 @@
                     "#e6ecd9",
                     "#e3ecd7"
                 ],
-                "fill-opacity": 0.7
+                "fill-opacity": 0.35
             }
         },
         {
@@ -68,7 +83,7 @@
             ],
             "paint": {
                 "fill-color": "#b9d7a8",
-                "fill-opacity": 0.6
+                "fill-opacity": 0.3
             }
         },
         {
@@ -79,7 +94,7 @@
             "filter": ["in", "kind", "residential", "commercial", "industrial"],
             "paint": {
                 "fill-color": "#ece3d1",
-                "fill-opacity": 0.5
+                "fill-opacity": 0.4
             }
         },
         {

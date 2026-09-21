@@ -6,19 +6,20 @@ import {
     Map,
     type Map as MapLibreMap,
     Marker,
-    NavigationControl,
     Popup,
     setWorkerUrl,
     type StyleSpecification,
 } from "maplibre-gl";
 import { PMTiles, Protocol } from "pmtiles";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { MapModeSwitcher } from "./MapModeSwitcher";
 import {
-    getTrailyMapStyle,
+    getMapStyle,
     MIN_ZOOM,
+    type MapMode,
     PMTILES_URL,
-} from "./style/get-traily-map-style";
+} from "./style/map-styles";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -149,6 +150,8 @@ function prefetchSurroundingTiles(
 
 export function TrailyMap() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const mapRef = useRef<MapLibreMap | null>(null);
+    const [mode, setMode] = useState<MapMode>("trail");
 
     useEffect(() => {
         setupMapLibreForWeb();
@@ -160,7 +163,8 @@ export function TrailyMap() {
 
         const map = new Map({
             container: containerRef.current,
-            style: getTrailyMapStyle(
+            style: getMapStyle(
+                "trail",
                 `pmtiles://${pmtilesUrl}`,
             ) as StyleSpecification,
             center: TRAILHEAD.lngLat,
@@ -170,8 +174,14 @@ export function TrailyMap() {
             // panning/zooming back to a spot you've already visited redraws
             // instantly instead of re-fetching.
             maxTileCacheZoomLevels: 8,
+            // No built-in nav (zoom +/- + compass) or attribution control —
+            // this app renders its own map chrome (MapModeSwitcher). Source
+            // attributions still need to live somewhere in the app (a
+            // credits/about screen, not on the map itself) to stay compliant
+            // with OSM/Protomaps/Esri's terms.
+            attributionControl: false,
         });
-        map.addControl(new NavigationControl(), "top-right");
+        mapRef.current = map;
 
         const popup = new Popup({ offset: 24 }).setText(TRAILHEAD.name);
         new Marker({ color: "#e0733f" })
@@ -185,8 +195,32 @@ export function TrailyMap() {
         map.once("idle", prefetch);
         map.on("moveend", prefetch);
 
-        return () => map.remove();
+        return () => {
+            mapRef.current = null;
+            map.remove();
+        };
     }, []);
 
-    return <div ref={containerRef} style={{ display: "flex", flex: 1 }} />;
+    // Skip the very first run: the init effect above already applies the
+    // "trail" style when it constructs the map.
+    const isFirstModeRender = useRef(true);
+    useEffect(() => {
+        if (isFirstModeRender.current) {
+            isFirstModeRender.current = false;
+            return;
+        }
+        mapRef.current?.setStyle(
+            getMapStyle(
+                mode,
+                `pmtiles://${getWebPmtilesUrl()}`,
+            ) as StyleSpecification,
+        );
+    }, [mode]);
+
+    return (
+        <div style={{ position: "relative", display: "flex", flex: 1 }}>
+            <div ref={containerRef} style={{ display: "flex", flex: 1 }} />
+            <MapModeSwitcher mode={mode} onChange={setMode} />
+        </div>
+    );
 }
