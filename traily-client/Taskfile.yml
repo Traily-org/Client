@@ -1,0 +1,48 @@
+version: "3"
+
+tasks:
+  install:
+    desc: install dependencies
+    cmds:
+      - pnpm install
+
+  start:
+    desc: start the Expo dev server
+    cmds:
+      - pnpm start
+
+  android:
+    desc: start the dev server and open on an Android emulator/device
+    cmds:
+      - pnpm android
+
+  ios:
+    desc: start the dev server and open on an iOS simulator/device
+    cmds:
+      - pnpm ios
+
+  web:
+    desc: start the dev server and open in the browser
+    cmds:
+      - pnpm web
+
+  lint:
+    desc: lint the codebase with ESLint
+    cmds:
+      - pnpm lint
+
+  format:
+    desc: format the codebase with Prettier
+    cmds:
+      - pnpm format
+
+  format:check:
+    desc: check formatting without writing changes
+    cmds:
+      - pnpm format:check
+
+  docker:dev:
+    desc: run the Expo dev server in Docker, removing the container on stop
+    cmds:
+      - defer: docker compose down
+      - docker compose up --build

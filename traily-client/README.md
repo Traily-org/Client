@@ -27,7 +27,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app source is bind-mounted, so edits on your machine are picked up immediately (hot reload) — no rebuild needed unless you add a dependency. See [TASKFILE.md](./TASKFILE.md) for the full list of commands.
+The app source is bind-mounted, so edits on your machine are picked up immediately (hot reload) — no rebuild needed unless you add a dependency. Run `task docker:dev` instead of `docker compose up --build` if you have [go-task](https://taskfile.dev) installed — see `Taskfile.yml` for the full list of commands (`task --list`).
 
 In the output, you'll find options to open the app in a
 
