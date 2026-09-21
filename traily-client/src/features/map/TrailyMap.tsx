@@ -2,9 +2,10 @@ import {
     Camera,
     Map,
     Marker,
+    OfflineManager,
     type StyleSpecification,
 } from "@maplibre/maplibre-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
@@ -18,8 +19,25 @@ const TRAILHEAD = {
     lngLat: [6.1296, 45.8992] as [number, number],
 };
 
+// MapLibre Native persists every tile it renders to an on-disk ambient
+// cache automatically — no wiring needed for that part. Its default 50MB
+// limit fills up fast with vector tiles though, evicting tiles from areas
+// the user just panned away from, so re-visiting them or zooming back out
+// re-fetches over the network instead of hitting disk. Raise the ceiling
+// once per app run so more of a hike's surrounding area stays cached.
+const AMBIENT_CACHE_SIZE_BYTES = 200 * 1024 * 1024;
+let ambientCacheConfigured = false;
+
 export function TrailyMap() {
     const [selected, setSelected] = useState(false);
+
+    useEffect(() => {
+        if (ambientCacheConfigured) return;
+        ambientCacheConfigured = true;
+        void OfflineManager.setMaximumAmbientCacheSize(
+            AMBIENT_CACHE_SIZE_BYTES,
+        );
+    }, []);
 
     if (!PMTILES_URL) {
         throw new Error(
