@@ -25,20 +25,6 @@ export const MAP_ATTRIBUTIONS = [
     },
 ] as const;
 
-/**
- * Keeps the map from zooming out to a near-global view, where most tiles
- * aren't cached yet and are visibly blank while they load. Tune to taste —
- * this only needs to cover the area the app actually cares about. Note zoom
- * 0-2 all look like "the whole world", so a low value here can look like it
- * isn't doing anything even though it's being enforced — push it up (5+)
- * once you want the loosest allowed view to feel like a real limit.
- *
- * No MAX_ZOOM: zooming in has no client-side cap (MapLibre's own default,
- * 22, applies). Past the source data's own max zoom the deepest available
- * tile is just scaled up ("overzoom") — normal MapLibre behavior, not a bug.
- */
-export const MIN_ZOOM = 12;
-
 export type MapMode = "trail" | "satellite" | "topo";
 
 /**

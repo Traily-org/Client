@@ -12,11 +12,12 @@ import {
 } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
+import { MAP_MIN_ZOOM } from "@/constants/config";
+
 import { MapLegalNotices } from "./MapLegalNotices";
 import { MapModeSwitcher } from "./MapModeSwitcher";
 import {
     getMapStyle,
-    MIN_ZOOM,
     SHOW_MAPTILER_LEGAL_NOTICES,
     type MapMode,
 } from "./style/map-styles";
@@ -63,7 +64,7 @@ export function TrailyMap() {
             style: { version: 8, sources: {}, layers: [] },
             center: TRAILHEAD.lngLat,
             zoom: 11,
-            minZoom: MIN_ZOOM,
+            minZoom: MAP_MIN_ZOOM,
             // Keeps more already-fetched tiles around in memory, so
             // panning/zooming back to a spot you've already visited redraws
             // instantly instead of re-fetching.
