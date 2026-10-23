@@ -16,9 +16,12 @@ Ce repo contient l'app iOS et Android, développée avec Expo (React Native) et 
 
 ## Prérequis
 
-- Node.js 22 LTS (22.12 ou plus récent)
-- pnpm : `npm install -g pnpm`
-- De quoi lancer l'app : [Expo Go](https://expo.dev/go) sur un téléphone, un émulateur Android (Android Studio) ou le simulateur iOS (Xcode, macOS uniquement)
+Deux façons de travailler, au choix :
+
+- **Avec Docker** : [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ou Docker Engine + Compose sous Linux). Ni Node ni pnpm à installer.
+- **En local** : Node.js 22 LTS (22.12 ou plus récent) et pnpm (`npm install -g pnpm`). La version exacte de pnpm est fixée par `packageManager` dans `package.json` et choisie automatiquement.
+
+Dans les deux cas, de quoi ouvrir l'app : [Expo Go](https://expo.dev/go) sur un téléphone, un navigateur (version web), un émulateur Android (Android Studio) ou le simulateur iOS (Xcode, macOS uniquement).
 
 ## Installation
 
@@ -27,14 +30,37 @@ git clone git@github.com:Traily-org/Client.git
 cd Client
 git switch develop
 cd traily-client
-pnpm install
 ```
+
+La branche par défaut est `main`, qui ne reçoit que les releases : toujours travailler depuis `develop`.
 
 Sous Windows, cloner le repo dans un chemin court (ex. `C:\dev\Client`). Au-delà de 260 caractères, certains chemins de `node_modules` font échouer Node.
 
 ## Lancer l'application
 
 Toutes les commandes se lancent depuis `traily-client/`.
+
+### Avec Docker
+
+```bash
+cp .env.example .env    # renseigner l'IP LAN du poste (voir les commentaires du fichier)
+docker compose up --build
+```
+
+- Metro tourne dans le conteneur `traily_client_dev`, sur le port 8081 : version web sur http://localhost:8081, QR code Expo Go dans les logs.
+- Les sources sont montées dans le conteneur : une modification est prise en compte tout de suite (hot reload), sans rebuild.
+- Les dépendances s'ajoutent dans le conteneur : `docker exec traily_client_dev pnpm expo install <paquet>`.
+- Après un `git pull` qui modifie `package.json` ou `pnpm-lock.yaml`, lancer `docker exec traily_client_dev pnpm install` : les dépendances vivent dans un volume Docker que `--build` ne met pas à jour. En cas de doute, `docker compose down -v` puis `docker compose up --build` repart de zéro.
+- Avec [go-task](https://taskfile.dev) installé, `task docker:dev` remplace `docker compose up --build` (`task --list` pour les autres tâches).
+
+### En local
+
+```bash
+pnpm install
+pnpm start
+```
+
+### Commandes
 
 | Commande                     | Rôle                                                               |
 | ---------------------------- | ------------------------------------------------------------------ |
@@ -44,8 +70,12 @@ Toutes les commandes se lancent depuis `traily-client/`.
 | `pnpm web`                   | version web, réservée au développement                             |
 | `pnpm lint`                  | analyse le code avec ESLint                                        |
 | `pnpm format`                | formate le code avec Prettier (`pnpm format:check` pour vérifier)  |
+| `pnpm typecheck`             | vérifie les types TypeScript (`tsc --noEmit`)                      |
+| `pnpm test`                  | lance les tests Vitest (`pnpm test:coverage` pour la couverture)   |
 | `pnpm expo install <paquet>` | ajoute une dépendance Expo dans une version compatible avec le SDK |
 | `npx expo-doctor@latest`     | diagnostique la configuration et les dépendances                   |
+
+En Docker, préfixer par `docker exec traily_client_dev`, par exemple `docker exec traily_client_dev pnpm lint`.
 
 Expo Go suffit tant que l'app n'utilise que des modules natifs inclus dans Expo Go. Dès qu'elle en utilise un autre (MapLibre pour la carte, par exemple), il faut un _development build_ : `pnpm expo run:android` ou `pnpm expo run:ios`.
 
@@ -64,6 +94,7 @@ traily-client/
     hooks/          hooks partagés
     global.css      point d'entrée Tailwind / NativeWind
   app.json          configuration Expo
+  Dockerfile, docker-compose.yml, Taskfile.yml   environnement de dev Docker
 ```
 
 ## Contribuer
