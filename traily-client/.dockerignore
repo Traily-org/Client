@@ -1,0 +1,12 @@
+node_modules
+.expo
+dist
+web-build
+.git
+.github
+.vscode
+ios
+android
+*.log
+.env
+coverage
