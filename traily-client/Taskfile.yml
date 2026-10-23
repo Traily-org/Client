@@ -1,0 +1,46 @@
+# https://taskfile.dev — `task` sans argument liste les tâches.
+version: "3"
+
+vars:
+    # Not a project dependency: EAS build servers would install it for
+    # nothing. Cached by pnpm after the first run. Keep the major in sync
+    # with `cli.version` in eas.json.
+    EAS: pnpm dlx eas-cli@25
+
+tasks:
+    default:
+        silent: true
+        cmds:
+            - task --list
+
+    setup:
+        desc: Installe les dépendances
+        cmds:
+            - pnpm install
+
+    eas:init:
+        desc: Connecte ton compte Expo et lie le projet à EAS (une seule fois)
+        interactive: true
+        cmds:
+            - "{{.EAS}} login"
+            - "{{.EAS}} init"
+
+    dev:
+        desc: Lance Metro pour le development build installé sur ton téléphone (`task dev -- --clear` vide le cache)
+        interactive: true
+        cmds:
+            - node scripts/dev-build.mjs report
+            - pnpm exec expo start {{.CLI_ARGS}}
+
+    "build:*":
+        desc: Construit le development build sur EAS (android ou ios), seulement si le code natif a changé (`--force` pour forcer)
+        interactive: true
+        vars:
+            PLATFORM: "{{index .MATCH 0}}"
+            FINGERPRINT:
+                sh: node scripts/dev-build.mjs hash {{.PLATFORM}}
+        status:
+            - node scripts/dev-build.mjs check {{.PLATFORM}} {{.FINGERPRINT}}
+        cmds:
+            - "{{.EAS}} build --profile development --platform {{.PLATFORM}}"
+            - node scripts/dev-build.mjs save {{.PLATFORM}} {{.FINGERPRINT}}
