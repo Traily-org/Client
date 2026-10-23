@@ -15,7 +15,7 @@ export default function CreditsScreen() {
             >
                 <Text className="text-2xl font-bold">Crédits</Text>
                 <Text className="text-base text-gray-600">
-                    Traily s'appuie sur des fonds de carte et des données
+                    Traily s’appuie sur des fonds de carte et des données
                     fournis par :
                 </Text>
                 {attributions.map((attribution) => (

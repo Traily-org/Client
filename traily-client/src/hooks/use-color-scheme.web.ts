@@ -8,6 +8,9 @@ export function useColorScheme() {
     const [hasHydrated, setHasHydrated] = useState(false);
 
     useEffect(() => {
+        // Standard Expo Router hydration pattern: intentional sync setState
+        // to re-derive the color scheme on the client after SSR/static render.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHasHydrated(true);
     }, []);
 

@@ -1,4 +1,3 @@
-# https://taskfile.dev — `task` sans argument liste les tâches.
 version: "3"
 
 vars:
@@ -13,27 +12,63 @@ tasks:
         cmds:
             - task --list
 
-    setup:
-        desc: Installe les dépendances
+    install:
+        desc: install dependencies
         cmds:
             - pnpm install
 
+    start:
+        desc: start the Expo dev server for the development build (`task start -- --clear` clears the cache)
+        interactive: true
+        cmds:
+            - node scripts/dev-build.mjs report
+            - pnpm start {{.CLI_ARGS}}
+
+    android:
+        desc: start the dev server and open on an Android emulator/device
+        cmds:
+            - pnpm android
+
+    ios:
+        desc: start the dev server and open on an iOS simulator/device
+        cmds:
+            - pnpm ios
+
+    web:
+        desc: start the dev server and open in the browser
+        cmds:
+            - pnpm web
+
+    lint:
+        desc: lint the codebase with ESLint
+        cmds:
+            - pnpm lint
+
+    format:
+        desc: format the codebase with Prettier
+        cmds:
+            - pnpm format
+
+    format:check:
+        desc: check formatting without writing changes
+        cmds:
+            - pnpm format:check
+
+    docker:dev:
+        desc: run the Expo dev server in Docker, removing the container on stop
+        cmds:
+            - defer: docker compose down
+            - docker compose up --build
+
     eas:init:
-        desc: Connecte ton compte Expo et lie le projet à EAS (une seule fois)
+        desc: log in to Expo and link the project to EAS (once per machine)
         interactive: true
         cmds:
             - "{{.EAS}} login"
             - "{{.EAS}} init"
 
-    dev:
-        desc: Lance Metro pour le development build installé sur ton téléphone (`task dev -- --clear` vide le cache)
-        interactive: true
-        cmds:
-            - node scripts/dev-build.mjs report
-            - pnpm exec expo start {{.CLI_ARGS}}
-
     "build:*":
-        desc: Construit le development build sur EAS (android ou ios), seulement si le code natif a changé (`--force` pour forcer)
+        desc: build the development build on EAS (android or ios), only when native code changed (`--force` to rebuild anyway)
         interactive: true
         vars:
             PLATFORM: "{{index .MATCH 0}}"
