@@ -5,16 +5,11 @@ import {
     OfflineManager,
     type StyleSpecification,
 } from "@maplibre/maplibre-react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { MapModeSwitcher } from "./MapModeSwitcher";
-import {
-    getMapStyle,
-    MIN_ZOOM,
-    type MapMode,
-    PMTILES_URL,
-} from "./style/map-styles";
+import { getMapStyle, MIN_ZOOM, type MapMode } from "./style/map-styles";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -33,6 +28,8 @@ let ambientCacheConfigured = false;
 export function TrailyMap() {
     const [selected, setSelected] = useState(false);
     const [mode, setMode] = useState<MapMode>("trail");
+    const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
+    const [styleError, setStyleError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (ambientCacheConfigured) return;
@@ -42,29 +39,41 @@ export function TrailyMap() {
         );
     }, []);
 
-    if (!PMTILES_URL) {
-        throw new Error(
-            "EXPO_PUBLIC_PM_TILES_URL is not set (see traily-client/.env)",
+    useEffect(() => {
+        // Ignore a slower, older fetch resolving after a newer mode switch.
+        let cancelled = false;
+        getMapStyle(mode).then(
+            (style) => {
+                if (cancelled) return;
+                setStyleError(null);
+                setMapStyle(style as StyleSpecification);
+            },
+            (error: Error) => {
+                if (!cancelled) setStyleError(error);
+            },
         );
-    }
+        return () => {
+            cancelled = true;
+        };
+    }, [mode]);
 
-    const mapStyle = useMemo(
-        () =>
-            getMapStyle(mode, `pmtiles://${PMTILES_URL}`) as StyleSpecification,
-        [mode],
-    );
+    // Surface a missing/invalid MapTiler key to the error boundary instead of
+    // rendering a blank map, but only before any style has loaded — a failed
+    // mode switch just keeps the current style.
+    if (styleError && !mapStyle) throw styleError;
+    if (!mapStyle) return <View style={styles.container} />;
 
     return (
         <View style={styles.container}>
-            {/* No built-in attribution button or compass — this app renders
-                its own map chrome (MapModeSwitcher). Source attributions
-                still need to live somewhere in the app (a credits/about
-                screen, not on the map itself) to stay compliant with
-                OSM/Protomaps/Esri's terms. */}
+            {/* No compass or MapLibre logo — this app renders its own map
+                chrome (MapModeSwitcher, bottom-right). The attribution stays
+                on the map, bottom-left (where the logo would sit), as
+                MapTiler's terms require. */}
             <Map
                 style={styles.map}
                 mapStyle={mapStyle}
-                attribution={false}
+                attributionPosition={{ bottom: 8, left: 8 }}
+                logo={false}
                 compass={false}
             >
                 <Camera

@@ -20,7 +20,6 @@
         "expo-web-browser": "~57.0.3",
         "maplibre-gl": "^6.10.0",
         "nativewind": "^4.2.6",
-        "pmtiles": "^4.5.0",
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "react-native": "0.86.3",
@@ -52,8 +51,7 @@
         "reset-project": "node ./scripts/reset-project.js",
         "android": "expo start --android",
         "ios": "expo start --ios",
-        "web": "node ./scripts/dev-web.mjs",
-        "web:tiles-proxy": "node ./scripts/pmtiles-dev-proxy.mjs",
+        "web": "expo start --web",
         "lint": "eslint .",
         "format": "prettier --write .",
         "format:check": "prettier --check ."

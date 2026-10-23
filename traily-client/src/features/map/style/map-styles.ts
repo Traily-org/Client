@@ -1,17 +1,9 @@
-import trailyStyle from "./traily-style.json";
-import satelliteStyle from "./satellite-style.json";
-import topoStyle from "./topo-style.json";
-
 /**
- * Daily Protomaps planet build (free, self-hostable) read via HTTP range
- * requests — no tile server needed. See README for how to pin/extract a
- * smaller region instead of the full planet file.
- *
- * Only used directly on native: `build.protomaps.com` doesn't send CORS
- * headers, so the browser build routes through the local dev proxy instead
- * (see TrailyMap.web.tsx and scripts/pmtiles-dev-proxy.mjs).
+ * MapTiler API key (free tier: https://cloud.maptiler.com/account/keys/).
+ * Restrict it to the app's origins/bundle IDs in the MapTiler dashboard —
+ * it ships in the client bundle like any EXPO_PUBLIC_ variable.
  */
-export const PMTILES_URL = process.env.EXPO_PUBLIC_PM_TILES_URL;
+export const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
 
 /**
  * Keeps the map from zooming out to a near-global view, where most tiles
@@ -30,32 +22,32 @@ export const MIN_ZOOM = 12;
 export type MapMode = "trail" | "satellite" | "topo";
 
 /**
- * Loosely typed on purpose: each style JSON's `layers` array otherwise
- * infers its own incompatible literal-union type, since layer objects don't
- * share a common shape across layer types. Not typed against either
- * package's real `StyleSpecification` for the same reason as `getMapStyle`
- * below.
+ * MapTiler map IDs backing each mode. `outdoor-v2` already draws hiking
+ * paths, contour lines and hillshade; `topo-v2` leans harder on relief;
+ * `hybrid` is satellite imagery with labels and roads on top.
+ */
+const MAPTILER_MAP_IDS: Record<MapMode, string> = {
+    trail: "outdoor-v2",
+    satellite: "hybrid",
+    topo: "topo-v2",
+};
+
+/**
+ * Loosely typed on purpose: not typed against either package's real
+ * `StyleSpecification` for the same reason as `getMapStyle` below.
  */
 type StyleJSON = {
     version: number;
-    name: string;
-    glyphs: string;
-    sprite: string;
-    sources: Record<string, { type: string; [key: string]: unknown }>;
+    sources: Record<string, unknown>;
     layers: unknown[];
-};
-
-const STYLES: Record<MapMode, StyleJSON> = {
-    trail: trailyStyle,
-    satellite: satelliteStyle,
-    topo: topoStyle,
+    [key: string]: unknown;
 };
 
 /**
  * Sample hike near the trailhead, standing in for real route data until a
- * route data model exists. Rendered via each style's `route` GeoJSON source
- * so the rendering path (casing + colored line, per-mode styling) is already
- * in place when real routes arrive.
+ * route data model exists. Appended to each MapTiler style as a `route`
+ * GeoJSON source so the rendering path (casing + colored line, per-mode
+ * styling) is already in place when real routes arrive.
  */
 const SAMPLE_ROUTE_GEOJSON = {
     type: "Feature",
@@ -72,46 +64,108 @@ const SAMPLE_ROUTE_GEOJSON = {
     },
 } as const;
 
+// Brighter red on satellite imagery, where the darker one gets lost.
+const ROUTE_COLORS: Record<MapMode, string> = {
+    trail: "#d1263f",
+    satellite: "#ff3b30",
+    topo: "#d1263f",
+};
+
+function getRouteLayers(mode: MapMode) {
+    const layout = { "line-join": "round", "line-cap": "round" };
+    return [
+        {
+            id: "route-casing",
+            type: "line",
+            source: "route",
+            layout,
+            paint: {
+                "line-color": "#ffffff",
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    10,
+                    3,
+                    18,
+                    8,
+                ],
+                "line-opacity": 0.9,
+            },
+        },
+        {
+            id: "route-line",
+            type: "line",
+            source: "route",
+            layout,
+            paint: {
+                "line-color": ROUTE_COLORS[mode],
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    10,
+                    1.5,
+                    18,
+                    5,
+                ],
+            },
+        },
+    ];
+}
+
+const styleCache = new Map<MapMode, Promise<StyleJSON>>();
+
+function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
+    const cached = styleCache.get(mode);
+    if (cached) return cached;
+
+    if (!MAPTILER_KEY) {
+        throw new Error(
+            "EXPO_PUBLIC_MAPTILER_KEY is not set (see traily-client/.env)",
+        );
+    }
+    const url = `https://api.maptiler.com/maps/${MAPTILER_MAP_IDS[mode]}/style.json?key=${MAPTILER_KEY}`;
+    const request = fetch(url).then(async (response) => {
+        if (!response.ok) {
+            throw new Error(
+                `MapTiler style "${MAPTILER_MAP_IDS[mode]}" failed to load (HTTP ${response.status})`,
+            );
+        }
+        return (await response.json()) as StyleJSON;
+    });
+    // Don't cache a failure — let the next mode switch retry.
+    request.catch(() => styleCache.delete(mode));
+    styleCache.set(mode, request);
+    return request;
+}
+
 /**
- * Returns a plain style spec object for the given mode with the pmtiles
- * source URL (already prefixed with `pmtiles://`) and the sample route
- * wired in. Not typed against either `maplibre-gl`'s or
- * `@maplibre/maplibre-react-native`'s `StyleSpecification` (the two packages
- * pin different, nominally incompatible versions of
- * `@maplibre/maplibre-gl-style-spec`) — cast to the right one at each
- * platform-specific call site.
+ * Resolves to a plain style spec object for the given mode: the MapTiler
+ * style with the sample route source and layers appended on top. Fetched
+ * (rather than handing MapLibre the style URL) so the route can be part of
+ * the style itself on both platforms. Not typed against either
+ * `maplibre-gl`'s or `@maplibre/maplibre-react-native`'s
+ * `StyleSpecification` (the two packages pin different, nominally
+ * incompatible versions of `@maplibre/maplibre-gl-style-spec`) — cast to the
+ * right one at each platform-specific call site.
  */
-export function getMapStyle(mode: MapMode, pmtilesSourceUrl: string) {
-    const style = STYLES[mode];
+export async function getMapStyle(mode: MapMode) {
+    const style = await fetchMapTilerStyle(mode);
     return {
         ...style,
         sources: {
             ...style.sources,
-            protomaps: {
-                ...style.sources.protomaps,
-                url: pmtilesSourceUrl,
-            },
-            route: {
-                ...style.sources.route,
-                data: SAMPLE_ROUTE_GEOJSON,
-            },
+            route: { type: "geojson", data: SAMPLE_ROUTE_GEOJSON },
         },
+        layers: [...style.layers, ...getRouteLayers(mode)],
     };
 }
 
 /**
- * Every unique data-source attribution across all map modes, in source
- * order — single source of truth for the credits screen, since the map
- * itself has no on-screen attribution control (see TrailyMap.tsx/.web.tsx).
+ * Data-source attributions for the credits screen. The map also shows
+ * MapTiler's own attribution on-screen (required by their terms).
  */
 export function getAllAttributions(): string[] {
-    const attributions = new Set<string>();
-    for (const style of Object.values(STYLES)) {
-        for (const source of Object.values(style.sources)) {
-            if (typeof source.attribution === "string") {
-                attributions.add(source.attribution);
-            }
-        }
-    }
-    return [...attributions];
+    return ["© MapTiler", "© OpenStreetMap contributors"];
 }
