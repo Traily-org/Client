@@ -20,9 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Vérifier la branche source
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          if [ "${{ github.head_ref }}" != "develop" ]; then
-            echo "::error::Les PR vers main ne sont autorisées que depuis develop (source actuelle : ${{ github.head_ref }})"
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "::error::Les PR vers main ne sont autorisées que depuis develop (source actuelle : $HEAD_REF)"
             exit 1
           fi
 
