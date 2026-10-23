@@ -16,6 +16,19 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
     npx expo start
     ```
 
+## Docker (dev)
+
+Run the Metro/Expo dev server in a container instead of installing Node/pnpm locally:
+
+```bash
+cp .env.example .env
+# edit .env and set your machine's LAN IP (see comments in the file),
+# so Expo Go on a physical device can reach the dev server
+docker compose up --build
+```
+
+The app source is bind-mounted, so edits on your machine are picked up immediately (hot reload) — no rebuild needed unless you add a dependency. Run `task docker:dev` instead of `docker compose up --build` if you have [go-task](https://taskfile.dev) installed — see `Taskfile.yml` for the full list of commands (`task --list`).
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
