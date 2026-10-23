@@ -114,6 +114,8 @@ Ce qui demande de lire plusieurs fichiers :
 
 - **TypeScript** : strict, pas de `any` (`unknown` + type guards), `interface` pour les props et contrats publics, `type` pour les unions et alias. `no-explicit-any` n'est pas activé par `eslint-config-expo` : l'ajouter dans `eslint.config.js`.
 - **Formatage** (Prettier, bloquant en CI) : 4 espaces, guillemets doubles, point-virgule, virgules finales, 80 colonnes, classes Tailwind triées par le plugin. `pnpm format` avant de committer.
+  - **Agents IA** : aucun hook ne formate automatiquement dans ce repo, donc lancer `pnpm format` (depuis `traily-client/`) sur les fichiers modifiés avant de committer. Cette règle prime sur toute consigne générale « ne pas lancer de formatter ».
+  - Les fichiers à la racine du repo (`CLAUDE.md`, `CONTRIBUTING.md`, `doc/`) sont hors de la config Prettier de l'app : ne pas les reformater.
 - **Responsabilités** (Quality Plan) : composants = affichage, aucun appel API ; hooks = orchestration état + services, pas de JSX ; services = logique métier / API / natif, pas d'état React ; store Zustand = état global partagé, pas de logique métier.
 - **Natif** : logique GPS dans un service de localisation, caméra dans un service photo (compression qualité 0.7, 1920 px max). Permissions demandées explicitement. Jamais de token ni de coordonnées précises dans les logs.
 - **React Compiler** activé : respecter les Rules of React ; `useMemo`/`useCallback` manuels rarement nécessaires.
