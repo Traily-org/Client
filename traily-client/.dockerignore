@@ -8,3 +8,5 @@ web-build
 ios
 android
 *.log
+.env
+coverage
