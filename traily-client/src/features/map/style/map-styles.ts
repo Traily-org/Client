@@ -6,6 +6,26 @@
 export const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
 
 /**
+ * Shows MapTiler's legal notices on the map: their logo (mandatory on the
+ * free plan) and an always-visible, readable text attribution (terms §6.1,
+ * §6.7) instead of MapLibre's collapsible one. On unless explicitly set to
+ * "false" — only do that with a paid plan / written MapTiler agreement.
+ */
+export const SHOW_MAPTILER_LEGAL_NOTICES =
+    process.env.EXPO_PUBLIC_MAPTILER_LEGAL_NOTICES !== "false";
+
+export const MAPTILER_HOME_URL = "https://www.maptiler.com";
+
+/** Text credits required on every map, with the links MapTiler asks for. */
+export const MAP_ATTRIBUTIONS = [
+    { label: "© MapTiler", url: "https://www.maptiler.com/copyright/" },
+    {
+        label: "© OpenStreetMap contributors",
+        url: "https://www.openstreetmap.org/copyright",
+    },
+] as const;
+
+/**
  * Keeps the map from zooming out to a near-global view, where most tiles
  * aren't cached yet and are visibly blank while they load. Tune to taste —
  * this only needs to cover the area the app actually cares about. Note zoom
@@ -164,8 +184,8 @@ export async function getMapStyle(mode: MapMode) {
 
 /**
  * Data-source attributions for the credits screen. The map also shows
- * MapTiler's own attribution on-screen (required by their terms).
+ * them on-screen (see MapLegalNotices), as MapTiler's terms require.
  */
 export function getAllAttributions(): string[] {
-    return ["© MapTiler", "© OpenStreetMap contributors"];
+    return MAP_ATTRIBUTIONS.map((attribution) => attribution.label);
 }

@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { MapMode } from "./style/map-styles";
 
@@ -15,8 +16,15 @@ export function MapModeSwitcher({
     mode: MapMode;
     onChange: (mode: MapMode) => void;
 }) {
+    const insets = useSafeAreaInsets();
+
+    // Sits above the home indicator, leaving room underneath for the
+    // MapLegalNotices text attribution.
     return (
-        <View className="absolute bottom-6 right-4 flex-row rounded-[10px] bg-white/90 p-[3px] shadow-md">
+        <View
+            className="absolute right-4 flex-row rounded-[10px] bg-white/90 p-[3px] shadow-md"
+            style={{ bottom: insets.bottom + 24 }}
+        >
             {OPTIONS.map((option) => {
                 const active = option.mode === mode;
                 return (

@@ -8,8 +8,14 @@ import {
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { MapLegalNotices } from "./MapLegalNotices";
 import { MapModeSwitcher } from "./MapModeSwitcher";
-import { getMapStyle, MIN_ZOOM, type MapMode } from "./style/map-styles";
+import {
+    getMapStyle,
+    MIN_ZOOM,
+    SHOW_MAPTILER_LEGAL_NOTICES,
+    type MapMode,
+} from "./style/map-styles";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -66,12 +72,13 @@ export function TrailyMap() {
     return (
         <View style={styles.container}>
             {/* No compass or MapLibre logo — this app renders its own map
-                chrome (MapModeSwitcher, bottom-right). The attribution stays
-                on the map, bottom-left (where the logo would sit), as
-                MapTiler's terms require. */}
+                chrome (MapModeSwitcher, bottom-right). MapLibre's "i"
+                attribution button is replaced by MapLegalNotices when those
+                are enabled. */}
             <Map
                 style={styles.map}
                 mapStyle={mapStyle}
+                attribution={!SHOW_MAPTILER_LEGAL_NOTICES}
                 attributionPosition={{ bottom: 8, left: 8 }}
                 logo={false}
                 compass={false}
@@ -93,6 +100,7 @@ export function TrailyMap() {
                     </Pressable>
                 </Marker>
             </Map>
+            {SHOW_MAPTILER_LEGAL_NOTICES && <MapLegalNotices />}
             <MapModeSwitcher mode={mode} onChange={setMode} />
         </View>
     );

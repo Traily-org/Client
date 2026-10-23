@@ -12,8 +12,14 @@ import {
 } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
+import { MapLegalNotices } from "./MapLegalNotices";
 import { MapModeSwitcher } from "./MapModeSwitcher";
-import { getMapStyle, MIN_ZOOM, type MapMode } from "./style/map-styles";
+import {
+    getMapStyle,
+    MIN_ZOOM,
+    SHOW_MAPTILER_LEGAL_NOTICES,
+    type MapMode,
+} from "./style/map-styles";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -64,18 +70,19 @@ export function TrailyMap() {
             maxTileCacheZoomLevels: 8,
             // No built-in nav (zoom +/- + compass) — this app renders its
             // own map chrome (MapModeSwitcher, bottom-right). The default
-            // attribution control is replaced below to move it out of the
-            // switcher's corner.
+            // attribution control is replaced below: by MapLegalNotices when
+            // those are enabled, else by a compact one out of the switcher's
+            // corner.
             attributionControl: false,
         });
         mapRef.current = map;
 
-        // Kept on the map (not just the credits screen), as MapTiler's terms
-        // require.
-        map.addControl(
-            new AttributionControl({ compact: true }),
-            "bottom-left",
-        );
+        if (!SHOW_MAPTILER_LEGAL_NOTICES) {
+            map.addControl(
+                new AttributionControl({ compact: true }),
+                "bottom-left",
+            );
+        }
 
         const popup = new Popup({ offset: 24 }).setText(TRAILHEAD.name);
         new Marker({ color: "#e0733f" })
@@ -116,6 +123,7 @@ export function TrailyMap() {
     return (
         <div style={{ position: "relative", display: "flex", flex: 1 }}>
             <div ref={containerRef} style={{ display: "flex", flex: 1 }} />
+            {SHOW_MAPTILER_LEGAL_NOTICES && <MapLegalNotices />}
             <MapModeSwitcher mode={mode} onChange={setMode} />
         </div>
     );
