@@ -77,11 +77,13 @@ test: cover map style builder
 Depuis `traily-client/`, lancer les vérifications de la CI :
 
 ```bash
+pnpm typecheck
 pnpm lint
 pnpm format         # ou `pnpm format:check` pour vérifier sans modifier
+pnpm test
 ```
 
-Lancer aussi `pnpm typecheck` et `pnpm test` dès que ces scripts existent (ils arrivent avec la CI front).
+Avec Docker, préfixer chaque commande par `docker exec traily_client_dev` (voir le [README](README.md#avec-docker)).
 
 ## Definition of Done
 
