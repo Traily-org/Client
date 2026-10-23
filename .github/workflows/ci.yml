@@ -1,0 +1,87 @@
+name: CI Frontend
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+    paths:
+      - "traily-client/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: traily-client
+
+jobs:
+  protect-main:
+    name: Protection main (PR uniquement depuis develop)
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier la branche source
+        run: |
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "::error::Les PR vers main ne sont autorisées que depuis develop (source actuelle : ${{ github.head_ref }})"
+            exit 1
+          fi
+
+  typecheck:
+    name: Typage (tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+
+  format:
+    name: Formatage (Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run format:check
+
+  test:
+    name: Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: traily-client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Tests
+        run: pnpm run test
+      - name: Couverture (informatif, non bloquant)
+        run: |
+          pnpm run test:coverage || true
