@@ -6,7 +6,11 @@
         "orientation": "portrait",
         "scheme": "trailyclient",
         "userInterfaceStyle": "automatic",
+        "ios": {
+            "bundleIdentifier": "com.traily.app"
+        },
         "android": {
+            "package": "com.traily.app",
             "predictiveBackGestureEnabled": false
         },
         "web": {
@@ -19,7 +23,8 @@
                 {
                     "backgroundColor": "#208AEF"
                 }
-            ]
+            ],
+            "@maplibre/maplibre-react-native"
         ],
         "experiments": {
             "typedRoutes": true,

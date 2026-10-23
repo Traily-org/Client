@@ -21,7 +21,9 @@ Deux façons de travailler, au choix :
 - **Avec Docker** : [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ou Docker Engine + Compose sous Linux). Ni Node ni pnpm à installer.
 - **En local** : Node.js 22 LTS (22.12 ou plus récent) et pnpm (`npm install -g pnpm`). La version exacte de pnpm est fixée par `packageManager` dans `package.json` et choisie automatiquement.
 
-Dans les deux cas, de quoi ouvrir l'app : [Expo Go](https://expo.dev/go) sur un téléphone, un navigateur (version web), un émulateur Android (Android Studio) ou le simulateur iOS (Xcode, macOS uniquement).
+Dans les deux cas, de quoi ouvrir l'app : le _development build_ de Traily sur un téléphone (voir [Development build](#development-build)), un navigateur (version web), un émulateur Android (Android Studio) ou le simulateur iOS (Xcode, macOS uniquement). [Expo Go](https://expo.dev/go) ne suffit plus : la carte utilise MapLibre, un module natif absent d'Expo Go.
+
+Pour le development build : [go-task](https://taskfile.dev) et un compte [Expo](https://expo.dev/signup) (gratuit).
 
 ## Installation
 
@@ -39,6 +41,25 @@ Sous Windows, cloner le repo dans un chemin court (ex. `C:\dev\Client`). Au-del�
 ## Lancer l'application
 
 Toutes les commandes se lancent depuis `traily-client/`.
+
+### Development build
+
+Version d'Expo Go propre à Traily, qui embarque ses modules natifs (MapLibre). Elle se construit dans le cloud EAS et s'installe sur le téléphone ; le code JavaScript lui est ensuite servi par Metro, comme avec Expo Go.
+
+Une fois par poste :
+
+```bash
+task eas:init        # connexion au compte Expo + liaison du projet à EAS
+task build:android   # build EAS (~15 min), puis installer l'APK via le QR code affiché
+```
+
+Au quotidien :
+
+```bash
+task start           # lance Metro ; ouvrir Traily sur le téléphone (même réseau que le poste)
+```
+
+Le JavaScript se recharge à chaque sauvegarde, sans rebuild. Seul un changement natif (dépendance native, `app.json`, plugin) impose un nouveau build : `task start` le signale, et `task build:android` ne reconstruit que dans ce cas (`--force` pour forcer). L'état des builds est suivi par empreinte native (`@expo/fingerprint`) dans `.expo/dev-builds.json`, propre à chaque poste. `task build:ios` fonctionne de la même façon mais exige un compte Apple Developer.
 
 ### Avec Docker
 
@@ -64,7 +85,7 @@ pnpm start
 
 | Commande                     | Rôle                                                               |
 | ---------------------------- | ------------------------------------------------------------------ |
-| `pnpm start`                 | démarre le serveur Metro ; scanner le QR code avec Expo Go         |
+| `pnpm start`                 | démarre le serveur Metro pour le development build                 |
 | `pnpm android`               | ouvre l'app sur un émulateur ou un appareil Android                |
 | `pnpm ios`                   | ouvre l'app sur le simulateur iOS                                  |
 | `pnpm web`                   | version web, réservée au développement                             |
@@ -77,11 +98,17 @@ pnpm start
 
 En Docker, préfixer par `docker exec traily_client_dev`, par exemple `docker exec traily_client_dev pnpm lint`.
 
-Expo Go suffit tant que l'app n'utilise que des modules natifs inclus dans Expo Go. Dès qu'elle en utilise un autre (MapLibre pour la carte, par exemple), il faut un _development build_ : `pnpm expo run:android` ou `pnpm expo run:ios`.
-
 ### Variables d'environnement
 
 Les variables se placent dans `traily-client/.env`, qui n'est pas versionné. Seules celles préfixées par `EXPO_PUBLIC_` sont lisibles par l'app, et elles finissent dans le bundle : n'y mettre aucun secret. Toute nouvelle variable doit être déclarée dans `traily-client/.env.example`.
+
+| Variable                             | Rôle                                                                                                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_MAPTILER_KEY`           | clé [MapTiler](https://cloud.maptiler.com/account/keys/) des fonds de carte, à restreindre à l'app dans le tableau de bord MapTiler                 |
+| `EXPO_PUBLIC_MAPTILER_LEGAL_NOTICES` | logo MapTiler + attribution toujours visible sur la carte. Obligatoire avec le plan gratuit : ne mettre `false` qu'avec un plan payant ou un accord |
+| `REACT_NATIVE_PACKAGER_HOSTNAME`     | IP LAN du poste, pour atteindre Metro dans Docker depuis un téléphone                                                                               |
+
+Après un changement de `.env`, relancer Metro avec `task start -- --clear` : les valeurs sont figées dans le bundle.
 
 ## Structure
 
@@ -94,7 +121,10 @@ traily-client/
     hooks/          hooks partagés
     global.css      point d'entrée Tailwind / NativeWind
   app.json          configuration Expo
-  Dockerfile, docker-compose.yml, Taskfile.yml   environnement de dev Docker
+  eas.json          profils de build EAS (development build)
+  scripts/          outils de dev (suivi des development builds)
+  Taskfile.yml      tâches go-task (dev, build EAS, Docker)
+  Dockerfile, docker-compose.yml   environnement de dev Docker
 ```
 
 ## Contribuer
