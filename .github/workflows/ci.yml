@@ -9,6 +9,9 @@ on:
       - "traily-client/**"
       - ".github/workflows/ci.yml"
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: traily-client
@@ -18,6 +21,10 @@ jobs:
     name: Protection main (PR uniquement depuis develop)
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
+    # No checkout here, so traily-client/ does not exist on the runner.
+    defaults:
+      run:
+        working-directory: .
     steps:
       - name: Vérifier la branche source
         env:
