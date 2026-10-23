@@ -12,6 +12,8 @@
 
 ## Phase 0 : stabilisation (immédiat)
 
+> **Statut au 23/10/2026** : TRA-109 réalise 0.1, 0.3 et 0.5, la partie `app.json` de 0.6 (références aux assets manquants retirées) et l'essentiel de 0.7 (`.gitattributes`, `.gitignore` racine, `pnpm-workspace.yaml`, `pnpm expo install --fix`, script `reset-project`, README unique). Restent 0.2, 0.4, le reste de 0.6 (assets, nom, identifiants), la règle `no-explicit-any` de 0.7, 0.8 et 0.9.
+
 | #   | Tâche                                                                                                                                                                                                                                                                                                                                                          | Branche                 | Owner           | Effort |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | --------------- | ------ |
 | 0.1 | Corriger la CI : `package_json_file: traily-client/package.json` sur `pnpm/action-setup`, génération d'`expo-env.d.ts` avant le typecheck. Ouvrir la PR vers `develop`.                                                                                                                                                                                        | `chore/frontend-ci`     | Florian         | XS     |

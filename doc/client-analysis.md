@@ -1,5 +1,7 @@
 # Analyse du repo Client (front-end)
 
+> **Instantané historique.** Ce document décrit le repo avant TRA-109 (23/10/2026), qui en a résolu la plupart des constats. L'état courant est dans la section « État actuel » de [CLAUDE.md](../CLAUDE.md).
+
 > Analyse du 21/09/2026 sur `origin/main` (`3cbd0a4`), `origin/develop` (`bb0e7cd`), `origin/chore/frontend-ci` (`b64553d`) et `origin/feat/map` (`521b6e9`). Mise à jour le 09/10/2026 par lecture du code : `feat/map` (`2cc61ec`) et `chore/frontend-docker` (`e108fd7`). Les vérifications outillées du §8 datent du 21/09.
 > Branches et intégration : section « Branches » de [CLAUDE.md](../CLAUDE.md). Suite du développement : [frontend-roadmap.md](frontend-roadmap.md).
 
