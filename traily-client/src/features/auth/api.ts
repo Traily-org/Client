@@ -5,6 +5,7 @@ import type { AuthApi, AuthResult, User } from "./types";
 export interface UserDto {
     id: string;
     email: string;
+    name?: string | null;
     username?: string | null;
     display_name?: string | null;
     avatar_url?: string | null;
@@ -21,7 +22,8 @@ export function mapUser(dto: UserDto): User {
         id: dto.id,
         email: dto.email,
         username: dto.username ?? null,
-        displayName: dto.display_name ?? null,
+        // Users only give a name at sign-up; display_name is set later in the profile.
+        displayName: dto.display_name ?? dto.name ?? null,
         avatarUrl: dto.avatar_url ?? null,
     };
 }

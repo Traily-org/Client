@@ -104,6 +104,21 @@ describe("createSessionService", () => {
 });
 
 describe("mapAuthResponse", () => {
+    it("falls back to the sign-up name when display_name is unset", () => {
+        expect(
+            mapAuthResponse({
+                access_token: "a",
+                refresh_token: "r",
+                user: {
+                    id: "u1",
+                    email: "e@x.io",
+                    name: "Eve",
+                    display_name: null,
+                },
+            }).user.displayName,
+        ).toBe("Eve");
+    });
+
     it("maps snake_case DTOs and nullable fields", () => {
         expect(
             mapAuthResponse({
