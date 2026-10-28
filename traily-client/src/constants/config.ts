@@ -10,3 +10,9 @@
  * scaled up ("overzoom"), which is normal MapLibre behavior, not a bug.
  */
 export const MAP_MIN_ZOOM = 0;
+
+export const API_URL =
+    process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
+export const API_TIMEOUT_MS = 15_000;
+/** Use in-memory fakes instead of the backend (no auth endpoints yet). */
+export const API_MOCK = process.env.EXPO_PUBLIC_API_MOCK === "true";
