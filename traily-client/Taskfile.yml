@@ -1,15 +1,28 @@
 version: "3"
 
+vars:
+    # Not a project dependency: EAS build servers would install it for
+    # nothing. Cached by pnpm after the first run. Keep the major in sync
+    # with `cli.version` in eas.json.
+    EAS: pnpm dlx eas-cli@25
+
 tasks:
+    default:
+        silent: true
+        cmds:
+            - task --list
+
     install:
         desc: install dependencies
         cmds:
             - pnpm install
 
     start:
-        desc: start the Expo dev server
+        desc: start the Expo dev server for the development build (`task start -- --clear` clears the cache)
+        interactive: true
         cmds:
-            - pnpm start
+            - node scripts/dev-build.mjs report
+            - pnpm start {{.CLI_ARGS}}
 
     android:
         desc: start the dev server and open on an Android emulator/device
@@ -46,3 +59,23 @@ tasks:
         cmds:
             - defer: docker compose down
             - docker compose up --build
+
+    eas:init:
+        desc: log in to Expo and link the project to EAS (once per machine)
+        interactive: true
+        cmds:
+            - "{{.EAS}} login"
+            - "{{.EAS}} init"
+
+    "build:*":
+        desc: build the development build on EAS (android or ios), only when native code changed (`--force` to rebuild anyway)
+        interactive: true
+        vars:
+            PLATFORM: "{{index .MATCH 0}}"
+            FINGERPRINT:
+                sh: node scripts/dev-build.mjs hash {{.PLATFORM}}
+        status:
+            - node scripts/dev-build.mjs check {{.PLATFORM}} {{.FINGERPRINT}}
+        cmds:
+            - "{{.EAS}} build --profile development --platform {{.PLATFORM}}"
+            - node scripts/dev-build.mjs save {{.PLATFORM}} {{.FINGERPRINT}}

@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > Guide de contexte du repo `Client` de Traily, pour les agents IA et les développeurs de l'équipe.
-> État vérifié le **23/10/2026** sur `chore/TRA-109-clean-develop` (intégration de la CI, du Docker et de la doc dans `develop`).
+> État vérifié le **23/10/2026** sur `feat/map` (carte MapTiler et development build, `develop` intégré).
 > Installation, lancement et commandes : [README.md](README.md). Branches, commits, PR et Definition of Done : [CONTRIBUTING.md](CONTRIBUTING.md). Ce fichier ne les répète pas : il ajoute le contexte utile pour coder.
 > **Mettre à jour « État actuel » et « Branches » après chaque merge dans `develop`.** Pour les autres repos, ne décrire que leur rôle et leur fonctionnement : leur état d'avancement se consulte directement dans ces repos.
 
@@ -45,7 +45,8 @@ Unique client de la plateforme : UI, fonctions natives (GPS foreground/backgroun
 | Navigation                          | Expo Router 57 (routage par fichiers) ; `typedRoutes` et `reactCompiler` activés dans `app.json`                                                                         |
 | Langage                             | TypeScript ~6.0.3, `strict: true`, alias `@/*` → `src/*`                                                                                                                 |
 | Styles                              | NativeWind 4.2.6 + Tailwind 3.4 (`className`) ; tokens `src/constants/theme.ts` lus via `useTheme()`                                                                     |
-| Carte (`feat/map`)                  | `@maplibre/maplibre-react-native` 11 (natif), `maplibre-gl` 6 (web), `pmtiles` 4 (tuiles vectorielles Protomaps) ; tuiles raster Esri pour les modes satellite et relief |
+| Carte                               | `@maplibre/maplibre-react-native` 11 (natif), `maplibre-gl` 6 (web) ; fonds MapTiler (`outdoor-v2`, `hybrid`, `topo-v2`), plan gratuit                                 |
+| Build natif                         | development build EAS (`expo-dev-client`, `eas.json`), tâches `task build:*` qui ne reconstruisent qu'à changement d'empreinte native (`@expo/fingerprint`)             |
 | Qualité                             | ESLint 9 (flat config `eslint-config-expo`), Prettier 3 + `prettier-plugin-tailwindcss`, Vitest 5, CI GitHub Actions (`.github/workflows/ci.yml`)                        |
 | Paquets                             | pnpm uniquement (`packageManager: pnpm@10.13.1`) ; overrides et règles de build dans `pnpm-workspace.yaml`                                                               |
 | Dev local                           | Docker (`node:22-alpine`, Metro sur le port 8081) + Taskfile (go-task)                                                                                                   |
@@ -65,35 +66,35 @@ pnpm expo install --check                                       # versions align
 
 Dans le conteneur Docker, préfixer par `docker exec traily_client_dev`.
 
-Après le merge de `feat/map`, la carte native exige un **development build** (module natif MapLibre, incompatible avec Expo Go) : `pnpm expo run:android` / `pnpm expo run:ios`, après avoir défini `ios.bundleIdentifier` et `android.package` dans `app.json`. Le conteneur Docker peut toujours servir Metro, mais le flux Expo Go sur téléphone n'affiche plus la carte. Variable requise dans `traily-client/.env` : `EXPO_PUBLIC_PM_TILES_URL` (URL d'un fichier `.pmtiles`), à ajouter au `.env.example`.
+La carte native exige un **development build** (module natif MapLibre, incompatible avec Expo Go) : `task eas:init` une fois, puis `task build:android` (build cloud EAS, sans Android Studio) et `task start` au quotidien. Détail dans le [README](README.md#development-build). `app.json` fixe `com.traily.app` comme `ios.bundleIdentifier` et `android.package` : modifiable tant que l'app n'est pas publiée sur les stores. Le conteneur Docker peut toujours servir Metro au development build. Variable requise dans `traily-client/.env` : `EXPO_PUBLIC_MAPTILER_KEY`.
 
 ## Architecture du code
-
-Structure de `develop` ; les fichiers marqués `feat/map` arrivent avec cette branche :
 
 ```
 traily-client/
   app/                         # routes Expo Router
     _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Slot />
-    index.tsx                  # accueil (placeholder) ; feat/map : liens vers /map et /credits
-    map.tsx                    # feat/map : écran carte
-    credits.tsx                # feat/map : attributions des sources de la carte
+    index.tsx                  # accueil (placeholder) : liens vers /map et /credits
+    map.tsx                    # écran carte
+    credits.tsx                # attributions des sources de la carte
     auth/                      # _layout (Stack sans header), login, register : placeholders
   src/
-    features/<feature>/        # code par fonctionnalité ; map/ (feat/map), auth/ et profile/ = fichiers vides
+    features/<feature>/        # code par fonctionnalité ; map/ implémenté, auth/ et profile/ = fichiers vides
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
-    constants/config.ts        # vide (prévu : URLs, timeouts)
+    constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
     hooks/                     # use-color-scheme(.web).ts, use-theme.ts
     global.css                 # directives Tailwind + variables de polices web
-  scripts/                     # feat/map : dev-web.mjs, pmtiles-dev-proxy.mjs (web uniquement)
-  Dockerfile, docker-compose.yml, Taskfile.yml, .env.example   # environnement de dev Docker
+  scripts/dev-build.mjs        # suivi par empreinte native des development builds (appelé par Taskfile)
+  eas.json                     # profil EAS `development`
+  Dockerfile, docker-compose.yml, Taskfile.yml, .env.example   # environnement de dev
 ```
 
 Ce qui demande de lire plusieurs fichiers :
 
 - **Découpage par feature** : chaque `src/features/<feature>/` expose son API via `index.ts` (`@/features/map` → `TrailyMap`, `getMapStyle`, `getAllAttributions`, type `MapMode`). Ce découpage s'écarte de la structure par couches du Quality Plan (`src/components|services|store|lib`). Décision à documenter (voir roadmap).
-- **Variantes de plateforme** : Metro charge `X.web.tsx` sur web et `X.tsx` sur natif. `TrailyMap` utilise MapLibre Native d'un côté et `maplibre-gl` dans une `div` de l'autre. Les deux fichiers doivent exporter la même API ; `MapModeSwitcher` est commun aux deux.
-- **Carte** : `getMapStyle(mode, url)` (`src/features/map/style/map-styles.ts`) renvoie l'un des trois styles : `trail` (`traily-style.json`, vectoriel Protomaps), `satellite` et `topo` (tuiles raster Esri ArcGIS + couches Protomaps). Il y injecte l'URL `pmtiles://…` et un tracé de démo (source GeoJSON `route`). La carte n'affiche aucune attribution : l'écran `/credits` les liste via `getAllAttributions()`, donc toute nouvelle source doit renseigner son champ `attribution`. Sur web, `build.protomaps.com` n'envoie pas d'en-têtes CORS : il faut le proxy local `scripts/pmtiles-dev-proxy.mjs` (port 8082 codé en dur) et le worker `maplibre-gl` chargé depuis jsDelivr. Le web ne sert donc qu'au développement.
+- **Variantes de plateforme** : Metro charge `X.web.tsx` sur web et `X.tsx` sur natif. `TrailyMap` utilise MapLibre Native d'un côté et `maplibre-gl` dans une `div` de l'autre. Les deux fichiers doivent exporter la même API ; `MapModeSwitcher` et `MapLegalNotices` sont communs aux deux.
+- **Carte** : `getMapStyle(mode)` (`src/features/map/style/map-styles.ts`) télécharge le style MapTiler du mode (`trail` → `outdoor-v2`, `satellite` → `hybrid`, `topo` → `topo-v2`, mis en cache par mode) et y ajoute un tracé de démo (source GeoJSON `route`). Il lève une erreur si `EXPO_PUBLIC_MAPTILER_KEY` manque ; `TrailyMap` la remonte à l'error boundary tant qu'aucun style n'est chargé. Le zoom arrière minimal est `MAP_MIN_ZOOM` (`src/constants/config.ts`, 0 = aucune limite). Sur web, le worker `maplibre-gl` est chargé depuis jsDelivr (Metro ne gère pas `import.meta.url`) : le web ne sert qu'au développement.
+- **Obligations légales MapTiler** (plan gratuit) : logo MapTiler cliquable + attribution « © MapTiler © OpenStreetMap contributors » **toujours visible** (CGU §6.1 et §6.7), rendus par `MapLegalNotices` à la place de l'attribution repliable de MapLibre. Interrupteur `EXPO_PUBLIC_MAPTILER_LEGAL_NOTICES` (activé sauf `false`) : ne le désactiver qu'avec un plan payant, et même alors seul le logo peut disparaître, pas la mention texte. Le plan gratuit est limité à un usage non commercial (CGU Cloud §1.2). L'écran `/credits` lit les mêmes attributions (`MAP_ATTRIBUTIONS`) : toute nouvelle source de carte s'y ajoute.
 - **Styles** : NativeWind n'injecte les classes que si un module de l'app importe `src/global.css` (fichier `input` de `metro.config.js`). C'est fait dans `app/_layout.tsx` : ne pas déplacer cet import. Le runtime JSX de NativeWind (`jsxImportSource: "nativewind"` dans `babel.config.js`) exige `react-native-css-interop` en dépendance directe : pnpm ne le hisse pas depuis `nativewind`. Les couleurs de `theme.ts` ne sont pas exposées à Tailwind (`theme.extend` vide).
 - **Splash** : il se masque automatiquement au premier rendu. Si un jour le layout doit attendre des ressources (polices, session), appeler `SplashScreen.preventAutoHideAsync()` en scope global **et** `SplashScreen.hide()` une fois prêt, sinon le splash natif reste affiché.
 - **Env** : seules les variables `EXPO_PUBLIC_*` sont exposées au bundle (`process.env.EXPO_PUBLIC_...`). `.env` est ignoré par `traily-client/.gitignore` ; toute nouvelle variable se déclare dans `traily-client/.env.example`.
@@ -114,18 +115,18 @@ Ce qui demande de lire plusieurs fichiers :
 ## État actuel (23/10/2026)
 
 - **Sur `develop` après le merge de TRA-109** : squelette Expo Router qui rend bien ses routes (accueil, `auth/login`, `auth/register` en placeholder), NativeWind chargé, thème light/dark défini (non exposé à Tailwind), CI GitHub Actions, environnement Docker de dev, documentation.
-- **En attente sur une branche sans PR** : carte MapLibre à trois modes (sentier, satellite, relief) avec un tracé et un marqueur de démo, et écran crédits (`feat/map`).
+- **Apporté par `feat/map`** : carte MapLibre sur fonds MapTiler à trois modes (sentier, satellite, relief) avec un tracé et un marqueur de démo, obligations légales MapTiler, écran crédits, development build EAS automatisé par le Taskfile.
 - **Absent** : navigation (onglets, garde d'auth), client API, état global, auth, GPS, caméra, offline, tests. Pas d'icônes ni de splash propres à l'app : `app.json` ne référence plus de fichiers dans `assets/`, Expo affiche ses visuels par défaut.
-- **Vérifications** (checkout propre, `chore/TRA-109-clean-develop`) :
+- **Vérifications** (`feat/map` après le merge de `develop`) :
 
-| Check                                        | Résultat                                       |
-| -------------------------------------------- | ---------------------------------------------- |
-| `pnpm typecheck`                             | OK, sans `expo-env.d.ts` (voir `expo-types.d.ts`) |
-| `pnpm lint`                                  | OK                                             |
-| `pnpm format:check`                          | OK                                             |
-| `pnpm test`                                  | OK (0 test)                                    |
-| `npx expo-doctor@latest`                     | OK, 21/21                                      |
-| `docker compose up --build` + web sur `8081` | OK, accueil et `/auth/login` servis            |
+| Check                    | Résultat                                                                |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `pnpm typecheck`         | OK                                                                      |
+| `pnpm lint`              | OK                                                                      |
+| `pnpm format:check`      | OK (fins de ligne LF, imposées par `.gitattributes`)                    |
+| `pnpm test`              | OK (0 test)                                                             |
+| `npx expo-doctor@latest` | OK, 21/21                                                               |
+| `expo prebuild` Android  | OK (`com.traily.app`) ; build EAS pas encore lancé (compte Expo requis) |
 
 L'analyse détaillée du 09/10 ([doc/client-analysis.md](doc/client-analysis.md)) décrit l'état d'avant TRA-109 : la plupart de ses constats sont résolus.
 
@@ -135,8 +136,8 @@ L'analyse détaillée du 09/10 ([doc/client-analysis.md](doc/client-analysis.md)
 | ----------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | `main`                                          | releases (branche par défaut)           | en retard sur `develop` ; ne compile pas                                                                                                                                 | ne pas en partir ; resynchroniser par PR `develop` → `main` une fois `develop` stable                       |
 | `develop`                                       | intégration, base de travail            | reçoit TRA-109                                                                                                                                                           | brancher ici                                                                                                |
-| `feat/map` (Lucas)                              | carte MapLibre + PMTiles, écran crédits | aucune PR ; pas de ticket Linear                                                                                                                                         | rebaser sur `develop` (voir Recommandations), ouvrir la PR                                                  |
-| `chore/frontend-ci`, `chore/frontend-docker`, `feat/init-docs-and-archi` | CI, Docker, doc   | intégrées par TRA-109                                                                                                                                                    | supprimables après le merge de TRA-109                                                                      |
+| `feat/map` (Lucas)                              | carte MapTiler, development build EAS   | `develop` mergé dedans ; pas de ticket Linear                                                                                                                            | ouvrir la PR vers `develop`                                                                                 |
+| `chore/frontend-ci`, `chore/frontend-docker`    | CI, Docker                              | intégrées par TRA-109                                                                                                                                                    | supprimables                                                                                                |
 | `feat/init-project`                             | source de la PR #1                      | contenu identique à `develop`                                                                                                                                            | obsolète, supprimable après accord de l'équipe                                                              |
 
 Simuler une fusion sans toucher au working tree : `git merge-tree --write-tree --name-only origin/<a> origin/<b>`.
@@ -144,9 +145,9 @@ Simuler une fusion sans toucher au working tree : `git merge-tree --write-tree -
 ## Recommandations (ordre conseillé)
 
 1. **Rendre la CI obligatoire** : ajouter les jobs `Typage (tsc)`, `Lint (ESLint)`, `Formatage (Prettier)` et `Tests (Vitest)` comme status checks requis dans le ruleset GitHub « Protect main/develop », plus `Protection main (PR uniquement depuis develop)`. Les checks n'apparaissent dans la liste qu'après une première exécution de la CI.
-2. **Intégrer `feat/map`** : rebase sur `develop`. Conflits attendus : `app/_layout.tsx` (garder la version de `develop`), `package.json` (l'override `react-native-css-interop` est déjà dans `pnpm-workspace.yaml` : retirer le champ `pnpm`), `pnpm-workspace.yaml` (garder la version de `develop` : `feat/map` contient encore `allowBuilds`), `app/index.tsx` (garder les `Link`, retirer `StyleSheet`) et `pnpm-lock.yaml` (régénérer avec `pnpm install`, jamais à la main). Ajouter `EXPO_PUBLIC_PM_TILES_URL` au `.env.example`, aligner `MIN_ZOOM` (12) et le zoom initial (11), valider les conditions d'utilisation des tuiles Esri (satellite, relief).
-3. **Identité de l'app** : icônes, splash et favicon dans `assets/` (puis les référencer dans `app.json`), nom « Traily », `ios.bundleIdentifier` et `android.package`.
-4. **Fondations** : navigation (onglets + `Stack.Protected` pour l'auth), tokens de thème dans Tailwind, client API typé avec mocks (en attendant les endpoints nécessaires côté backend), Zustand + `expo-secure-store`, choix du lanceur de tests (Jest + `jest-expo` recommandé pour les composants : Quality Plan, preset du SDK, et `expo-router/testing-library` repose sur `jest` ; Vitest en `node` ne couvre que les fonctions pures), dev build / EAS, règle ESLint `@typescript-eslint/no-explicit-any`.
+2. **Carte (suite de `feat/map`)** : restreindre la clé MapTiler à l'app dans le tableau de bord (aucune restriction aujourd'hui), passer à un plan MapTiler payant avant tout usage commercial, lancer et tester le premier development build sur téléphone.
+3. **Identité de l'app** : icônes, splash et favicon dans `assets/` (puis les référencer dans `app.json`), nom « Traily ». `ios.bundleIdentifier` et `android.package` valent `com.traily.app` : à confirmer avant la première publication sur les stores.
+4. **Fondations** : navigation (onglets + `Stack.Protected` pour l'auth), tokens de thème dans Tailwind, client API typé avec mocks (en attendant les endpoints nécessaires côté backend), Zustand + `expo-secure-store`, choix du lanceur de tests (Jest + `jest-expo` recommandé pour les composants : Quality Plan, preset du SDK, et `expo-router/testing-library` repose sur `jest` ; Vitest en `node` ne couvre que les fonctions pures), règle ESLint `@typescript-eslint/no-explicit-any`.
 5. **Features MVP** (backlog `Must`) : GPS et traces, photo géolocalisée, collections, profil. Voir [doc/frontend-roadmap.md](doc/frontend-roadmap.md).
 
 ## Pièges connus
