@@ -7,7 +7,7 @@ export default function RegisterScreen() {
             title="Inscription"
             story="8.1.3"
             links={[
-                { label: "Créer le compte", href: "/" },
+                { label: "Créer le compte", href: "/", replace: true },
                 {
                     label: "J’ai déjà un compte",
                     href: "/login",

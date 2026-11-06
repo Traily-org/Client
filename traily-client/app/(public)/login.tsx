@@ -7,7 +7,7 @@ export default function LoginScreen() {
             title="Connexion"
             story="8.1.3"
             links={[
-                { label: "Se connecter", href: "/" },
+                { label: "Se connecter", href: "/", replace: true },
                 { label: "Créer un compte", href: "/register" },
             ]}
         />

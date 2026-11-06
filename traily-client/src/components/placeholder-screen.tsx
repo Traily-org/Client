@@ -8,6 +8,8 @@ export interface PlaceholderLink {
     href: Href;
     /** Go back to `href` when it is already in the history, instead of pushing it again. */
     dismissTo?: boolean;
+    /** Replace the current screen, so the back gesture cannot return to it. */
+    replace?: boolean;
 }
 
 interface PlaceholderScreenProps {
@@ -46,9 +48,13 @@ export function PlaceholderScreen({
                                 key={link.label}
                                 href={link.href}
                                 dismissTo={link.dismissTo}
+                                replace={link.replace}
                                 asChild
                             >
-                                <Pressable className="rounded-xl bg-[#e0733f] px-4 py-3">
+                                <Pressable
+                                    accessibilityRole="button"
+                                    className="rounded-xl bg-[#e0733f] px-4 py-3"
+                                >
                                     <Text className="text-center font-semibold text-white">
                                         {link.label}
                                     </Text>

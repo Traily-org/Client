@@ -20,7 +20,7 @@ export default function SettingsScreen() {
                 >
                     Revoir l’onboarding
                 </Link>
-                <Link href="/login" className="text-base text-blue-600">
+                <Link href="/login" replace className="text-base text-blue-600">
                     Se déconnecter
                 </Link>
             </View>

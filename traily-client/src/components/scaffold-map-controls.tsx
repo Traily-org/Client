@@ -22,7 +22,10 @@ export function ScaffoldMapControls() {
                 style={{ top: insets.top + 12 }}
             >
                 <Link href="/search" asChild>
-                    <Pressable className="h-10 flex-1 justify-center rounded-full bg-white/90 px-4 shadow-md">
+                    <Pressable
+                        accessibilityRole="search"
+                        className="h-10 flex-1 justify-center rounded-full bg-white/90 px-4 shadow-md"
+                    >
                         <Text className="text-gray-500">
                             Rechercher une rando…
                         </Text>
@@ -44,10 +47,18 @@ export function ScaffoldMapControls() {
                     className="absolute left-4 gap-2 rounded-xl bg-white/95 p-3 shadow-md"
                     style={{ bottom: bottom + 52 }}
                 >
-                    <Link href="/leaderboard" className="py-1 text-base">
+                    <Link
+                        href="/leaderboard"
+                        onPress={() => setSocialOpen(false)}
+                        className="py-1 text-base"
+                    >
                         Classements
                     </Link>
-                    <Link href="/team" className="py-1 text-base">
+                    <Link
+                        href="/team"
+                        onPress={() => setSocialOpen(false)}
+                        className="py-1 text-base"
+                    >
                         Équipe
                     </Link>
                 </View>
@@ -93,6 +104,7 @@ export function ScaffoldMapControls() {
 function MapButton({ label, onPress }: { label: string; onPress: () => void }) {
     return (
         <Pressable
+            accessibilityRole="button"
             onPress={onPress}
             className="rounded-full bg-white/90 px-4 py-2 shadow-md"
         >
