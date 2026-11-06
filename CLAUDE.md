@@ -74,7 +74,7 @@ La carte native exige un **development build** (module natif MapLibre, incompati
 traily-client/
   app/                         # routes Expo Router
     _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Stack /> sans header
-    (app)/                     # groupe hors URL de l'app connectée : _layout (Stack sans header)
+    (app)/                     # groupe hors URL de l'app connectée : _layout (Stack avec header, sauf carte et capture ; déclare modals et panneau)
       index.tsx                # écran d'accueil = la carte (/) + contrôles temporaires (recherche, social, démarrer, profil, paramètres)
       settings/                # index (/settings), credits (/settings/credits : attributions de la carte), onboarding
       search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/, moderation
