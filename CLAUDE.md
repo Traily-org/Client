@@ -73,12 +73,16 @@ La carte native exige un **development build** (module natif MapLibre, incompati
 ```
 traily-client/
   app/                         # routes Expo Router
-    _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Slot />
+    _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Stack /> sans header
     (app)/                     # groupe hors URL de l'app connectée : _layout (Stack sans header)
-      index.tsx                # écran d'accueil = la carte (/), bouton engrenage vers les paramètres
-      settings/                # index (/settings), credits (/settings/credits : attributions de la carte)
+      index.tsx                # écran d'accueil = la carte (/) + contrôles temporaires (recherche, social, démarrer, profil, paramètres)
+      settings/                # index (/settings), credits (/settings/credits : attributions de la carte), onboarding
+      search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/, moderation
+                               # écrans vides (PlaceholderScreen) : un commentaire donne la story et la feature cible
+    onboarding.tsx             # écran vide (7.3)
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
+    components/                # UI partagée sans métier ; placeholder-screen.tsx (écran vide + boutons de parcours) et scaffold-map-controls.tsx (boutons sur la carte) : temporaires, marqués TODO(design)
     features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/, style/, assets/), auth/ et profile/ = fichiers vides
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
