@@ -13,7 +13,11 @@ const MAPTILER_LOGO = require("../assets/maptiler-logo.svg");
  * attribution collapses behind an "i" button while the terms require it to
  * stay visible and readable. Shared by the native and web maps.
  */
-export function MapLegalNotices() {
+export function MapLegalNotices({
+    bottomOffset = 0,
+}: {
+    bottomOffset?: number;
+}) {
     const insets = useSafeAreaInsets();
 
     return (
@@ -23,7 +27,7 @@ export function MapLegalNotices() {
                 accessibilityRole="link"
                 accessibilityLabel="MapTiler logo"
                 className="absolute left-2"
-                style={{ bottom: insets.bottom + 8 }}
+                style={{ bottom: insets.bottom + bottomOffset + 8 }}
             >
                 <Image
                     source={MAPTILER_LOGO}
@@ -33,7 +37,7 @@ export function MapLegalNotices() {
             </Pressable>
             <View
                 className="absolute right-1 rounded bg-white/80 px-1"
-                style={{ bottom: insets.bottom + 2 }}
+                style={{ bottom: insets.bottom + bottomOffset + 2 }}
             >
                 <Text className="text-[10px] text-[#333]">
                     {MAP_ATTRIBUTIONS.map((attribution, index) => (

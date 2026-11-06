@@ -21,6 +21,7 @@ import {
     SHOW_MAPTILER_LEGAL_NOTICES,
     type MapMode,
 } from "../style/map-styles";
+import type { TrailyMapProps } from "../types";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -45,7 +46,10 @@ function setupMapLibreForWeb() {
     setupDone = true;
 }
 
-export function TrailyMap() {
+export function TrailyMap({
+    bottomOffset = 0,
+    showModeSwitcher = true,
+}: TrailyMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const [mode, setMode] = useState<MapMode>("trail");
@@ -124,8 +128,16 @@ export function TrailyMap() {
     return (
         <div style={{ position: "relative", display: "flex", flex: 1 }}>
             <div ref={containerRef} style={{ display: "flex", flex: 1 }} />
-            {SHOW_MAPTILER_LEGAL_NOTICES && <MapLegalNotices />}
-            <MapModeSwitcher mode={mode} onChange={setMode} />
+            {SHOW_MAPTILER_LEGAL_NOTICES && (
+                <MapLegalNotices bottomOffset={bottomOffset} />
+            )}
+            {showModeSwitcher && (
+                <MapModeSwitcher
+                    mode={mode}
+                    onChange={setMode}
+                    bottomOffset={bottomOffset}
+                />
+            )}
         </div>
     );
 }
