@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { MapMode } from "./style/map-styles";
+import type { MapMode } from "../style/map-styles";
 
 const OPTIONS: { mode: MapMode; label: string }[] = [
     { mode: "trail", label: "Sentier" },

@@ -2,9 +2,9 @@ import { Image } from "expo-image";
 import { Linking, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MAP_ATTRIBUTIONS, MAPTILER_HOME_URL } from "./style/map-styles";
+import { MAP_ATTRIBUTIONS, MAPTILER_HOME_URL } from "../style/map-styles";
 
-const MAPTILER_LOGO = require("./assets/maptiler-logo.svg");
+const MAPTILER_LOGO = require("../assets/maptiler-logo.svg");
 
 /**
  * MapTiler's legal notices, laid out as their docs recommend: the logo

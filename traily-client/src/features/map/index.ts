@@ -1,4 +1,4 @@
-export { TrailyMap } from "./traily-map";
+export { TrailyMap } from "./components/traily-map";
 export {
     getAllAttributions,
     getMapStyle,

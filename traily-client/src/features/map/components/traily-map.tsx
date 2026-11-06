@@ -16,7 +16,7 @@ import {
     getMapStyle,
     SHOW_MAPTILER_LEGAL_NOTICES,
     type MapMode,
-} from "./style/map-styles";
+} from "../style/map-styles";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
