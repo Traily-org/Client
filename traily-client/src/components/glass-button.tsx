@@ -13,8 +13,8 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import { GlassSurface } from "./GlassSurface";
-import { PRESS_IN, PRESS_OUT } from "./motion";
+import { GlassSurface } from "./glass-surface";
+import { PRESS_IN, PRESS_OUT } from "@/constants/motion";
 
 export interface CornerRadii {
     topLeft?: number;

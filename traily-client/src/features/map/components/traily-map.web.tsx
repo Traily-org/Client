@@ -46,10 +46,7 @@ function setupMapLibreForWeb() {
     setupDone = true;
 }
 
-export function TrailyMap({
-    bottomOffset = 0,
-    showModeSwitcher = true,
-}: TrailyMapProps) {
+export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const [mode, setMode] = useState<MapMode>("trail");
@@ -131,13 +128,11 @@ export function TrailyMap({
             {SHOW_MAPTILER_LEGAL_NOTICES && (
                 <MapLegalNotices bottomOffset={bottomOffset} />
             )}
-            {showModeSwitcher && (
-                <MapModeSwitcher
-                    mode={mode}
-                    onChange={setMode}
-                    bottomOffset={bottomOffset}
-                />
-            )}
+            <MapModeSwitcher
+                mode={mode}
+                onChange={setMode}
+                bottomOffset={bottomOffset}
+            />
         </div>
     );
 }

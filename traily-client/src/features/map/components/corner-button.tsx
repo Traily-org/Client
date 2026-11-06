@@ -4,9 +4,9 @@ import { Text } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { GlassButton } from "./GlassButton";
-import { ON_GLASS } from "./GlassSurface";
-import { ENTER_DURATION } from "./motion";
+import { GlassButton } from "@/components/glass-button";
+import { ON_GLASS } from "@/components/glass-surface";
+import { ENTER_DURATION } from "@/constants/motion";
 
 /** Height of a corner button above the bottom safe area. */
 export const CORNER_BUTTON_SIZE = 92;

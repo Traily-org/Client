@@ -6,6 +6,4 @@ export interface TrailyMapProps {
      * bottom of the map.
      */
     bottomOffset?: number;
-    /** Set to false when the screen offers its own way to switch modes. */
-    showModeSwitcher?: boolean;
 }

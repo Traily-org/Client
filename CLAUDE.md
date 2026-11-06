@@ -75,17 +75,18 @@ traily-client/
   app/                         # routes Expo Router
     _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Stack /> sans header
     (app)/                     # groupe hors URL de l'app connectée : _layout (Stack avec header, sauf carte et capture ; déclare modals et panneau)
-      index.tsx                # écran d'accueil = la carte (/) + contrôles temporaires (recherche, social, démarrer, profil, paramètres)
+      index.tsx                # écran d'accueil = la carte (/) + MapControls (recherche, paramètres, équipe, profil) + barre de rando temporaire
       settings/                # index (/settings), credits (/settings/credits : attributions de la carte), onboarding
       search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/, moderation
                                # écrans vides (PlaceholderScreen) : un commentaire donne la story et la feature cible
     onboarding.tsx             # écran vide (7.3)
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
-    components/                # UI partagée sans métier ; placeholder-screen.tsx (écran vide + boutons de parcours) et scaffold-map-controls.tsx (boutons sur la carte) : temporaires, marqués TODO(design)
-    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/, style/, assets/)
+    components/                # UI partagée sans métier : glass-surface, glass-button (verre Liquid Glass sur iOS 26+, givré ailleurs), icon (SF Symbols / Material Symbols) ; placeholder-screen.tsx (écran vide + boutons de parcours) et scaffold-map-controls.tsx (barre de rando sur la carte) : temporaires, marqués TODO(design)
+    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/ dont map-controls, style/, assets/)
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
+    constants/motion.ts        # durées et courbes d'animation partagées
     global.css                 # directives Tailwind + variables de polices web
   scripts/dev-build.mjs        # suivi par empreinte native des development builds (appelé par Taskfile)
   eas.json                     # profil EAS `development`

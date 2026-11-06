@@ -33,10 +33,7 @@ const TRAILHEAD = {
 const AMBIENT_CACHE_SIZE_BYTES = 200 * 1024 * 1024;
 let ambientCacheConfigured = false;
 
-export function TrailyMap({
-    bottomOffset = 0,
-    showModeSwitcher = true,
-}: TrailyMapProps) {
+export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
     const [selected, setSelected] = useState(false);
     const [mode, setMode] = useState<MapMode>("trail");
     const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
@@ -108,13 +105,11 @@ export function TrailyMap({
             {SHOW_MAPTILER_LEGAL_NOTICES && (
                 <MapLegalNotices bottomOffset={bottomOffset} />
             )}
-            {showModeSwitcher && (
-                <MapModeSwitcher
-                    mode={mode}
-                    onChange={setMode}
-                    bottomOffset={bottomOffset}
-                />
-            )}
+            <MapModeSwitcher
+                mode={mode}
+                onChange={setMode}
+                bottomOffset={bottomOffset}
+            />
         </View>
     );
 }

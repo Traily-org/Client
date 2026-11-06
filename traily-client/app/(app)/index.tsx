@@ -1,15 +1,16 @@
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 import { ScaffoldMapControls } from "@/components/scaffold-map-controls";
-import { TrailyMap } from "@/features/map";
+import { CORNER_BUTTON_SIZE, MapControls, TrailyMap } from "@/features/map";
 
+// Full-bleed map: the controls handle the safe areas themselves.
 export default function MapScreen() {
     return (
-        <SafeAreaView style={styles.container} edges={["top"]}>
-            <TrailyMap />
+        <View style={styles.container}>
+            <TrailyMap bottomOffset={CORNER_BUTTON_SIZE} />
+            <MapControls />
             <ScaffoldMapControls />
-        </SafeAreaView>
+        </View>
     );
 }
 

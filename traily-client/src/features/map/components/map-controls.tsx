@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import Animated, {
     FadeInUp,
@@ -8,36 +9,26 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CornerButton } from "./CornerButton";
-import { GlassButton } from "./GlassButton";
-import { ON_GLASS } from "./GlassSurface";
-import { Icon } from "./Icon";
-import { ENTER_DURATION, TRANSITION } from "./motion";
-import { SearchBar } from "./SearchBar";
+import { GlassButton } from "@/components/glass-button";
+import { ON_GLASS } from "@/components/glass-surface";
+import { Icon } from "@/components/icon";
+import { ENTER_DURATION, TRANSITION } from "@/constants/motion";
+
+import { CornerButton } from "./corner-button";
+import { SearchBar } from "./search-bar";
 
 const SETTINGS_SIZE = 44;
 const TOP_BAR_GAP = 10;
 
-interface HomeOverlayProps {
-    onSearch?: (query: string) => void;
-    onOpenSettings?: () => void;
-    onOpenTeam?: () => void;
-    onOpenProfile?: () => void;
-}
-
 /**
- * Buttons laid over the home map: search bar and settings at the top, team
+ * Controls laid over the home map: search bar and settings at the top, team
  * and profile in the bottom corners. The settings button steps aside while
  * searching so the bar can stretch. Lets touches through to the map
  * everywhere else.
  */
-export function HomeOverlay({
-    onSearch,
-    onOpenSettings,
-    onOpenTeam,
-    onOpenProfile,
-}: HomeOverlayProps) {
+export function MapControls() {
     const insets = useSafeAreaInsets();
+    const router = useRouter();
     const searchFocus = useSharedValue(0);
     const gearRotation = useSharedValue(0);
 
@@ -55,7 +46,7 @@ export function HomeOverlay({
 
     function handleOpenSettings() {
         gearRotation.set(withTiming(gearRotation.get() + 60, TRANSITION));
-        onOpenSettings?.();
+        router.push("/settings");
     }
 
     return (
@@ -67,7 +58,12 @@ export function HomeOverlay({
                 <View style={styles.searchSlot}>
                     <SearchBar
                         focusProgress={searchFocus}
-                        onSearch={onSearch}
+                        onSearch={(query) =>
+                            router.push({
+                                pathname: "/search",
+                                params: { q: query },
+                            })
+                        }
                     />
                 </View>
                 <Animated.View style={settingsSlotStyle}>
@@ -94,7 +90,7 @@ export function HomeOverlay({
                 corner="left"
                 label="Équipe"
                 enterDelay={80}
-                onPress={onOpenTeam}
+                onPress={() => router.push("/team")}
                 icon={
                     <Icon
                         ios="person.2.fill"
@@ -108,7 +104,7 @@ export function HomeOverlay({
                 corner="right"
                 label="Profil"
                 enterDelay={140}
-                onPress={onOpenProfile}
+                onPress={() => router.push("/profile")}
                 icon={
                     <Icon
                         ios="face.smiling"

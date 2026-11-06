@@ -15,9 +15,13 @@ import Animated, {
     type SharedValue,
 } from "react-native-reanimated";
 
-import { GlassSurface, ON_GLASS, ON_GLASS_MUTED } from "./GlassSurface";
-import { Icon } from "./Icon";
-import { TRANSITION } from "./motion";
+import {
+    GlassSurface,
+    ON_GLASS,
+    ON_GLASS_MUTED,
+} from "@/components/glass-surface";
+import { Icon } from "@/components/icon";
+import { TRANSITION } from "@/constants/motion";
 
 export const SEARCH_HEIGHT = 52;
 
