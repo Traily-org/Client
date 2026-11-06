@@ -1,22 +1,23 @@
-import { Link } from "expo-router";
-import { View, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { View } from "react-native";
+
+import { CORNER_BUTTON_SIZE, HomeOverlay } from "@/features/home";
+import { TrailyMap } from "@/features/map";
 
 export default function HomeScreen() {
+    const router = useRouter();
+
+    // Full-bleed map: the overlay handles the safe areas itself. The map
+    // mode switcher is hidden until it finds a place in the new layout
+    // (still available on /map). Credits will live in the settings screen:
+    // link them from the settings button until it exists.
     return (
-        <SafeAreaView className="flex-1 items-center justify-center">
-            <View>
-                <Text className="text-2xl font-bold">Bienvenue sur Traily</Text>
-                <Link href="/map" className="mt-4 text-center text-blue-600">
-                    Voir la carte
-                </Link>
-                <Link
-                    href="/credits"
-                    className="mt-2 text-center text-blue-600"
-                >
-                    Crédits
-                </Link>
-            </View>
-        </SafeAreaView>
+        <View className="flex-1">
+            <TrailyMap
+                bottomOffset={CORNER_BUTTON_SIZE}
+                showModeSwitcher={false}
+            />
+            <HomeOverlay onOpenSettings={() => router.push("/credits")} />
+        </View>
     );
 }

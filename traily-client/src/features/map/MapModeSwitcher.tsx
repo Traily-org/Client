@@ -12,9 +12,11 @@ const OPTIONS: { mode: MapMode; label: string }[] = [
 export function MapModeSwitcher({
     mode,
     onChange,
+    bottomOffset = 0,
 }: {
     mode: MapMode;
     onChange: (mode: MapMode) => void;
+    bottomOffset?: number;
 }) {
     const insets = useSafeAreaInsets();
 
@@ -23,7 +25,7 @@ export function MapModeSwitcher({
     return (
         <View
             className="absolute right-4 flex-row rounded-[10px] bg-white/90 p-[3px] shadow-md"
-            style={{ bottom: insets.bottom + 24 }}
+            style={{ bottom: insets.bottom + bottomOffset + 24 }}
         >
             {OPTIONS.map((option) => {
                 const active = option.mode === mode;

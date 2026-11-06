@@ -17,6 +17,7 @@ import {
     SHOW_MAPTILER_LEGAL_NOTICES,
     type MapMode,
 } from "./style/map-styles";
+import type { TrailyMapProps } from "./types";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -32,7 +33,10 @@ const TRAILHEAD = {
 const AMBIENT_CACHE_SIZE_BYTES = 200 * 1024 * 1024;
 let ambientCacheConfigured = false;
 
-export function TrailyMap() {
+export function TrailyMap({
+    bottomOffset = 0,
+    showModeSwitcher = true,
+}: TrailyMapProps) {
     const [selected, setSelected] = useState(false);
     const [mode, setMode] = useState<MapMode>("trail");
     const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
@@ -101,8 +105,16 @@ export function TrailyMap() {
                     </Pressable>
                 </Marker>
             </Map>
-            {SHOW_MAPTILER_LEGAL_NOTICES && <MapLegalNotices />}
-            <MapModeSwitcher mode={mode} onChange={setMode} />
+            {SHOW_MAPTILER_LEGAL_NOTICES && (
+                <MapLegalNotices bottomOffset={bottomOffset} />
+            )}
+            {showModeSwitcher && (
+                <MapModeSwitcher
+                    mode={mode}
+                    onChange={setMode}
+                    bottomOffset={bottomOffset}
+                />
+            )}
         </View>
     );
 }
