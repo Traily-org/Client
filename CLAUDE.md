@@ -82,7 +82,6 @@ traily-client/
     features/<feature>/        # code par fonctionnalité ; map/ implémenté, auth/ et profile/ = fichiers vides
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
-    hooks/                     # use-color-scheme(.web).ts, use-theme.ts
     global.css                 # directives Tailwind + variables de polices web
   scripts/dev-build.mjs        # suivi par empreinte native des development builds (appelé par Taskfile)
   eas.json                     # profil EAS `development`
@@ -108,7 +107,7 @@ Ce qui demande de lire plusieurs fichiers :
 - **Responsabilités** (Quality Plan) : composants = affichage, aucun appel API ; hooks = orchestration état + services, pas de JSX ; services = logique métier / API / natif, pas d'état React ; store Zustand = état global partagé, pas de logique métier.
 - **Natif** : logique GPS dans un service de localisation, caméra dans un service photo (compression qualité 0.7, 1920 px max). Permissions demandées explicitement. Jamais de token ni de coordonnées précises dans les logs.
 - **React Compiler** activé : respecter les Rules of React ; `useMemo`/`useCallback` manuels rarement nécessaires.
-- **Nommage des fichiers** (TRA-120) : **kebab-case pour tous les fichiers**, composants compris (`traily-map.tsx`, `map-mode-switcher.tsx`, `use-theme.ts`). Le composant exporté reste en PascalCase dans le code (`export function TrailyMap`). Raisons : norme du template Expo, routes Expo Router déjà en kebab-case (ce sont des URL), et pas de conflit de casse Git entre macOS/Windows (insensibles à la casse) et Linux/CI. Tout nouveau fichier suit cette règle. Textes UI en français, code et commentaires en anglais.
+- **Nommage des fichiers** (TRA-120) : **kebab-case pour tous les fichiers**, composants compris (`traily-map.tsx`, `map-mode-switcher.tsx`, `map-styles.ts`). Le composant exporté reste en PascalCase dans le code (`export function TrailyMap`). Raisons : norme du template Expo, routes Expo Router déjà en kebab-case (ce sont des URL), et pas de conflit de casse Git entre macOS/Windows (insensibles à la casse) et Linux/CI. Tout nouveau fichier suit cette règle. Textes UI en français, code et commentaires en anglais.
 - **Git** (détail : [CONTRIBUTING.md](CONTRIBUTING.md)) : Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`), description en anglais à l'impératif et en minuscules, ex. `feat: add map screen`. Branches `feat/ fix/ chore/ docs/ test/ hotfix/` + ticket Linear (équipe `TRA`), ex. `feat/TRA-42-map-screen`. 1 ticket = 1 branche = 1 PR. **Brancher depuis `develop` et ouvrir la PR vers `develop`** (1 approbation, squash uniquement : le titre de la PR devient le message du commit, il suit donc la même convention). `main` n'accepte que des PR depuis `develop`. Capture ou vidéo dans les PR UI.
 - **Definition of Done** : exigences du ticket couvertes, CI verte, tests si nécessaire, revue par un membre, doc à jour, testé en environnement de dev.
 
