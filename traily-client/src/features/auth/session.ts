@@ -43,8 +43,11 @@ export function createSessionService(
             await start(await api.register(input));
         },
         async logout() {
+            const stored = await tokens.get();
             await tokens.clear();
             setAnonymous();
+            // Best effort: offline logout still signs out locally.
+            if (stored) await api.logout(stored.refreshToken).catch(() => {});
         },
     };
 }

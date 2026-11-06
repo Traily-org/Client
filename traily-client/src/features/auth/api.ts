@@ -12,9 +12,8 @@ export interface UserDto {
 }
 
 export interface AuthResponseDto {
-    access_token: string;
-    refresh_token: string;
     user: UserDto;
+    tokens: { access_token: string; refresh_token: string };
 }
 
 export function mapUser(dto: UserDto): User {
@@ -31,8 +30,8 @@ export function mapUser(dto: UserDto): User {
 export function mapAuthResponse(dto: AuthResponseDto): AuthResult {
     return {
         user: mapUser(dto.user),
-        accessToken: dto.access_token,
-        refreshToken: dto.refresh_token,
+        accessToken: dto.tokens.access_token,
+        refreshToken: dto.tokens.refresh_token,
     };
 }
 
@@ -52,6 +51,13 @@ export function createAuthApi(client: ApiClient): AuthApi {
                 { method: "POST", body: input, auth: false },
             );
             return mapAuthResponse(dto);
+        },
+        async logout(refreshToken) {
+            await client.request("/auth/logout", {
+                method: "POST",
+                body: { refresh_token: refreshToken },
+                auth: false,
+            });
         },
         async me() {
             return mapUser(await client.request<UserDto>("/users/me"));

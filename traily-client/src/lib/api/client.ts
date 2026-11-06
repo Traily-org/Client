@@ -43,9 +43,23 @@ export interface ApiClientConfig {
     fetch?: typeof fetch;
 }
 
-interface RefreshResponse {
+interface TokensDto {
     access_token: string;
     refresh_token: string;
+}
+
+/** Reads `{ tokens: { access_token, refresh_token } }` (auth responses). */
+export function readTokens(data: unknown): Tokens | null {
+    const tokens = isRecord(data) ? data.tokens : undefined;
+    if (
+        !isRecord(tokens) ||
+        typeof tokens.access_token !== "string" ||
+        typeof tokens.refresh_token !== "string"
+    ) {
+        return null;
+    }
+    const dto = tokens as unknown as TokensDto;
+    return { accessToken: dto.access_token, refreshToken: dto.refresh_token };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -119,19 +133,9 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
             );
             if (!response.ok) return false;
             const body = await readJson(response);
-            const data = isRecord(body) ? body.data : undefined;
-            if (
-                !isRecord(data) ||
-                typeof data.access_token !== "string" ||
-                typeof data.refresh_token !== "string"
-            ) {
-                return false;
-            }
-            const next = data as unknown as RefreshResponse;
-            await config.tokens.set({
-                accessToken: next.access_token,
-                refreshToken: next.refresh_token,
-            });
+            const next = readTokens(isRecord(body) ? body.data : undefined);
+            if (!next) return false;
+            await config.tokens.set(next);
             return true;
         } catch {
             // Network failure during refresh: keep the tokens, the caller gets the 401.

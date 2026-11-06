@@ -106,7 +106,12 @@ describe("createApiClient", () => {
             async (url, init) => {
                 if (String(url).endsWith("/auth/refresh")) {
                     return json(200, {
-                        data: { access_token: "new", refresh_token: "r2" },
+                        data: {
+                            tokens: {
+                                access_token: "new",
+                                refresh_token: "r2",
+                            },
+                        },
                     });
                 }
                 return authHeader(init) === "Bearer new"
@@ -130,7 +135,12 @@ describe("createApiClient", () => {
                     refreshCalls++;
                     await new Promise((r) => setTimeout(r, 5));
                     return json(200, {
-                        data: { access_token: "new", refresh_token: "r2" },
+                        data: {
+                            tokens: {
+                                access_token: "new",
+                                refresh_token: "r2",
+                            },
+                        },
                     });
                 }
                 return authHeader(init) === "Bearer new"

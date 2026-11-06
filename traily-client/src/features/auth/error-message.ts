@@ -4,16 +4,16 @@ import { ApiError } from "@/lib/api/client";
 export function authErrorMessage(err: unknown): string {
     if (!(err instanceof ApiError)) return "Une erreur inattendue est survenue";
     switch (err.code) {
-        case "invalid_credentials":
+        case "UNAUTHORIZED":
             return "E-mail ou mot de passe incorrect";
-        case "email_taken":
+        case "CONFLICT":
             return "Un compte existe déjà avec cet e-mail";
+        case "RATE_LIMITED":
+            return "Trop de tentatives, réessayez dans quelques minutes";
         case "network_error":
         case "timeout":
             return "Impossible de joindre le serveur, vérifiez votre connexion";
         default:
-            return err.status === 401
-                ? "E-mail ou mot de passe incorrect"
-                : "Une erreur est survenue, réessayez";
+            return "Une erreur est survenue, réessayez";
     }
 }

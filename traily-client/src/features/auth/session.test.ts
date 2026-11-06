@@ -33,6 +33,7 @@ function fakeApi(overrides: Partial<AuthApi> = {}): AuthApi {
     return {
         login: async () => ({ user, accessToken: "a", refreshToken: "r" }),
         register: async () => ({ user, accessToken: "a", refreshToken: "r" }),
+        logout: async () => {},
         me: async () => user,
         ...overrides,
     };
@@ -82,7 +83,15 @@ describe("createSessionService", () => {
 
     it("stores tokens on login and clears them on logout", async () => {
         const tokens = memoryTokens();
-        const service = createSessionService(fakeApi(), tokens.store);
+        const revoked: string[] = [];
+        const service = createSessionService(
+            fakeApi({
+                logout: async (r) => {
+                    revoked.push(r);
+                },
+            }),
+            tokens.store,
+        );
 
         await service.login({
             email: "alice@example.com",
@@ -95,11 +104,24 @@ describe("createSessionService", () => {
         expect(useSessionStore.getState().status).toBe("authenticated");
 
         await service.logout();
+        expect(revoked).toEqual(["r"]);
         expect(tokens.current()).toBeNull();
         expect(useSessionStore.getState()).toMatchObject({
             status: "anonymous",
             user: null,
         });
+    });
+
+    it("signs out locally even when the server logout fails", async () => {
+        const tokens = memoryTokens({ accessToken: "a", refreshToken: "r" });
+        const api = fakeApi({
+            logout: async () => {
+                throw new ApiError(0, "network_error", "offline");
+            },
+        });
+        await createSessionService(api, tokens.store).logout();
+        expect(tokens.current()).toBeNull();
+        expect(useSessionStore.getState().status).toBe("anonymous");
     });
 });
 
@@ -107,8 +129,7 @@ describe("mapAuthResponse", () => {
     it("falls back to the sign-up name when display_name is unset", () => {
         expect(
             mapAuthResponse({
-                access_token: "a",
-                refresh_token: "r",
+                tokens: { access_token: "a", refresh_token: "r" },
                 user: {
                     id: "u1",
                     email: "e@x.io",
@@ -122,8 +143,7 @@ describe("mapAuthResponse", () => {
     it("maps snake_case DTOs and nullable fields", () => {
         expect(
             mapAuthResponse({
-                access_token: "a",
-                refresh_token: "r",
+                tokens: { access_token: "a", refresh_token: "r" },
                 user: { id: "u1", email: "e@x.io", display_name: "Eve" },
             }),
         ).toEqual({

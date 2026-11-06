@@ -26,7 +26,7 @@ export function createMockAuthApi(): AuthApi {
             if (password.length < 8) {
                 throw new ApiError(
                     401,
-                    "invalid_credentials",
+                    "UNAUTHORIZED",
                     "Identifiants invalides",
                 );
             }
@@ -34,6 +34,9 @@ export function createMockAuthApi(): AuthApi {
         },
         async register({ email, name }) {
             return signIn(email, name);
+        },
+        async logout() {
+            current = null;
         },
         async me() {
             if (!current) {

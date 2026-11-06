@@ -25,5 +25,7 @@ export interface AuthResult {
 export interface AuthApi {
     login(input: LoginInput): Promise<AuthResult>;
     register(input: RegisterInput): Promise<AuthResult>;
+    /** Revokes the refresh token server-side. */
+    logout(refreshToken: string): Promise<void>;
     me(): Promise<User>;
 }

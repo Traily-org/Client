@@ -45,14 +45,19 @@ describe("validateRegister", () => {
 
 describe("authErrorMessage", () => {
     it.each([
-        ["invalid_credentials", 401, "E-mail ou mot de passe incorrect"],
-        ["email_taken", 409, "Un compte existe déjà avec cet e-mail"],
+        ["UNAUTHORIZED", 401, "E-mail ou mot de passe incorrect"],
+        ["CONFLICT", 409, "Un compte existe déjà avec cet e-mail"],
         [
             "network_error",
             0,
             "Impossible de joindre le serveur, vérifiez votre connexion",
         ],
-        ["http_error", 500, "Une erreur est survenue, réessayez"],
+        [
+            "RATE_LIMITED",
+            429,
+            "Trop de tentatives, réessayez dans quelques minutes",
+        ],
+        ["INTERNAL_ERROR", 500, "Une erreur est survenue, réessayez"],
     ])("maps %s", (code, status, message) => {
         expect(authErrorMessage(new ApiError(status, code, "x"))).toBe(message);
     });
