@@ -74,8 +74,8 @@ La carte native exige un **development build** (module natif MapLibre, incompati
 traily-client/
   app/                         # routes Expo Router
     _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Slot />
-    index.tsx                  # accueil (placeholder) : liens vers /map et /credits
-    map.tsx                    # écran carte
+    (app)/                     # groupe hors URL de l'app connectée : _layout (Stack sans header)
+      index.tsx                # écran d'accueil = la carte (/)
     credits.tsx                # attributions des sources de la carte
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
