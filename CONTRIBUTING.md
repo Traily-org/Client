@@ -34,6 +34,12 @@ Format : `<préfixe>/TRA-<numéro>-<description-courte>`, en anglais et en kebab
 
 Exemples : `feat/TRA-42-map-screen`, `fix/TRA-57-hide-splash-screen`.
 
+## Nommage des fichiers
+
+**kebab-case pour tous les fichiers**, composants compris : `traily-map.tsx`, `map-mode-switcher.tsx`, `use-theme.ts`. Le composant exporté reste en PascalCase dans le code (`export function TrailyMap`).
+
+C'est la norme du template Expo, les routes Expo Router sont déjà en kebab-case (ce sont des URL), et cela évite les conflits de casse Git entre macOS/Windows (insensibles à la casse) et Linux/CI. Décision : TRA-120.
+
 ## Commits
 
 La convention [Conventional Commits](https://www.conventionalcommits.org/fr/) est **obligatoire** sur toutes les branches.

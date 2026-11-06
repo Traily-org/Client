@@ -10,8 +10,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { MAP_MIN_ZOOM } from "@/constants/config";
 
-import { MapLegalNotices } from "./MapLegalNotices";
-import { MapModeSwitcher } from "./MapModeSwitcher";
+import { MapLegalNotices } from "./map-legal-notices";
+import { MapModeSwitcher } from "./map-mode-switcher";
 import {
     getMapStyle,
     SHOW_MAPTILER_LEGAL_NOTICES,
