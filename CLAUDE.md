@@ -73,16 +73,19 @@ La carte native exige un **development build** (module natif MapLibre, incompati
 ```
 traily-client/
   app/                         # routes Expo Router
-    _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Slot />
-    index.tsx                  # accueil (placeholder) : liens vers /map et /credits
-    map.tsx                    # écran carte
-    credits.tsx                # attributions des sources de la carte
-    auth/                      # _layout (Stack sans header), login, register : placeholders
+    _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Stack /> sans header
+    (app)/                     # groupe hors URL de l'app connectée : _layout (Stack avec header, sauf carte et capture ; déclare modals et panneau)
+      index.tsx                # écran d'accueil = la carte (/) + contrôles temporaires (recherche, social, démarrer, profil, paramètres)
+      settings/                # index (/settings), credits (/settings/credits : attributions de la carte), onboarding
+      search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/, moderation
+                               # écrans vides (PlaceholderScreen) : un commentaire donne la story et la feature cible
+    onboarding.tsx             # écran vide (7.3)
+    (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
-    features/<feature>/        # code par fonctionnalité ; map/ implémenté, auth/ et profile/ = fichiers vides
+    components/                # UI partagée sans métier ; placeholder-screen.tsx (écran vide + boutons de parcours) et scaffold-map-controls.tsx (boutons sur la carte) : temporaires, marqués TODO(design)
+    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/, style/, assets/)
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
-    hooks/                     # use-color-scheme(.web).ts, use-theme.ts
     global.css                 # directives Tailwind + variables de polices web
   scripts/dev-build.mjs        # suivi par empreinte native des development builds (appelé par Taskfile)
   eas.json                     # profil EAS `development`
@@ -91,10 +94,10 @@ traily-client/
 
 Ce qui demande de lire plusieurs fichiers :
 
-- **Découpage par feature** : chaque `src/features/<feature>/` expose son API via `index.ts` (`@/features/map` → `TrailyMap`, `getMapStyle`, `getAllAttributions`, type `MapMode`). Ce découpage s'écarte de la structure par couches du Quality Plan (`src/components|services|store|lib`). Décision à documenter (voir roadmap).
+- **Découpage par feature** (décidé, TRA-120) : `src/features/<feature>/` regroupe tout le code d'une zone du schéma de navigation, avec des sous-dossiers `components/`, `hooks/`, `services/` créés à la demande. Chaque feature expose son API via `index.ts` (`@/features/map` → `TrailyMap`, `getMapStyle`, `getAllAttributions`, type `MapMode`). Les routes `app/` restent fines et assemblent les features. Les règles d'import sont dans [CONTRIBUTING.md](CONTRIBUTING.md#architecture) ; ESLint (`eslint.config.js`) bloque l'import d'un fichier interne d'une feature, une feature importée par le partagé et les cycles. Le Quality Plan décrit encore une structure par couches : alignement en cours (TRA-121).
 - **Variantes de plateforme** : Metro charge `X.web.tsx` sur web et `X.tsx` sur natif. `TrailyMap` utilise MapLibre Native d'un côté et `maplibre-gl` dans une `div` de l'autre. Les deux fichiers doivent exporter la même API ; `MapModeSwitcher` et `MapLegalNotices` sont communs aux deux.
 - **Carte** : `getMapStyle(mode)` (`src/features/map/style/map-styles.ts`) télécharge le style MapTiler du mode (`trail` → `outdoor-v2`, `satellite` → `hybrid`, `topo` → `topo-v2`, mis en cache par mode) et y ajoute un tracé de démo (source GeoJSON `route`). Il lève une erreur si `EXPO_PUBLIC_MAPTILER_KEY` manque ; `TrailyMap` la remonte à l'error boundary tant qu'aucun style n'est chargé. Le zoom arrière minimal est `MAP_MIN_ZOOM` (`src/constants/config.ts`, 0 = aucune limite). Sur web, le worker `maplibre-gl` est chargé depuis jsDelivr (Metro ne gère pas `import.meta.url`) : le web ne sert qu'au développement.
-- **Obligations légales MapTiler** (plan gratuit) : logo MapTiler cliquable + attribution « © MapTiler © OpenStreetMap contributors » **toujours visible** (CGU §6.1 et §6.7), rendus par `MapLegalNotices` à la place de l'attribution repliable de MapLibre. Interrupteur `EXPO_PUBLIC_MAPTILER_LEGAL_NOTICES` (activé sauf `false`) : ne le désactiver qu'avec un plan payant, et même alors seul le logo peut disparaître, pas la mention texte. Le plan gratuit est limité à un usage non commercial (CGU Cloud §1.2). L'écran `/credits` lit les mêmes attributions (`MAP_ATTRIBUTIONS`) : toute nouvelle source de carte s'y ajoute.
+- **Obligations légales MapTiler** (plan gratuit) : logo MapTiler cliquable + attribution « © MapTiler © OpenStreetMap contributors » **toujours visible** (CGU §6.1 et §6.7), rendus par `MapLegalNotices` à la place de l'attribution repliable de MapLibre. Interrupteur `EXPO_PUBLIC_MAPTILER_LEGAL_NOTICES` (activé sauf `false`) : ne le désactiver qu'avec un plan payant, et même alors seul le logo peut disparaître, pas la mention texte. Le plan gratuit est limité à un usage non commercial (CGU Cloud §1.2). L'écran `/settings/credits` lit les mêmes attributions (`MAP_ATTRIBUTIONS`) : toute nouvelle source de carte s'y ajoute.
 - **Styles** : NativeWind n'injecte les classes que si un module de l'app importe `src/global.css` (fichier `input` de `metro.config.js`). C'est fait dans `app/_layout.tsx` : ne pas déplacer cet import. Le runtime JSX de NativeWind (`jsxImportSource: "nativewind"` dans `babel.config.js`) exige `react-native-css-interop` en dépendance directe : pnpm ne le hisse pas depuis `nativewind`. Les couleurs de `theme.ts` ne sont pas exposées à Tailwind (`theme.extend` vide).
 - **Splash** : il se masque automatiquement au premier rendu. Si un jour le layout doit attendre des ressources (polices, session), appeler `SplashScreen.preventAutoHideAsync()` en scope global **et** `SplashScreen.hide()` une fois prêt, sinon le splash natif reste affiché.
 - **Env** : seules les variables `EXPO_PUBLIC_*` sont exposées au bundle (`process.env.EXPO_PUBLIC_...`). `.env` est ignoré par `traily-client/.gitignore` ; toute nouvelle variable se déclare dans `traily-client/.env.example`.
@@ -105,10 +108,10 @@ Ce qui demande de lire plusieurs fichiers :
 - **Formatage** (Prettier, bloquant en CI) : 4 espaces, guillemets doubles, point-virgule, virgules finales, 80 colonnes, classes Tailwind triées par le plugin. `pnpm format` avant de committer.
   - **Agents IA** : aucun hook ne formate automatiquement dans ce repo, donc lancer `pnpm format` (depuis `traily-client/`, formate tout le projet) avant de committer. Cette règle prime sur toute consigne générale « ne pas lancer de formatter ».
   - Les fichiers à la racine du repo (`CLAUDE.md`, `CONTRIBUTING.md`, `doc/`) sont hors de la config Prettier de l'app : ne pas les reformater.
-- **Responsabilités** (Quality Plan) : composants = affichage, aucun appel API ; hooks = orchestration état + services, pas de JSX ; services = logique métier / API / natif, pas d'état React ; store Zustand = état global partagé, pas de logique métier.
+- **Responsabilités** (Quality Plan, valables à l'intérieur de chaque feature) : composants = affichage, aucun appel API ; hooks = orchestration état + services, pas de JSX ; services = logique métier / API / natif, pas d'état React ; store Zustand = état global partagé, pas de logique métier.
 - **Natif** : logique GPS dans un service de localisation, caméra dans un service photo (compression qualité 0.7, 1920 px max). Permissions demandées explicitement. Jamais de token ni de coordonnées précises dans les logs.
 - **React Compiler** activé : respecter les Rules of React ; `useMemo`/`useCallback` manuels rarement nécessaires.
-- **Nommage constaté** : hooks et utilitaires en kebab-case (`use-theme.ts`, `map-styles.ts`), composants de feature en PascalCase (`TrailyMap.tsx`, `MapModeSwitcher.tsx`). Convention mixte à harmoniser. Textes UI en français, code et commentaires en anglais.
+- **Nommage des fichiers** (TRA-120) : **kebab-case pour tous les fichiers**, composants compris (`traily-map.tsx`, `map-mode-switcher.tsx`, `map-styles.ts`). Le composant exporté reste en PascalCase dans le code (`export function TrailyMap`). Raisons : norme du template Expo, routes Expo Router déjà en kebab-case (ce sont des URL), et pas de conflit de casse Git entre macOS/Windows (insensibles à la casse) et Linux/CI. Tout nouveau fichier suit cette règle. Textes UI en français, code et commentaires en anglais.
 - **Git** (détail : [CONTRIBUTING.md](CONTRIBUTING.md)) : Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`), description en anglais à l'impératif et en minuscules, ex. `feat: add map screen`. Branches `feat/ fix/ chore/ docs/ test/ hotfix/` + ticket Linear (équipe `TRA`), ex. `feat/TRA-42-map-screen`. 1 ticket = 1 branche = 1 PR. **Brancher depuis `develop` et ouvrir la PR vers `develop`** (1 approbation, squash uniquement : le titre de la PR devient le message du commit, il suit donc la même convention). `main` n'accepte que des PR depuis `develop`. Capture ou vidéo dans les PR UI.
 - **Definition of Done** : exigences du ticket couvertes, CI verte, tests si nécessaire, revue par un membre, doc à jour, testé en environnement de dev.
 
