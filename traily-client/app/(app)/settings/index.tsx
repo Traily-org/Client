@@ -14,6 +14,15 @@ export default function SettingsScreen() {
                 >
                     Crédits
                 </Link>
+                <Link
+                    href="/settings/onboarding"
+                    className="text-base text-blue-600"
+                >
+                    Revoir l’onboarding
+                </Link>
+                <Link href="/login" className="text-base text-blue-600">
+                    Se déconnecter
+                </Link>
             </View>
         </SafeAreaView>
     );

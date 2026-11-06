@@ -1,12 +1,15 @@
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { PlaceholderScreen } from "@/components/placeholder-screen";
 
+// Login (backend 8.1.3, TRA-94; front sub-issue to create): build the screen in @/features/auth, then render it here.
 export default function LoginScreen() {
     return (
-        <SafeAreaView className="flex-1 items-center justify-center">
-            <View>
-                <Text className="text-2xl font-bold">Connexion</Text>
-            </View>
-        </SafeAreaView>
+        <PlaceholderScreen
+            title="Connexion"
+            story="8.1.3"
+            links={[
+                { label: "Se connecter", href: "/" },
+                { label: "Créer un compte", href: "/register" },
+            ]}
+        />
     );
 }
