@@ -83,7 +83,7 @@ traily-client/
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
     components/                # UI partagée sans métier ; placeholder-screen.tsx (écran vide + boutons de parcours) et scaffold-map-controls.tsx (boutons sur la carte) : temporaires, marqués TODO(design)
-    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/, style/, assets/), auth/ et profile/ = fichiers vides
+    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/, style/, assets/)
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
     global.css                 # directives Tailwind + variables de polices web
