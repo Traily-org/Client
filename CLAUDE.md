@@ -77,7 +77,7 @@ traily-client/
     index.tsx                  # accueil (placeholder) : liens vers /map et /credits
     map.tsx                    # écran carte
     credits.tsx                # attributions des sources de la carte
-    auth/                      # _layout (Stack sans header), login, register : placeholders
+    (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
     features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/, style/, assets/), auth/ et profile/ = fichiers vides
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
