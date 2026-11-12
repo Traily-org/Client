@@ -83,7 +83,7 @@ traily-client/
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
     components/                # UI partagée sans métier : glass-surface, glass-button (verre Liquid Glass sur iOS 26+, givré ailleurs), icon (SF Symbols / Material Symbols) ; placeholder-screen.tsx (écran vide + boutons de parcours) et scaffold-map-controls.tsx (barre de rando sur la carte) : temporaires, marqués TODO(design)
-    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/ dont map-controls, style/, assets/)
+    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/ dont map-controls et search-panel, style/, assets/) ; trails/ : résultats de recherche (cartes de sentier, données fictives dans services/ en attendant l'API)
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
     constants/motion.ts        # durées et courbes d'animation partagées

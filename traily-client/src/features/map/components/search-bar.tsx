@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
     Pressable,
     StyleSheet,
@@ -11,7 +11,6 @@ import Animated, {
     FadeIn,
     FadeOut,
     useAnimatedStyle,
-    withTiming,
     type SharedValue,
 } from "react-native-reanimated";
 
@@ -21,7 +20,6 @@ import {
     ON_GLASS_MUTED,
 } from "@/components/glass-surface";
 import { Icon } from "@/components/icon";
-import { TRANSITION } from "@/constants/motion";
 
 export const SEARCH_HEIGHT = 52;
 
@@ -30,35 +28,60 @@ export const SEARCH_HEIGHT = 52;
 const NO_WEB_OUTLINE = { outlineStyle: "none" } as unknown as TextStyle;
 
 interface SearchBarProps {
-    /** 0 → 1 while the input has focus; driven here, read by the overlay. */
-    focusProgress: SharedValue<number>;
-    onSearch?: (query: string) => void;
+    query: string;
+    onChangeQuery: (query: string) => void;
+    /** Whether the search panel is open. */
+    open: boolean;
+    /** 0 → 1 as the search panel opens. */
+    openProgress: SharedValue<number>;
+    onOpen: () => void;
+    onClose: () => void;
 }
 
 /**
- * Glass search pill. Turns more opaque while focused; a clear button fades
- * in as soon as there is text.
+ * Glass search pill. Focusing it opens the search panel: the pill turns
+ * into a white field on the panel and its magnifier into a back arrow that
+ * closes the panel. A clear button fades in as soon as there is text.
  */
-export function SearchBar({ focusProgress, onSearch }: SearchBarProps) {
+export function SearchBar({
+    query,
+    onChangeQuery,
+    open,
+    openProgress,
+    onOpen,
+    onClose,
+}: SearchBarProps) {
     const inputRef = useRef<TextInput>(null);
-    const [query, setQuery] = useState("");
 
     const frostStyle = useAnimatedStyle(() => ({
-        opacity: focusProgress.get(),
+        opacity: openProgress.get(),
+    }));
+    const searchIconStyle = useAnimatedStyle(() => ({
+        opacity: 1 - openProgress.get(),
+    }));
+    const backIconStyle = useAnimatedStyle(() => ({
+        opacity: openProgress.get(),
     }));
 
     function handleFocus() {
+        if (open) return;
         void Haptics.selectionAsync();
-        focusProgress.set(withTiming(1, TRANSITION));
+        onOpen();
     }
 
-    function handleBlur() {
-        focusProgress.set(withTiming(0, TRANSITION));
+    function handleLeadingPress() {
+        if (!open) {
+            inputRef.current?.focus();
+            return;
+        }
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        inputRef.current?.blur();
+        onClose();
     }
 
     function handleClear() {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setQuery("");
+        onChangeQuery("");
         inputRef.current?.focus();
     }
 
@@ -73,19 +96,35 @@ export function SearchBar({ focusProgress, onSearch }: SearchBarProps) {
                     frostStyle,
                 ]}
             />
-            <Icon
-                ios="magnifyingglass"
-                material="search"
-                size={22}
-                color={ON_GLASS_MUTED}
-            />
+            <Pressable
+                onPress={handleLeadingPress}
+                accessibilityRole="button"
+                accessibilityLabel={open ? "Fermer la recherche" : "Rechercher"}
+                hitSlop={6}
+                style={styles.leading}
+            >
+                <Animated.View style={[styles.leadingIcon, searchIconStyle]}>
+                    <Icon
+                        ios="magnifyingglass"
+                        material="search"
+                        size={22}
+                        color={ON_GLASS_MUTED}
+                    />
+                </Animated.View>
+                <Animated.View style={[styles.leadingIcon, backIconStyle]}>
+                    <Icon
+                        ios="chevron.left"
+                        material="arrow_back"
+                        size={22}
+                        color={ON_GLASS}
+                    />
+                </Animated.View>
+            </Pressable>
             <TextInput
                 ref={inputRef}
                 value={query}
-                onChangeText={setQuery}
+                onChangeText={onChangeQuery}
                 onFocus={handleFocus}
-                onBlur={handleBlur}
-                onSubmitEditing={() => onSearch?.(query.trim())}
                 placeholder="Rechercher un sentier, une espèce…"
                 placeholderTextColor={ON_GLASS_MUTED}
                 returnKeyType="search"
@@ -124,18 +163,25 @@ const styles = StyleSheet.create({
         height: SEARCH_HEIGHT,
         flexDirection: "row",
         alignItems: "center",
-        paddingLeft: 16,
+        paddingLeft: 6,
         paddingRight: 10,
     },
     round: { borderRadius: SEARCH_HEIGHT / 2 },
-    frost: { backgroundColor: "rgba(255, 255, 255, 0.3)" },
+    // Opaque white once the panel is open: the bar reads as a field on it.
+    frost: { backgroundColor: "rgba(255, 255, 255, 0.92)" },
+    leading: { width: 40, height: 40 },
+    leadingIcon: {
+        ...StyleSheet.absoluteFill,
+        alignItems: "center",
+        justifyContent: "center",
+    },
     input: {
         // Already the default on native; on web, keeps the <input> painted
         // above the absolutely positioned glass instead of under it.
         position: "relative",
         flex: 1,
         height: "100%",
-        marginLeft: 10,
+        marginLeft: 4,
         fontSize: 16,
         color: ON_GLASS,
     },
