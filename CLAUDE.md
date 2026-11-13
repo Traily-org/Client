@@ -13,7 +13,8 @@ Application mobile (iOS/Android) de randonnée gamifiée centrée sur la découv
 
 | Repo                              | Rôle                                                                                                                                       |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Client` (ici)                    | app mobile Expo / React Native, seul client de la plateforme                                                                               |
+| `Client` (ici)                    | app mobile Expo / React Native, client des randonneurs                                                                                     |
+| `Web-app`                         | interface web des modérateurs : connexion modérateur, dashboard (6.1) et historique (6.3). Le signalement (6.2) reste dans le mobile       |
 | `backend` (anciennement `Server`) | API REST Go (Gin, architecture hexagonale) sur PostgreSQL + PostGIS : auth, données, logique métier. Seul point d'entrée du mobile         |
 | `IA`                              | micro-services IA (Go et Python/FastAPI) : identification d'espèces, analyse de traces, recommandations. Appelés uniquement par le backend |
 | `Docs`                            | documents de cadrage : produit, architecture, organisation, process, qualité. Ils font foi en cas de divergence                            |
@@ -77,7 +78,7 @@ traily-client/
     (app)/                     # groupe hors URL de l'app connectée : _layout (Stack avec header, sauf carte et capture ; déclare modals et panneau)
       index.tsx                # écran d'accueil = la carte (/) + contrôles temporaires (recherche, social, démarrer, profil, paramètres)
       settings/                # index (/settings), credits (/settings/credits : attributions de la carte), onboarding
-      search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/, moderation
+      search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/
                                # écrans vides (PlaceholderScreen) : un commentaire donne la story et la feature cible
     onboarding.tsx             # écran vide (7.3)
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
