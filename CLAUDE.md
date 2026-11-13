@@ -77,17 +77,18 @@ traily-client/
     _layout.tsx                # layout racine : importe global.css, ThemeProvider + <Stack /> sans header
     (app)/                     # groupe hors URL de l'app connectée : _layout (Stack avec header, sauf carte et capture ; déclare modals et panneau)
       index.tsx                # écran d'accueil = la carte (/) + MapControls (recherche, paramètres, équipe, profil) + rando en cours (HikeStatusCard sous la recherche, HikeActionBar en bas)
-      settings/                # index (/settings : fond de carte, liens), credits (/settings/credits : attributions de la carte), onboarding
+      settings/                # index (/settings : rend SettingsScreen), personal-info (modale, vide : 3.4), credits (modale : attributions de la carte), onboarding (page, vide : 7.3)
       search, trail/[trailId], capture/, hike-summary, species/[speciesId], profile/, leaderboard, team/
                                # écrans vides (PlaceholderScreen) : un commentaire donne la story et la feature cible
     onboarding.tsx             # écran vide (7.3)
     (public)/                  # groupe hors URL : _layout (Stack sans header), login, register (/login, /register) : placeholders
   src/
-    components/                # UI partagée sans métier : glass-surface, glass-button (verre Liquid Glass sur iOS 26+, givré ailleurs, teinte optionnelle), icon (SF Symbols / Material Symbols) ; placeholder-screen.tsx (écran vide + boutons de parcours) : temporaire, marqué TODO(design)
-    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/ dont map-controls, search-panel et map-mode-picker, hooks/use-map-mode, style/, assets/) ; trails/ : résultats de recherche (cartes de sentier, données fictives dans services/ en attendant l'API) ; hike-session/ : rando en cours (sentier choisi, chrono, pause, distance simulée en attendant le GPS, état en mémoire)
+    components/                # UI partagée sans métier : glass-surface, glass-button (verre Liquid Glass sur iOS 26+, givré ailleurs, teinte optionnelle), icon (SF Symbols / Material Symbols), list-section + list-row / list-switch-row / list-choice-row (lignes de réglages génériques, accessibles par défaut : rôle, libellé, zone tactile de 44 px ; grisées tant qu'aucune action n'est branchée), header-close-button (« Fermer » des modales, indispensable sur web) ; placeholder-screen.tsx (écran vide + boutons de parcours) : temporaire, marqué TODO(design)
+    features/<feature>/        # code par fonctionnalité ; map/ implémenté (components/ dont map-controls, search-panel et map-mode-picker, hooks/use-map-mode, style/, assets/) ; trails/ : résultats de recherche (cartes de sentier, données fictives dans services/ en attendant l'API) ; hike-session/ : rando en cours (sentier choisi, chrono, pause, distance simulée en attendant le GPS, état en mémoire) ; settings/ : écran Paramètres (TRA-127), réglages pas encore branchés affichés grisés
     constants/theme.ts         # Colors light/dark, Fonts, Spacing
     constants/config.ts        # réglages de l'app (MAP_MIN_ZOOM) ; prévu : URLs, timeouts
     constants/motion.ts        # durées et courbes d'animation partagées
+    constants/ui-classes.ts    # couleurs provisoires des composants de liste, regroupées pour être remplacées par le thème (TRA-126)
     global.css                 # directives Tailwind + variables de polices web
   scripts/dev-build.mjs        # suivi par empreinte native des development builds (appelé par Taskfile)
   eas.json                     # profil EAS `development`
