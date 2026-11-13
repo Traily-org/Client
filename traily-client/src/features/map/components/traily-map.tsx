@@ -7,16 +7,14 @@ import {
 } from "@maplibre/maplibre-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MAP_MIN_ZOOM } from "@/constants/config";
 
 import { MapLegalNotices } from "./map-legal-notices";
-import { MapModeSwitcher } from "./map-mode-switcher";
-import {
-    getMapStyle,
-    SHOW_MAPTILER_LEGAL_NOTICES,
-    type MapMode,
-} from "../style/map-styles";
+import { useMapMode } from "../hooks/use-map-mode";
+import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
+import type { TrailyMapProps } from "../types";
 
 const TRAILHEAD = {
     name: "Départ du sentier",
@@ -32,9 +30,10 @@ const TRAILHEAD = {
 const AMBIENT_CACHE_SIZE_BYTES = 200 * 1024 * 1024;
 let ambientCacheConfigured = false;
 
-export function TrailyMap() {
+export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
+    const insets = useSafeAreaInsets();
     const [selected, setSelected] = useState(false);
-    const [mode, setMode] = useState<MapMode>("trail");
+    const mode = useMapMode();
     const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
     const [styleError, setStyleError] = useState<Error | null>(null);
 
@@ -73,14 +72,17 @@ export function TrailyMap() {
     return (
         <View style={styles.container}>
             {/* No compass or MapLibre logo — this app renders its own map
-                chrome (MapModeSwitcher, bottom-right). MapLibre's "i"
+                chrome (MapControls). MapLibre's "i"
                 attribution button is replaced by MapLegalNotices when those
                 are enabled. */}
             <Map
                 style={styles.map}
                 mapStyle={mapStyle}
                 attribution={!SHOW_MAPTILER_LEGAL_NOTICES}
-                attributionPosition={{ bottom: 8, left: 8 }}
+                attributionPosition={{
+                    bottom: insets.bottom + bottomOffset + 8,
+                    left: 8,
+                }}
                 logo={false}
                 compass={false}
             >
@@ -101,8 +103,9 @@ export function TrailyMap() {
                     </Pressable>
                 </Marker>
             </Map>
-            {SHOW_MAPTILER_LEGAL_NOTICES && <MapLegalNotices />}
-            <MapModeSwitcher mode={mode} onChange={setMode} />
+            {SHOW_MAPTILER_LEGAL_NOTICES && (
+                <MapLegalNotices bottomOffset={bottomOffset} />
+            )}
         </View>
     );
 }
