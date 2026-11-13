@@ -1,5 +1,16 @@
 import { Stack } from "expo-router";
 
+import { HeaderCloseButton } from "@/components/header-close-button";
+
+/** Screens opened from the settings: a modal with a "Fermer" button. */
+function settingsModal(title: string) {
+    return {
+        title,
+        presentation: "modal" as const,
+        headerRight: () => <HeaderCloseButton href="/settings" />,
+    };
+}
+
 // Presentation of each screen, as decided in TRA-119 / TRA-123.
 export default function AppLayout() {
     return (
@@ -31,8 +42,17 @@ export default function AppLayout() {
                 options={{ title: "Paramètres" }}
             />
             <Stack.Screen
+                name="settings/personal-info"
+                options={settingsModal("Mes informations")}
+            />
+            <Stack.Screen
                 name="settings/credits"
-                options={{ title: "Crédits" }}
+                options={settingsModal("Crédits")}
+            />
+            {/* Full page with a back button: the onboarding is a multi-page flow. */}
+            <Stack.Screen
+                name="settings/onboarding"
+                options={{ title: "Onboarding éthique" }}
             />
         </Stack>
     );
