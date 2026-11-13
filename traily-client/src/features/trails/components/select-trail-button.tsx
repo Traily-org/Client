@@ -76,9 +76,10 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         gap: 8,
     },
+    // Opaque: the button floats over the text.
     locked: {
         borderRadius: 26,
-        backgroundColor: "rgba(30, 30, 47, 0.08)",
+        backgroundColor: "#ECECEF",
     },
     label: { fontSize: 16, fontWeight: "700", color: "#FFFFFF" },
     lockedLabel: { color: "rgba(30, 30, 47, 0.45)" },

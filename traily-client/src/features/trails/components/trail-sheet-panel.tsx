@@ -2,40 +2,34 @@ import { useEffect, useEffectEvent, useState } from "react";
 import {
     BackHandler,
     PanResponder,
-    ScrollView,
     StyleSheet,
-    Text,
     useWindowDimensions,
     View,
 } from "react-native";
 import Animated, {
+    clamp,
     interpolate,
+    type SharedValue,
+    useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { SHEET_CLOSE, SHEET_OPEN, TRANSITION } from "@/constants/motion";
 
-import { useTrailDetails } from "../hooks/use-trail-details";
 import type { TrailDetails } from "../types";
-import {
-    SelectTrailButton,
-    type TrailSelectState,
-} from "./select-trail-button";
-import { TrailDetailsCard } from "./trail-details-card";
-import { TrailSheetActions } from "./trail-sheet-actions";
+import type { TrailSelectState } from "./select-trail-button";
+import { TrailSheetContent } from "./trail-sheet-content";
 
-export const TRAIL_SHEET_BACKGROUND = "#F2F1EE";
 const TOP_RADIUS = 28;
+/** Keeps the drag area clear of the floating star and cross. */
+const HANDLE_INSET = 72;
 
 /** Pulled down further than this, or flicked faster (px/ms), it closes. */
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 0.9;
-/** Vertical travel before the bar takes the touch from the buttons on it. */
-const DRAG_THRESHOLD = 8;
 
 interface TrailSheetPanelProps {
     trailId: string;
@@ -45,6 +39,11 @@ interface TrailSheetPanelProps {
     onSelect: (trail: TrailDetails) => void;
     /** Called once the panel has slid out, to unmount it. */
     onDismissed: () => void;
+    /**
+     * Mirrors how far the panel is open, 0 to 1, finger pull included: lets
+     * the search bar fade its back arrow in step.
+     */
+    openness?: SharedValue<number>;
 }
 
 /**
@@ -59,17 +58,30 @@ export function TrailSheetPanel({
     selectState,
     onSelect,
     onDismissed,
+    openness,
 }: TrailSheetPanelProps) {
     const { height } = useWindowDimensions();
-    const insets = useSafeAreaInsets();
-    const trail = useTrailDetails(trailId);
     // 0 = below the screen, 1 = open. `drag` adds the finger's pull on top.
     const progress = useSharedValue(0);
     const drag = useSharedValue(0);
+    // The route map is heavy to start: it waits for the end of the opening,
+    // so the panel moves on the very first frames.
+    const [opened, setOpened] = useState(false);
 
     useEffect(() => {
-        progress.set(withTiming(1, SHEET_OPEN));
+        progress.set(
+            withTiming(1, SHEET_OPEN, (finished) => {
+                if (finished) scheduleOnRN(setOpened, true);
+            }),
+        );
     }, [progress]);
+
+    useAnimatedReaction(
+        () => clamp(progress.get() - drag.get() / height, 0, 1),
+        (value) => openness?.set(value),
+    );
+    // Unmounted with the search results while still open: give the arrow back.
+    useEffect(() => () => openness?.set(0), [openness]);
 
     function dismiss() {
         progress.set(
@@ -101,9 +113,10 @@ export function TrailSheetPanel({
     // trail card only ended that stale gesture.
     const [pullDown] = useState(() =>
         PanResponder.create({
-            onMoveShouldSetPanResponder: (_, gesture) =>
-                Math.abs(gesture.dy) > DRAG_THRESHOLD &&
-                Math.abs(gesture.dy) > Math.abs(gesture.dx),
+            // The handle holds no button: it takes the touch right away and
+            // keeps it, even once the finger (or mouse, on the web) has left
+            // its thin strip.
+            onStartShouldSetPanResponder: () => true,
             onPanResponderTerminationRequest: () => false,
             onPanResponderMove: (_, gesture) => {
                 drag.set(Math.max(0, gesture.dy));
@@ -139,42 +152,24 @@ export function TrailSheetPanel({
 
     return (
         <>
-            <Animated.View style={[styles.backdrop, backdropStyle]} />
+            {/* Reaches a screen height up, behind the search bar, so its edge
+                never shows around the panel's rounded corners. The search
+                panel clips it at the top of the screen. */}
+            <Animated.View
+                style={[styles.backdrop, { top: -height }, backdropStyle]}
+            />
             <Animated.View style={[styles.panel, panelStyle]}>
-                {/* The whole strip drags, the bar shows where. */}
-                <View style={styles.handleZone} {...pullDown.panHandlers}>
+                <TrailSheetContent
+                    trailId={trailId}
+                    onClose={dismiss}
+                    onSelect={onSelect}
+                    selectState={selectState}
+                    mapReady={opened}
+                />
+                {/* Drag area around the bar, between the floating buttons. */}
+                <View style={styles.handle} {...pullDown.panHandlers}>
                     <View style={styles.grabber} />
-                    <View style={styles.actions}>
-                        <TrailSheetActions
-                            trailId={trailId}
-                            showFavorite={trail !== undefined}
-                            onClose={dismiss}
-                        />
-                    </View>
                 </View>
-                <ScrollView
-                    style={styles.scroll}
-                    contentContainerStyle={styles.content}
-                >
-                    {trail ? (
-                        <TrailDetailsCard trail={trail} />
-                    ) : (
-                        <Text style={styles.missing}>Sentier introuvable.</Text>
-                    )}
-                </ScrollView>
-                {trail && (
-                    <View
-                        style={[
-                            styles.footer,
-                            { paddingBottom: insets.bottom + 12 },
-                        ]}
-                    >
-                        <SelectTrailButton
-                            state={selectState}
-                            onPress={() => onSelect(trail)}
-                        />
-                    </View>
-                )}
             </Animated.View>
         </>
     );
@@ -190,32 +185,22 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         borderTopLeftRadius: TOP_RADIUS,
         borderTopRightRadius: TOP_RADIUS,
-        backgroundColor: TRAIL_SHEET_BACKGROUND,
+        backgroundColor: "#FFFFFF",
         boxShadow: "0px -8px 28px rgba(20, 20, 40, 0.18)",
     },
-    handleZone: { height: 60 },
-    actions: { position: "absolute", top: 10, right: 16 },
+    handle: {
+        position: "absolute",
+        top: 0,
+        left: HANDLE_INSET,
+        right: HANDLE_INSET,
+        height: 36,
+        alignItems: "center",
+    },
     grabber: {
-        alignSelf: "center",
         marginTop: 8,
         width: 40,
         height: 5,
         borderRadius: 2.5,
         backgroundColor: "rgba(30, 30, 47, 0.25)",
-    },
-    scroll: { flex: 1 },
-    content: { paddingHorizontal: 16, paddingBottom: 16 },
-    missing: {
-        marginTop: 48,
-        textAlign: "center",
-        fontSize: 15,
-        color: "rgba(30, 30, 47, 0.55)",
-    },
-    footer: {
-        paddingTop: 12,
-        paddingHorizontal: 16,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: "rgba(30, 30, 47, 0.15)",
-        backgroundColor: TRAIL_SHEET_BACKGROUND,
     },
 });

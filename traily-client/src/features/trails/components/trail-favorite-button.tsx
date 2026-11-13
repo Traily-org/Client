@@ -1,59 +1,62 @@
 import * as Haptics from "expo-haptics";
-import { Pressable } from "react-native";
+import { useEffect } from "react";
+import {
+    Pressable,
+    StyleSheet,
+    type StyleProp,
+    type ViewStyle,
+} from "react-native";
 import Animated, {
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
-    withSequence,
-    withSpring,
     withTiming,
 } from "react-native-reanimated";
+import Svg, { Path } from "react-native-svg";
 
-import { Icon } from "@/components/icon";
 import { EASE_OUT } from "@/constants/motion";
 
 const ACCENT = "#E0733F";
-const IDLE = "rgba(30, 30, 47, 0.45)";
+const IDLE = "rgba(30, 30, 47, 0.5)";
+const STAR_SIZE = 22;
+const STAR_PATH =
+    "M12 2.8l2.75 5.84 6.38.78-4.69 4.4 1.2 6.32L12 17.06l-5.64 3.08 1.2-6.32-4.69-4.4 6.38-.78z";
 
 interface TrailFavoriteButtonProps {
     isFavorite: boolean;
     onPress: () => void;
-    size: number;
+    /** Size, background and position of the round button. */
+    style?: StyleProp<ViewStyle>;
 }
 
 /**
- * Star that fills with the accent color once the trail is saved. It pops
- * and tilts on each press, then springs back.
+ * Star outline whose inside fills with the accent color, growing from the
+ * center, once the trail is saved; it empties the same way when removed.
  */
 export function TrailFavoriteButton({
     isFavorite,
     onPress,
-    size,
+    style,
 }: TrailFavoriteButtonProps) {
     const reduceMotion = useReducedMotion();
-    const pop = useSharedValue(0);
+    const fill = useSharedValue(isFavorite ? 1 : 0);
 
-    const starStyle = useAnimatedStyle(() => ({
-        transform: [
-            { scale: 1 + 0.4 * pop.get() },
-            { rotate: `${-18 * pop.get()}deg` },
-        ],
+    useEffect(() => {
+        const target = isFavorite ? 1 : 0;
+        fill.set(
+            reduceMotion
+                ? target
+                : withTiming(target, { duration: 180, easing: EASE_OUT }),
+        );
+    }, [isFavorite, reduceMotion, fill]);
+
+    const fillStyle = useAnimatedStyle(() => ({
+        opacity: fill.get(),
+        transform: [{ scale: fill.get() }],
     }));
 
     function handlePress() {
-        void Haptics.impactAsync(
-            isFavorite
-                ? Haptics.ImpactFeedbackStyle.Light
-                : Haptics.ImpactFeedbackStyle.Medium,
-        );
-        if (!reduceMotion) {
-            pop.set(
-                withSequence(
-                    withTiming(1, { duration: 130, easing: EASE_OUT }),
-                    withSpring(0, { damping: 7, stiffness: 260 }),
-                ),
-            );
-        }
+        void Haptics.selectionAsync();
         onPress();
     }
 
@@ -65,22 +68,28 @@ export function TrailFavoriteButton({
                 isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
             }
             accessibilityState={{ selected: isFavorite }}
-            hitSlop={4}
-            style={{
-                width: size,
-                height: size,
-                alignItems: "center",
-                justifyContent: "center",
-            }}
+            hitSlop={6}
+            style={style}
         >
-            <Animated.View style={starStyle}>
-                <Icon
-                    ios={isFavorite ? "star.fill" : "star"}
-                    material="star"
-                    size={20}
-                    color={isFavorite ? ACCENT : IDLE}
-                />
+            <Animated.View style={[styles.layer, fillStyle]}>
+                <Svg width={STAR_SIZE} height={STAR_SIZE} viewBox="0 0 24 24">
+                    <Path d={STAR_PATH} fill={ACCENT} />
+                </Svg>
             </Animated.View>
+            <Svg width={STAR_SIZE} height={STAR_SIZE} viewBox="0 0 24 24">
+                <Path
+                    d={STAR_PATH}
+                    fill="none"
+                    stroke={isFavorite ? ACCENT : IDLE}
+                    strokeWidth={1.8}
+                    strokeLinejoin="round"
+                />
+            </Svg>
         </Pressable>
     );
 }
+
+const styles = StyleSheet.create({
+    // Under the outline, centered on it, so it grows from the middle.
+    layer: { position: "absolute", pointerEvents: "none" },
+});

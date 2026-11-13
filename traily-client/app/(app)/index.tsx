@@ -42,10 +42,16 @@ export default function MapScreen() {
             <HikeActionBar cornerButtonSize={CORNER_BUTTON_SIZE} />
             <MapControls
                 belowSearch={<HikeStatusCard />}
-                renderSearchResults={({ query, closeSearch, focusCount }) => (
+                renderSearchResults={({
+                    query,
+                    closeSearch,
+                    focusCount,
+                    coverProgress,
+                }) => (
                     <TrailResults
                         query={query}
                         searchFocusCount={focusCount}
+                        sheetOpenness={coverProgress}
                         selectedTrailId={hike.trail?.id}
                         selectionLocked={hike.status !== "idle"}
                         onSelectTrail={(trail) => {

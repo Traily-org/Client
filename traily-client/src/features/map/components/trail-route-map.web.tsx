@@ -32,8 +32,9 @@ interface MarkerSlot {
 }
 
 /**
- * Still map of a route, framed on the whole line, with photo pins along it.
- * Gestures are off: it sits inside a scrolling sheet.
+ * Map of a route, framed on the whole line, with photo pins along it. It
+ * zooms in and pans, but never zooms out past that framing, nor pans out of
+ * it. No rotation or tilt.
  */
 export function TrailRouteMap({
     route,
@@ -55,9 +56,16 @@ export function TrailRouteMap({
             style: { version: 8, sources: {}, layers: [] },
             bounds: getBounds([...route, ...pins.map((pin) => pin.lngLat)]),
             fitBoundsOptions: { padding: ROUTE_MAP_PADDING },
-            interactive: false,
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            keyboard: false,
             attributionControl: false,
         });
+        map.touchZoomRotate.disableRotation();
+        // The framing above is the widest view: zoom in and pan inside it.
+        map.setMinZoom(map.getZoom());
+        map.setMaxBounds(map.getBounds());
         mapRef.current = map;
 
         const items: {

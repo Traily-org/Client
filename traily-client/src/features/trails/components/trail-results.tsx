@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { SharedValue } from "react-native-reanimated";
 import { Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +17,8 @@ interface TrailResultsProps {
     query: string;
     /** Bumped on each focus of the search field, which lowers the sheet. */
     searchFocusCount?: number;
+    /** Set to how far a trail sheet is open, 0 to 1. */
+    sheetOpenness?: SharedValue<number>;
     /** Called by the "Choisir" button of a trail's sheet. */
     onSelectTrail?: (trail: Trail) => void;
     /** Trail already picked for the hike, if any. */
@@ -32,6 +35,7 @@ interface TrailResultsProps {
 export function TrailResults({
     query,
     searchFocusCount = 0,
+    sheetOpenness,
     onSelectTrail,
     selectedTrailId,
     selectionLocked = false,
@@ -96,6 +100,7 @@ export function TrailResults({
                     selectState={getSelectState(openTrail.id)}
                     onSelect={(trail) => onSelectTrail?.(trail)}
                     onDismissed={() => setOpenTrail(null)}
+                    openness={sheetOpenness}
                 />
             )}
         </View>

@@ -16,7 +16,7 @@ import { DIFFICULTY } from "./trail-difficulty";
 const TEXT = "#1E1E2F";
 const MUTED = "rgba(30, 30, 47, 0.55)";
 
-/** Points of interest listed in the card; the map shows them all. */
+/** Points of interest listed in the sheet; the map shows them all. */
 const LISTED_POINTS = 3;
 
 /**
@@ -24,7 +24,14 @@ const LISTED_POINTS = 3;
  * points of interest, then the route on a map with the points of interest
  * pinned along it.
  */
-export function TrailDetailsCard({ trail }: { trail: TrailDetails }) {
+export function TrailDetailsBody({
+    trail,
+    showMap = true,
+}: {
+    trail: TrailDetails;
+    /** False keeps an empty frame in place of the map, which is heavy to start. */
+    showMap?: boolean;
+}) {
     const router = useRouter();
     const [viewedPhoto, setViewedPhoto] = useState<ViewedPhoto | null>(null);
     const difficulty = DIFFICULTY[trail.difficulty];
@@ -51,7 +58,7 @@ export function TrailDetailsCard({ trail }: { trail: TrailDetails }) {
     ];
 
     return (
-        <View style={styles.card}>
+        <View style={styles.body}>
             <View style={styles.summary}>
                 <Pressable
                     onPress={() =>
@@ -139,16 +146,18 @@ export function TrailDetailsCard({ trail }: { trail: TrailDetails }) {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Tracé</Text>
                 <View style={styles.map}>
-                    <TrailRouteMap
-                        route={trail.route}
-                        pins={pins}
-                        onPressPin={(pinId) => {
-                            const point = trail.pointsOfInterest.find(
-                                (candidate) => candidate.id === pinId,
-                            );
-                            if (point) viewPoint(point);
-                        }}
-                    />
+                    {showMap && (
+                        <TrailRouteMap
+                            route={trail.route}
+                            pins={pins}
+                            onPressPin={(pinId) => {
+                                const point = trail.pointsOfInterest.find(
+                                    (candidate) => candidate.id === pinId,
+                                );
+                                if (point) viewPoint(point);
+                            }}
+                        />
+                    )}
                 </View>
             </View>
 
@@ -182,13 +191,7 @@ function Figure({ ios, material, text }: FigureProps) {
 }
 
 const styles = StyleSheet.create({
-    card: {
-        gap: 16,
-        padding: 14,
-        borderRadius: 28,
-        backgroundColor: "#FFFFFF",
-        boxShadow: "0px 2px 12px rgba(20, 20, 40, 0.06)",
-    },
+    body: { gap: 18 },
     summary: { flexDirection: "row", gap: 14 },
     pressed: { opacity: 0.8 },
     cover: {
@@ -210,6 +213,11 @@ const styles = StyleSheet.create({
         height: StyleSheet.hairlineWidth,
         backgroundColor: "rgba(30, 30, 47, 0.15)",
     },
-    map: { height: 240, borderRadius: 18, overflow: "hidden" },
+    map: {
+        height: 240,
+        borderRadius: 18,
+        overflow: "hidden",
+        backgroundColor: "#E9E7E0",
+    },
     credits: { fontSize: 11, lineHeight: 15, color: MUTED },
 });

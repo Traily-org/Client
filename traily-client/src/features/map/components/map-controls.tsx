@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { BackHandler, Keyboard, StyleSheet, View } from "react-native";
 import Animated, {
     FadeInUp,
+    type SharedValue,
     interpolate,
     useAnimatedStyle,
     useSharedValue,
@@ -35,6 +36,11 @@ export interface SearchResultsContext {
     closeSearch: () => void;
     /** Bumped each time the search field gains focus. */
     focusCount: number;
+    /**
+     * For a panel the results open over the search (0 to 1, how far it is
+     * open): fades the search bar's back arrow out in step.
+     */
+    coverProgress: SharedValue<number>;
 }
 
 interface MapControlsProps {
@@ -43,7 +49,11 @@ interface MapControlsProps {
      * feature doesn't depend on the features it searches.
      */
     renderSearchResults?: (search: SearchResultsContext) => ReactNode;
-    /** Shown top-left under the search bar, covered by the search panel. */
+    /**
+     * Shown top-left under the search bar, covered by the search panel. Its
+     * container fills the screen (letting touches through), so it can lay a
+     * full-screen layer behind itself, e.g. to close on a tap outside.
+     */
     belowSearch?: ReactNode;
 }
 
@@ -65,6 +75,7 @@ export function MapControls({
     const [openCount, setOpenCount] = useState(0);
     const [focusCount, setFocusCount] = useState(0);
     const searchProgress = useSharedValue(0);
+    const coverProgress = useSharedValue(0);
     const gearRotation = useSharedValue(0);
 
     const topBarHeight = insets.top + TOP_BAR_MARGIN + SEARCH_HEIGHT;
@@ -148,7 +159,7 @@ export function MapControls({
             <View
                 style={[
                     styles.belowSearch,
-                    { top: topBarHeight + TOP_BAR_GAP },
+                    { paddingTop: topBarHeight + TOP_BAR_GAP },
                 ]}
             >
                 {belowSearch}
@@ -166,6 +177,7 @@ export function MapControls({
                             query,
                             closeSearch,
                             focusCount,
+                            coverProgress,
                         })}
                     </View>
                 )}
@@ -187,6 +199,7 @@ export function MapControls({
                         onOpen={openSearch}
                         onClose={closeSearch}
                         onFocus={() => setFocusCount((count) => count + 1)}
+                        coverProgress={coverProgress}
                     />
                 </View>
                 {/* Clips the button as the slot shrinks: otherwise it sticks
@@ -229,9 +242,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     belowSearch: {
-        position: "absolute",
-        left: 16,
-        right: 16,
+        ...StyleSheet.absoluteFill,
+        paddingHorizontal: 16,
         alignItems: "flex-start",
         pointerEvents: "box-none",
     },
