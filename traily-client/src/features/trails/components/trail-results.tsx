@@ -4,6 +4,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTrailSearch } from "../hooks/use-trail-search";
+import type { Trail } from "../types";
 import { TrailCard } from "./trail-card";
 
 const TEXT = "#1E1E2F";
@@ -11,6 +12,8 @@ const MUTED = "rgba(30, 30, 47, 0.55)";
 
 interface TrailResultsProps {
     query: string;
+    /** Called with the trail picked, before its sheet opens. */
+    onSelectTrail?: (trail: Trail) => void;
 }
 
 /**
@@ -18,14 +21,18 @@ interface TrailResultsProps {
  * empty. Cards cascade in when the list appears; picking one opens the
  * trail sheet.
  */
-export function TrailResults({ query }: TrailResultsProps) {
+export function TrailResults({ query, onSelectTrail }: TrailResultsProps) {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { trails, isSearching } = useTrailSearch(query);
 
-    function openTrail(trailId: string) {
+    function openTrail(trail: Trail) {
         Keyboard.dismiss();
-        router.push({ pathname: "/trail/[trailId]", params: { trailId } });
+        onSelectTrail?.(trail);
+        router.push({
+            pathname: "/trail/[trailId]",
+            params: { trailId: trail.id },
+        });
     }
 
     // TODO(perf): switch to a FlatList once results come from the API.
@@ -49,10 +56,7 @@ export function TrailResults({ query }: TrailResultsProps) {
                         120 + Math.min(index, 6) * 45,
                     )}
                 >
-                    <TrailCard
-                        trail={trail}
-                        onPress={() => openTrail(trail.id)}
-                    />
+                    <TrailCard trail={trail} onPress={() => openTrail(trail)} />
                 </Animated.View>
             ))}
             {isSearching && trails.length === 0 && (

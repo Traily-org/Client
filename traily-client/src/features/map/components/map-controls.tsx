@@ -32,8 +32,11 @@ interface MapControlsProps {
     /**
      * Content of the search panel for the current query. Passed in by the
      * route, so the map feature doesn't depend on the features it searches.
+     * `closeSearch` lets a result close the panel once picked.
      */
-    renderSearchResults?: (query: string) => ReactNode;
+    renderSearchResults?: (query: string, closeSearch: () => void) => ReactNode;
+    /** Shown top-left under the search bar, covered by the search panel. */
+    belowSearch?: ReactNode;
 }
 
 /**
@@ -42,7 +45,10 @@ interface MapControlsProps {
  * full-screen search panel that merges with the bar, while the settings
  * button steps aside. Lets touches through to the map everywhere else.
  */
-export function MapControls({ renderSearchResults }: MapControlsProps) {
+export function MapControls({
+    renderSearchResults,
+    belowSearch,
+}: MapControlsProps) {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const [query, setQuery] = useState("");
@@ -129,6 +135,16 @@ export function MapControls({ renderSearchResults }: MapControlsProps) {
                 }
             />
 
+            {/* Before the search panel, which covers it when open. */}
+            <View
+                style={[
+                    styles.belowSearch,
+                    { top: topBarHeight + TOP_BAR_GAP },
+                ]}
+            >
+                {belowSearch}
+            </View>
+
             <SearchPanel
                 progress={searchProgress}
                 contentTop={topBarHeight + TOP_BAR_MARGIN}
@@ -137,7 +153,7 @@ export function MapControls({ renderSearchResults }: MapControlsProps) {
                     while the panel slides back down. */}
                 {openCount > 0 && (
                     <View key={openCount} style={styles.searchResults}>
-                        {renderSearchResults?.(query)}
+                        {renderSearchResults?.(query, closeSearch)}
                     </View>
                 )}
             </SearchPanel>
@@ -195,6 +211,13 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 16,
+    },
+    belowSearch: {
+        position: "absolute",
+        left: 16,
+        right: 16,
+        alignItems: "flex-start",
+        pointerEvents: "box-none",
     },
     searchSlot: { flex: 1 },
     searchResults: { flex: 1 },

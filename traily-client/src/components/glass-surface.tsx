@@ -1,5 +1,11 @@
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
-import { Platform, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+    Platform,
+    View,
+    type ColorValue,
+    type StyleProp,
+    type ViewStyle,
+} from "react-native";
 
 // The map underneath is light whatever the color scheme, so the glass is
 // always the light variant, with dark content on it.
@@ -29,18 +35,33 @@ const WEB_BLUR = { backdropFilter: "blur(20px) saturate(180%)" } as ViewStyle;
 interface GlassSurfaceProps {
     /** Position, size and border radii of the glass pane. */
     style?: StyleProp<ViewStyle>;
+    /** Colored glass, to make a primary action stand out. */
+    tint?: ColorValue;
 }
 
 /** Glass pane to lay behind a control's content. */
-export function GlassSurface({ style }: GlassSurfaceProps) {
+export function GlassSurface({ style, tint }: GlassSurfaceProps) {
     if (NATIVE_GLASS) {
         return (
             <GlassView
                 glassEffectStyle="regular"
                 colorScheme="light"
+                tintColor={tint}
                 style={style}
             />
         );
     }
-    return <View style={[FALLBACK, IS_WEB && WEB_BLUR, style]} />;
+    return (
+        <View
+            style={[
+                FALLBACK,
+                IS_WEB && WEB_BLUR,
+                tint !== undefined && {
+                    backgroundColor: tint,
+                    borderColor: "rgba(255, 255, 255, 0.45)",
+                },
+                style,
+            ]}
+        />
+    );
 }

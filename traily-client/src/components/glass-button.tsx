@@ -4,6 +4,7 @@ import {
     Pressable,
     StyleSheet,
     View,
+    type ColorValue,
     type StyleProp,
     type ViewStyle,
 } from "react-native";
@@ -33,6 +34,8 @@ interface GlassButtonProps {
     transformOrigin?: ViewStyle["transformOrigin"];
     pressedScale?: number;
     haptic?: Haptics.ImpactFeedbackStyle;
+    /** Colored glass, to make a primary action stand out. */
+    tint?: ColorValue;
     onPress?: () => void;
     children: ReactNode;
 }
@@ -58,6 +61,7 @@ export function GlassButton({
     transformOrigin = "center",
     pressedScale = 0.95,
     haptic = Haptics.ImpactFeedbackStyle.Light,
+    tint,
     onPress,
     children,
 }: GlassButtonProps) {
@@ -89,7 +93,10 @@ export function GlassButton({
             accessibilityLabel={accessibilityLabel}
         >
             <Animated.View style={[style, { transformOrigin }, pressStyle]}>
-                <GlassSurface style={[StyleSheet.absoluteFill, radii]} />
+                <GlassSurface
+                    style={[StyleSheet.absoluteFill, radii]}
+                    tint={tint}
+                />
                 <View style={[StyleSheet.absoluteFill, radii, styles.clip]}>
                     <Animated.View style={[styles.highlight, highlightStyle]} />
                 </View>

@@ -1,7 +1,11 @@
 import type { ErrorBoundaryProps } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { ScaffoldMapControls } from "@/components/scaffold-map-controls";
+import {
+    HikeActionBar,
+    HikeStatusCard,
+    selectHikeTrail,
+} from "@/features/hike-session";
 import { CORNER_BUTTON_SIZE, MapControls, TrailyMap } from "@/features/map";
 import { TrailResults } from "@/features/trails";
 
@@ -25,14 +29,25 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 }
 
 // Full-bleed map: the controls handle the safe areas themselves. The hike
-// bar comes before MapControls so the search panel covers it.
+// bar comes before MapControls so the search panel covers it. Picking a
+// trail in the search sets the trail of the next hike and closes the
+// search.
 export default function MapScreen() {
     return (
         <View style={styles.container}>
             <TrailyMap bottomOffset={CORNER_BUTTON_SIZE} />
-            <ScaffoldMapControls />
+            <HikeActionBar cornerButtonSize={CORNER_BUTTON_SIZE} />
             <MapControls
-                renderSearchResults={(query) => <TrailResults query={query} />}
+                belowSearch={<HikeStatusCard />}
+                renderSearchResults={(query, closeSearch) => (
+                    <TrailResults
+                        query={query}
+                        onSelectTrail={(trail) => {
+                            selectHikeTrail(trail);
+                            closeSearch();
+                        }}
+                    />
+                )}
             />
         </View>
     );
