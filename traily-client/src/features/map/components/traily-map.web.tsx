@@ -1,12 +1,10 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
-    getVersion,
     Map,
     type Map as MapLibreMap,
     Marker,
     Popup,
-    setWorkerUrl,
     type StyleSpecification,
 } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { MAP_MIN_ZOOM } from "@/constants/config";
 
 import { MapLegalNotices } from "./map-legal-notices";
+import { setupMapLibreForWeb } from "./setup-maplibre-web";
 import { useMapMode } from "../hooks/use-map-mode";
 import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
 import type { TrailyMapProps } from "../types";
@@ -22,24 +21,6 @@ const TRAILHEAD = {
     name: "Départ du sentier",
     lngLat: [6.1296, 45.8992] as [number, number],
 };
-
-let setupDone = false;
-
-/**
- * maplibre-gl locates its tile-parsing worker via `import.meta.url`, which
- * Metro doesn't preserve per-module — it resolves to the entry bundle's URL
- * instead, so the worker 404s and no vector layers render (the style still
- * loads and paints the background/markers, since those don't need the
- * worker). Point it at jsDelivr's build of the exact installed version
- * instead, which serves it with CORS enabled.
- */
-function setupMapLibreForWeb() {
-    if (setupDone) return;
-    setWorkerUrl(
-        `https://cdn.jsdelivr.net/npm/maplibre-gl@${getVersion()}/dist/maplibre-gl-worker.mjs`,
-    );
-    setupDone = true;
-}
 
 export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);

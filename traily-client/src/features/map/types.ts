@@ -7,3 +7,20 @@ export interface TrailyMapProps {
      */
     bottomOffset?: number;
 }
+
+/** Photo thumbnail pinned on the map, e.g. a point of interest. */
+export interface PhotoPin {
+    id: string;
+    /** `[longitude, latitude]`. */
+    lngLat: [number, number];
+    photoUrl: string;
+    /** Read by screen readers. */
+    label: string;
+}
+
+/** Shared by the native and web `TrailRouteMap`. */
+export interface TrailRouteMapProps {
+    /** `[longitude, latitude]` points, start first. */
+    route: [number, number][];
+    pins?: PhotoPin[];
+}
