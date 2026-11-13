@@ -16,8 +16,9 @@ export default function AppLayout() {
     return (
         <Stack screenOptions={{ headerShown: true }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            {/* Panel over the search results: swipe down goes back to them.
-                The sheet draws its own header (favorite, close). */}
+            {/* Trail sheet reached from outside the search (history, deep
+                links); the search raises its own panel. Draws its own header
+                (favorite, close). */}
             <Stack.Screen
                 name="trail/[trailId]"
                 options={{

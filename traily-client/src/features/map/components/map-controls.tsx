@@ -28,13 +28,21 @@ const SETTINGS_SIZE = 44;
 const TOP_BAR_GAP = 10;
 const TOP_BAR_MARGIN = 12;
 
+/** What the search results need to know about the search. */
+export interface SearchResultsContext {
+    query: string;
+    /** Lets a result close the panel once picked. */
+    closeSearch: () => void;
+    /** Bumped each time the search field gains focus. */
+    focusCount: number;
+}
+
 interface MapControlsProps {
     /**
-     * Content of the search panel for the current query. Passed in by the
-     * route, so the map feature doesn't depend on the features it searches.
-     * `closeSearch` lets a result close the panel once picked.
+     * Content of the search panel. Passed in by the route, so the map
+     * feature doesn't depend on the features it searches.
      */
-    renderSearchResults?: (query: string, closeSearch: () => void) => ReactNode;
+    renderSearchResults?: (search: SearchResultsContext) => ReactNode;
     /** Shown top-left under the search bar, covered by the search panel. */
     belowSearch?: ReactNode;
 }
@@ -55,6 +63,7 @@ export function MapControls({
     const [searchOpen, setSearchOpen] = useState(false);
     // Bumped on each opening so the results remount and cascade in again.
     const [openCount, setOpenCount] = useState(0);
+    const [focusCount, setFocusCount] = useState(0);
     const searchProgress = useSharedValue(0);
     const gearRotation = useSharedValue(0);
 
@@ -153,7 +162,11 @@ export function MapControls({
                     while the panel slides back down. */}
                 {openCount > 0 && (
                     <View key={openCount} style={styles.searchResults}>
-                        {renderSearchResults?.(query, closeSearch)}
+                        {renderSearchResults?.({
+                            query,
+                            closeSearch,
+                            focusCount,
+                        })}
                     </View>
                 )}
             </SearchPanel>
@@ -173,9 +186,12 @@ export function MapControls({
                         openProgress={searchProgress}
                         onOpen={openSearch}
                         onClose={closeSearch}
+                        onFocus={() => setFocusCount((count) => count + 1)}
                     />
                 </View>
-                <Animated.View style={settingsSlotStyle}>
+                {/* Clips the button as the slot shrinks: otherwise it sticks
+                    out on the right and widens the page on the web. */}
+                <Animated.View style={[styles.settingsSlot, settingsSlotStyle]}>
                     <GlassButton
                         accessibilityLabel="Paramètres"
                         radius={SETTINGS_SIZE / 2}
@@ -220,6 +236,7 @@ const styles = StyleSheet.create({
         pointerEvents: "box-none",
     },
     searchSlot: { flex: 1 },
+    settingsSlot: { overflow: "hidden" },
     searchResults: { flex: 1 },
     settings: {
         width: SETTINGS_SIZE,

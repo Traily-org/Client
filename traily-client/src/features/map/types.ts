@@ -23,4 +23,6 @@ export interface TrailRouteMapProps {
     /** `[longitude, latitude]` points, start first. */
     route: [number, number][];
     pins?: PhotoPin[];
+    /** Touching a pin, e.g. to show its photo in large. */
+    onPressPin?: (pinId: string) => void;
 }

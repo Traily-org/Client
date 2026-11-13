@@ -19,7 +19,11 @@ import type { TrailRouteMapProps } from "../types";
  * Still map of a route, framed on the whole line, with photo pins along it.
  * Gestures are off: it sits inside a scrolling sheet.
  */
-export function TrailRouteMap({ route, pins = [] }: TrailRouteMapProps) {
+export function TrailRouteMap({
+    route,
+    pins = [],
+    onPressPin,
+}: TrailRouteMapProps) {
     const mode = useMapMode();
     const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
     const [failed, setFailed] = useState(false);
@@ -76,6 +80,11 @@ export function TrailRouteMap({ route, pins = [] }: TrailRouteMapProps) {
                         <PhotoPinMarker
                             photoUrl={pin.photoUrl}
                             label={pin.label}
+                            onPress={
+                                onPressPin
+                                    ? () => onPressPin(pin.id)
+                                    : undefined
+                            }
                         />
                     </Marker>
                 ))}

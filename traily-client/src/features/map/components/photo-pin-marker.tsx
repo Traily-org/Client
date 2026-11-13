@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 const FRAME = 46;
 const BORDER = 3;
@@ -22,19 +22,25 @@ export const ROUTE_MAP_PADDING = {
 interface PhotoPinMarkerProps {
     photoUrl: string;
     label: string;
+    onPress?: () => void;
 }
 
 /**
  * Photo thumbnail in a white frame with a pointer at the bottom, anchored
  * by its tip on the spot it shows. Shared by the native and web maps.
  */
-export function PhotoPinMarker({ photoUrl, label }: PhotoPinMarkerProps) {
+export function PhotoPinMarker({
+    photoUrl,
+    label,
+    onPress,
+}: PhotoPinMarkerProps) {
     return (
-        <View
-            style={styles.container}
-            accessible
-            accessibilityRole="image"
+        <Pressable
+            onPress={onPress}
+            disabled={!onPress}
+            accessibilityRole={onPress ? "imagebutton" : "image"}
             accessibilityLabel={label}
+            style={styles.container}
         >
             <View style={styles.pointer} />
             <View style={styles.frame}>
@@ -45,7 +51,7 @@ export function PhotoPinMarker({ photoUrl, label }: PhotoPinMarkerProps) {
                     transition={200}
                 />
             </View>
-        </View>
+        </Pressable>
     );
 }
 

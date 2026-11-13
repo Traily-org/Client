@@ -36,6 +36,8 @@ interface SearchBarProps {
     openProgress: SharedValue<number>;
     onOpen: () => void;
     onClose: () => void;
+    /** Every focus of the field, the panel open or not. */
+    onFocus?: () => void;
 }
 
 /**
@@ -50,6 +52,7 @@ export function SearchBar({
     openProgress,
     onOpen,
     onClose,
+    onFocus,
 }: SearchBarProps) {
     const inputRef = useRef<TextInput>(null);
 
@@ -64,6 +67,7 @@ export function SearchBar({
     }));
 
     function handleFocus() {
+        onFocus?.();
         if (open) return;
         void Haptics.selectionAsync();
         onOpen();

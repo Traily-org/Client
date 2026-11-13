@@ -7,7 +7,7 @@ import {
     type PositionAnchor,
     type StyleSpecification,
 } from "maplibre-gl";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -18,20 +18,28 @@ import { setupMapLibreForWeb } from "./setup-maplibre-web";
 import { useMapMode } from "../hooks/use-map-mode";
 import { getBounds } from "../services/route-bounds";
 import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
-import type { TrailRouteMapProps } from "../types";
+import type { PhotoPin, TrailRouteMapProps } from "../types";
 
-/** A maplibre-gl marker element and the React content portaled into it. */
+/**
+ * A maplibre-gl marker element, and what to portal into it: a route end,
+ * or a photo pin. Rendered from the slots so a pin always calls the latest
+ * `onPressPin` without rebuilding the map.
+ */
 interface MarkerSlot {
     key: string;
     element: HTMLElement;
-    content: ReactNode;
+    marker: "start" | "end" | PhotoPin;
 }
 
 /**
  * Still map of a route, framed on the whole line, with photo pins along it.
  * Gestures are off: it sits inside a scrolling sheet.
  */
-export function TrailRouteMap({ route, pins = [] }: TrailRouteMapProps) {
+export function TrailRouteMap({
+    route,
+    pins = [],
+    onPressPin,
+}: TrailRouteMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const mode = useMapMode();
@@ -56,27 +64,25 @@ export function TrailRouteMap({ route, pins = [] }: TrailRouteMapProps) {
             key: string;
             lngLat: [number, number];
             anchor: PositionAnchor;
-            content: ReactNode;
+            marker: MarkerSlot["marker"];
         }[] = [
             ...pins.map((pin) => ({
                 key: pin.id,
                 lngLat: pin.lngLat,
                 anchor: "bottom" as const,
-                content: (
-                    <PhotoPinMarker photoUrl={pin.photoUrl} label={pin.label} />
-                ),
+                marker: pin,
             })),
             {
                 key: "start",
                 lngLat: route[0],
                 anchor: "center",
-                content: <RouteStartMarker />,
+                marker: "start",
             },
             {
                 key: "end",
                 lngLat: route[route.length - 1],
                 anchor: "center",
-                content: <RouteEndMarker />,
+                marker: "end",
             },
         ];
         // Later markers are drawn on top: the route ends stay above the pins.
@@ -85,7 +91,7 @@ export function TrailRouteMap({ route, pins = [] }: TrailRouteMapProps) {
             new Marker({ element, anchor: item.anchor })
                 .setLngLat(item.lngLat)
                 .addTo(map);
-            return { key: item.key, element, content: item.content };
+            return { key: item.key, element, marker: item.marker };
         });
         // The marker elements only exist once maplibre-gl has created them.
         setSlots(markers);
@@ -117,8 +123,26 @@ export function TrailRouteMap({ route, pins = [] }: TrailRouteMapProps) {
     return (
         <View style={styles.container}>
             <div ref={containerRef} style={{ display: "flex", flex: 1 }} />
-            {slots.map((slot) =>
-                createPortal(slot.content, slot.element, slot.key),
+            {slots.map(({ key, element, marker }) =>
+                createPortal(
+                    marker === "start" ? (
+                        <RouteStartMarker />
+                    ) : marker === "end" ? (
+                        <RouteEndMarker />
+                    ) : (
+                        <PhotoPinMarker
+                            photoUrl={marker.photoUrl}
+                            label={marker.label}
+                            onPress={
+                                onPressPin
+                                    ? () => onPressPin(marker.id)
+                                    : undefined
+                            }
+                        />
+                    ),
+                    element,
+                    key,
+                ),
             )}
             {failed && (
                 <View style={[StyleSheet.absoluteFill, styles.placeholder]}>
