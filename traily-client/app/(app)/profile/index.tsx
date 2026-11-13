@@ -9,7 +9,6 @@ export default function ProfileScreen() {
             links={[
                 { label: "Mon herbier", href: "/profile/herbarium" },
                 { label: "Historique", href: "/profile/history" },
-                { label: "Modération", href: "/moderation" },
             ]}
         />
     );
