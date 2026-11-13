@@ -1,7 +1,6 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
-    AttributionControl,
     getVersion,
     Map,
     type Map as MapLibreMap,
@@ -15,12 +14,8 @@ import { useEffect, useRef, useState } from "react";
 import { MAP_MIN_ZOOM } from "@/constants/config";
 
 import { MapLegalNotices } from "./map-legal-notices";
-import { MapModeSwitcher } from "./map-mode-switcher";
-import {
-    getMapStyle,
-    SHOW_MAPTILER_LEGAL_NOTICES,
-    type MapMode,
-} from "../style/map-styles";
+import { useMapMode } from "../hooks/use-map-mode";
+import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
 import type { TrailyMapProps } from "../types";
 
 const TRAILHEAD = {
@@ -49,7 +44,7 @@ function setupMapLibreForWeb() {
 export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
-    const [mode, setMode] = useState<MapMode>("trail");
+    const mode = useMapMode();
     const [styleError, setStyleError] = useState<Error | null>(null);
     const [styleLoaded, setStyleLoaded] = useState(false);
 
@@ -71,20 +66,14 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
             // instantly instead of re-fetching.
             maxTileCacheZoomLevels: 8,
             // No built-in nav (zoom +/- + compass) — this app renders its
-            // own map chrome (MapModeSwitcher, bottom-right). The default
-            // attribution control is replaced below: by MapLegalNotices when
-            // those are enabled, else by a compact one out of the switcher's
-            // corner.
+            // own map chrome (MapControls). The default attribution control
+            // is replaced by MapLegalNotices when those are enabled. Without
+            // them, the web build (development only, never shipped) shows
+            // no attribution: MapLibre's compact one opens expanded over the
+            // corner buttons.
             attributionControl: false,
         });
         mapRef.current = map;
-
-        if (!SHOW_MAPTILER_LEGAL_NOTICES) {
-            map.addControl(
-                new AttributionControl({ compact: true }),
-                "bottom-left",
-            );
-        }
 
         const popup = new Popup({ offset: 24 }).setText(TRAILHEAD.name);
         new Marker({ color: "#e0733f" })
@@ -128,11 +117,6 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
             {SHOW_MAPTILER_LEGAL_NOTICES && (
                 <MapLegalNotices bottomOffset={bottomOffset} />
             )}
-            <MapModeSwitcher
-                mode={mode}
-                onChange={setMode}
-                bottomOffset={bottomOffset}
-            />
         </div>
     );
 }

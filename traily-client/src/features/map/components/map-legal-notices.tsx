@@ -8,8 +8,8 @@ const MAPTILER_LOGO = require("../assets/maptiler-logo.svg");
 
 /**
  * MapTiler's legal notices, laid out as their docs recommend: the logo
- * (linking to maptiler.com) bottom-left, the text attribution bottom-right
- * — under MapModeSwitcher. Rendered by the app rather than MapLibre, whose
+ * (linking to maptiler.com) bottom-left, the text attribution bottom-right.
+ * Rendered by the app rather than MapLibre, whose
  * attribution collapses behind an "i" button while the terms require it to
  * stay visible and readable. Shared by the native and web maps.
  */
