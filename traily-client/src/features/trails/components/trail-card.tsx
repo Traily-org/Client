@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
     useAnimatedStyle,
@@ -8,34 +9,14 @@ import Animated, {
 import { Icon } from "@/components/icon";
 import { PRESS_IN, PRESS_OUT } from "@/constants/motion";
 
-import type { Trail, TrailDifficulty } from "../types";
+import { formatDistance, formatDuration } from "../services/trail-format";
+import type { Trail } from "../types";
+import { DIFFICULTY } from "./trail-difficulty";
 import { TrailSketch } from "./trail-sketch";
 
 const TEXT = "#1E1E2F";
 const MUTED = "rgba(30, 30, 47, 0.55)";
 const SKETCH_COLOR = "#E0733F";
-
-const DIFFICULTY: Record<
-    TrailDifficulty,
-    { label: string; color: string; tint: string }
-> = {
-    easy: { label: "Facile", color: "#2F8A4F", tint: "#E2F2E7" },
-    medium: { label: "Moyen", color: "#B87400", tint: "#FDF0D5" },
-    hard: { label: "Difficile", color: "#C2412B", tint: "#FBE2DC" },
-};
-
-function formatDistance(km: number): string {
-    return `${km.toFixed(1).replace(".", ",")} km`;
-}
-
-function formatDuration(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const rest = minutes % 60;
-    if (hours === 0) return `${rest} min`;
-    return rest === 0
-        ? `${hours} h`
-        : `${hours} h ${String(rest).padStart(2, "0")}`;
-}
 
 interface TrailCardProps {
     trail: Trail;
@@ -62,7 +43,7 @@ export function TrailCard({ trail, onPress }: TrailCardProps) {
             accessibilityLabel={trail.name}
         >
             <Animated.View style={[styles.card, pressStyle]}>
-                {/* TODO(design): cover photo once the API provides one. */}
+                {/* The icon shows until the photo has loaded. */}
                 <View
                     style={[styles.cover, { backgroundColor: difficulty.tint }]}
                 >
@@ -71,6 +52,12 @@ export function TrailCard({ trail, onPress }: TrailCardProps) {
                         material="landscape"
                         size={30}
                         color={difficulty.color}
+                    />
+                    <Image
+                        source={{ uri: trail.cover.url }}
+                        style={StyleSheet.absoluteFill}
+                        contentFit="cover"
+                        transition={200}
                     />
                 </View>
                 <View style={styles.body}>
@@ -114,6 +101,7 @@ const styles = StyleSheet.create({
         width: 84,
         height: 76,
         borderRadius: 16,
+        overflow: "hidden",
         alignItems: "center",
         justifyContent: "center",
     },

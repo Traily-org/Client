@@ -49,32 +49,29 @@ type StyleJSON = {
     [key: string]: unknown;
 };
 
+/** `[longitude, latitude]` points of a route line, start first. */
+export type RouteLine = [number, number][];
+
 /**
- * Sample hike near the trailhead, standing in for real route data until a
- * route data model exists. Appended to each MapTiler style as a `route`
- * GeoJSON source so the rendering path (casing + colored line, per-mode
- * styling) is already in place when real routes arrive.
+ * Sample hike near the trailhead, drawn on the home map until it shows the
+ * hike in progress.
  */
-const SAMPLE_ROUTE_GEOJSON = {
-    type: "Feature",
-    properties: {},
-    geometry: {
-        type: "LineString",
-        coordinates: [
-            [6.1296, 45.8992],
-            [6.1324, 45.9015],
-            [6.1355, 45.9042],
-            [6.1381, 45.9071],
-            [6.1417, 45.9089],
-        ],
-    },
-} as const;
+const SAMPLE_ROUTE: RouteLine = [
+    [6.1296, 45.8992],
+    [6.1324, 45.9015],
+    [6.1355, 45.9042],
+    [6.1381, 45.9071],
+    [6.1417, 45.9089],
+];
+
+/** Color of route lines, and of the markers at their ends. */
+export const ROUTE_COLOR = "#d1263f";
 
 // Brighter red on satellite imagery, where the darker one gets lost.
 const ROUTE_COLORS: Record<MapMode, string> = {
-    trail: "#d1263f",
+    trail: ROUTE_COLOR,
     satellite: "#ff3b30",
-    topo: "#d1263f",
+    topo: ROUTE_COLOR,
 };
 
 function getRouteLayers(mode: MapMode) {
@@ -92,9 +89,9 @@ function getRouteLayers(mode: MapMode) {
                     ["linear"],
                     ["zoom"],
                     10,
-                    3,
+                    5,
                     18,
-                    8,
+                    10,
                 ],
                 "line-opacity": 0.9,
             },
@@ -111,9 +108,9 @@ function getRouteLayers(mode: MapMode) {
                     ["linear"],
                     ["zoom"],
                     10,
-                    1.5,
+                    3,
                     18,
-                    5,
+                    6,
                 ],
             },
         },
@@ -148,7 +145,8 @@ function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
 
 /**
  * Resolves to a plain style spec object for the given mode: the MapTiler
- * style with the sample route source and layers appended on top. Fetched
+ * style with `route` (the sample route by default) appended on top as a
+ * GeoJSON source and its line layers. Fetched
  * (rather than handing MapLibre the style URL) so the route can be part of
  * the style itself on both platforms. Not typed against either
  * `maplibre-gl`'s or `@maplibre/maplibre-react-native`'s
@@ -156,13 +154,23 @@ function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
  * incompatible versions of `@maplibre/maplibre-gl-style-spec`) — cast to the
  * right one at each platform-specific call site.
  */
-export async function getMapStyle(mode: MapMode) {
+export async function getMapStyle(
+    mode: MapMode,
+    route: RouteLine = SAMPLE_ROUTE,
+) {
     const style = await fetchMapTilerStyle(mode);
     return {
         ...style,
         sources: {
             ...style.sources,
-            route: { type: "geojson", data: SAMPLE_ROUTE_GEOJSON },
+            route: {
+                type: "geojson",
+                data: {
+                    type: "Feature",
+                    properties: {},
+                    geometry: { type: "LineString", coordinates: route },
+                },
+            },
         },
         layers: [...style.layers, ...getRouteLayers(mode)],
     };

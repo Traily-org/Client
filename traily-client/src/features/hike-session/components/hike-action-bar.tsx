@@ -5,7 +5,6 @@ import { StyleSheet, Text, View } from "react-native";
 import Animated, {
     cancelAnimation,
     FadeInDown,
-    FadeOut,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -100,7 +99,6 @@ function StartButton({ onPress }: { onPress: () => void }) {
     return (
         <Animated.View
             entering={FadeInDown.duration(ENTER_DURATION).delay(110)}
-            exiting={FadeOut.duration(160)}
         >
             {!reducedMotion && (
                 <Animated.View style={[styles.halo, haloStyle]} />
@@ -133,6 +131,8 @@ function StartButton({ onPress }: { onPress: () => void }) {
 /** Round glass button, in the style of the corner buttons around it. */
 function PhotoButton({ onPress }: { onPress: () => void }) {
     return (
+        // Démarrer goes at once on press (no exit animation, which also
+        // jumped on the web): Photo grows in its place, never next to it.
         <Animated.View entering={ZoomIn.duration(ENTER_DURATION)}>
             <GlassButton
                 accessibilityLabel="Prendre une photo"

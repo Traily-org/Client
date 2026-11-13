@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { BackHandler, Keyboard, StyleSheet, View } from "react-native";
 import Animated, {
     FadeInUp,
+    type SharedValue,
     interpolate,
     useAnimatedStyle,
     useSharedValue,
@@ -28,14 +29,31 @@ const SETTINGS_SIZE = 44;
 const TOP_BAR_GAP = 10;
 const TOP_BAR_MARGIN = 12;
 
+/** What the search results need to know about the search. */
+export interface SearchResultsContext {
+    query: string;
+    /** Lets a result close the panel once picked. */
+    closeSearch: () => void;
+    /** Bumped each time the search field gains focus. */
+    focusCount: number;
+    /**
+     * For a panel the results open over the search (0 to 1, how far it is
+     * open): fades the search bar's back arrow out in step.
+     */
+    coverProgress: SharedValue<number>;
+}
+
 interface MapControlsProps {
     /**
-     * Content of the search panel for the current query. Passed in by the
-     * route, so the map feature doesn't depend on the features it searches.
-     * `closeSearch` lets a result close the panel once picked.
+     * Content of the search panel. Passed in by the route, so the map
+     * feature doesn't depend on the features it searches.
      */
-    renderSearchResults?: (query: string, closeSearch: () => void) => ReactNode;
-    /** Shown top-left under the search bar, covered by the search panel. */
+    renderSearchResults?: (search: SearchResultsContext) => ReactNode;
+    /**
+     * Shown top-left under the search bar, covered by the search panel. Its
+     * container fills the screen (letting touches through), so it can lay a
+     * full-screen layer behind itself, e.g. to close on a tap outside.
+     */
     belowSearch?: ReactNode;
 }
 
@@ -55,7 +73,9 @@ export function MapControls({
     const [searchOpen, setSearchOpen] = useState(false);
     // Bumped on each opening so the results remount and cascade in again.
     const [openCount, setOpenCount] = useState(0);
+    const [focusCount, setFocusCount] = useState(0);
     const searchProgress = useSharedValue(0);
+    const coverProgress = useSharedValue(0);
     const gearRotation = useSharedValue(0);
 
     const topBarHeight = insets.top + TOP_BAR_MARGIN + SEARCH_HEIGHT;
@@ -139,7 +159,7 @@ export function MapControls({
             <View
                 style={[
                     styles.belowSearch,
-                    { top: topBarHeight + TOP_BAR_GAP },
+                    { paddingTop: topBarHeight + TOP_BAR_GAP },
                 ]}
             >
                 {belowSearch}
@@ -153,7 +173,12 @@ export function MapControls({
                     while the panel slides back down. */}
                 {openCount > 0 && (
                     <View key={openCount} style={styles.searchResults}>
-                        {renderSearchResults?.(query, closeSearch)}
+                        {renderSearchResults?.({
+                            query,
+                            closeSearch,
+                            focusCount,
+                            coverProgress,
+                        })}
                     </View>
                 )}
             </SearchPanel>
@@ -173,9 +198,13 @@ export function MapControls({
                         openProgress={searchProgress}
                         onOpen={openSearch}
                         onClose={closeSearch}
+                        onFocus={() => setFocusCount((count) => count + 1)}
+                        coverProgress={coverProgress}
                     />
                 </View>
-                <Animated.View style={settingsSlotStyle}>
+                {/* Clips the button as the slot shrinks: otherwise it sticks
+                    out on the right and widens the page on the web. */}
+                <Animated.View style={[styles.settingsSlot, settingsSlotStyle]}>
                     <GlassButton
                         accessibilityLabel="Paramètres"
                         radius={SETTINGS_SIZE / 2}
@@ -213,13 +242,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     belowSearch: {
-        position: "absolute",
-        left: 16,
-        right: 16,
+        ...StyleSheet.absoluteFill,
+        paddingHorizontal: 16,
         alignItems: "flex-start",
         pointerEvents: "box-none",
     },
     searchSlot: { flex: 1 },
+    settingsSlot: { overflow: "hidden" },
     searchResults: { flex: 1 },
     settings: {
         width: SETTINGS_SIZE,

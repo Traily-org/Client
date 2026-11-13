@@ -16,13 +16,21 @@ export default function AppLayout() {
     return (
         <Stack screenOptions={{ headerShown: true }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            {/* Panel over the search results: swipe down goes back to them. */}
+            {/* Trail sheet reached from outside the search (history, deep
+                links); the search raises its own panel. Draws its own header
+                (favorite, close). */}
             <Stack.Screen
                 name="trail/[trailId]"
                 options={{
                     presentation: "formSheet",
                     sheetGrabberVisible: true,
+                    headerShown: false,
                 }}
+            />
+            {/* Over the trail sheet, which a pushed screen would go under. */}
+            <Stack.Screen
+                name="user/[userId]"
+                options={{ presentation: "modal" }}
             />
             {/* Camera then identification, back to the hike when done. */}
             <Stack.Screen
