@@ -30,16 +30,15 @@
 
 ## Phase 1 : fondations techniques
 
-### 1.1 Architecture et conventions (à documenter dans le Quality Plan)
+### 1.1 Architecture et conventions (décidé : TRA-120 ; Quality Plan : TRA-121)
 
-Structure hybride proposée, qui prolonge le découpage par feature déjà amorcé :
+Structure par feature d'abord, qui prolonge le découpage déjà amorcé. Règles détaillées dans [CONTRIBUTING.md](../CONTRIBUTING.md#architecture) :
 
 ```
 app/                        routes uniquement (écrans minces qui composent les features)
   _layout.tsx               providers, import global.css, hydratation de session, masquage du splash
   (public)/                 login, register, onboarding éthique
-  (app)/                    routes réservées aux utilisateurs connectés (garde d'auth)
-    (tabs)/                 explorer, carte / enregistrement, collections, profil
+  (app)/                    routes réservées aux utilisateurs connectés (garde d'auth) ; écrans : voir schéma de navigation (TRA-119)
 src/
   features/<feature>/       components/, hooks/, services/, types.ts, index.ts (API publique)
   components/ui/            design system partagé (Button, Text, Card, Badge, Sheet…)
@@ -49,13 +48,13 @@ src/
 ```
 
 - Les groupes `(public)` / `(app)` évitent l'ambiguïté du Quality Plan, où `(auth)` désigne les routes _authentifiées_, et de l'actuel `app/auth/`, qui contient login et register.
-- Règle de nommage à trancher. Proposition : kebab-case pour tous les fichiers (comme le template Expo et les routes), composants exportés en PascalCase.
-- Règles de dépendance : une feature n'importe pas les fichiers internes d'une autre feature, seulement son `index.ts`. `app/` ne contient pas de logique métier.
+- Règle de nommage **décidée (TRA-120)** : kebab-case pour tous les fichiers (comme le template Expo et les routes), composants exportés en PascalCase.
+- Règles de dépendance : une feature n'importe pas les fichiers internes d'une autre feature, seulement son `index.ts`. `app/` ne contient pas de logique métier. Vérifiées par ESLint (TRA-120).
 
 ### 1.2 Navigation
 
 - Layout racine en `Stack`. Groupe `(app)` protégé avec `Stack.Protected guard={isAuthenticated}` (API présente dans expo-router 57.0.21).
-- Onglets : l'export `Tabs` d'`expo-router` est **déprécié en v57** (« Use `import { Tabs } from 'expo-router/js-tabs'` »). Le paquet expose aussi `expo-router/tabs` et `expo-router/unstable-native-tabs`. Choisir d'après la doc v57.
+- Pas d'onglets : le schéma de navigation validé (TRA-119) place la Map au centre, avec des boutons flottants et des panneaux. Note v57 : l'export `Tabs` d'`expo-router` est déprécié (« Use `import { Tabs } from 'expo-router/js-tabs'` »).
 - `export function ErrorBoundary` dans les layouts : expo-router 57 l'exporte ; à utiliser pour ne plus planter tout l'écran.
 
 ### 1.3 Design system
@@ -127,11 +126,11 @@ Endpoints prévus par ARCHITECTURE.md, à confirmer avec l'équipe backend. Leur
 
 | Décision                  | Options                                                                                                                     | Recommandation                                                                                                                                                                                                                                                                                     |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Structure du code         | par couches (Quality Plan) / par feature (code actuel)                                                                      | hybride (1.1), à documenter dans le Quality Plan                                                                                                                                                                                                                                                   |
+| Structure du code         | par couches (Quality Plan) / par feature (code actuel)                                                                      | par feature d'abord, décidé (TRA-120)                                                                                                                                                                                                                                                              |
 | Lanceur de tests          | Jest + `jest-expo` (Quality Plan) / Vitest (CI actuelle)                                                                    | pour les composants, hooks et routes : **Jest + `jest-expo`**. C'est le preset du SDK (`jest-expo ~57.0.5`), et les utilitaires `expo-router/testing-library` reposent sur le global `jest`. Vitest en environnement `node` ne couvre que les fonctions pures. Aligner ensuite Quality Plan et CI. |
 | Cache des données serveur | fetch + Zustand / TanStack Query                                                                                            | TanStack Query pour le cache, les retries et la persistance offline des lectures ; Zustand pour l'état client                                                                                                                                                                                      |
 | Styles                    | NativeWind / `StyleSheet`                                                                                                   | NativeWind par défaut avec les tokens partagés ; `StyleSheet` réservé aux cas natifs ou de performance (marqueurs de carte)                                                                                                                                                                        |
-| Nommage des fichiers      | kebab-case / PascalCase pour les composants                                                                                 | kebab-case partout (1.1)                                                                                                                                                                                                                                                                           |
+| Nommage des fichiers      | kebab-case / PascalCase pour les composants                                                                                 | kebab-case partout, décidé (TRA-120)                                                                                                                                                                                                                                                               |
 | Groupes de routes         | `(auth)`/`(public)` du Quality Plan / `app/auth/` actuel                                                                    | `(public)` + `(app)` avec `Stack.Protected`                                                                                                                                                                                                                                                        |
 | Cible web                 | produit / outil de dev                                                                                                      | outil de dev (MVP mobile) ; ne pas investir dans le web de prod. Un repo `Web-app` existe dans l'organisation : clarifier son rôle avec l'équipe                                                                                                                                                   |
 | Tuiles de carte           | build quotidien Protomaps / extrait régional hébergé / fournisseur tiers (Esri, utilisé pour les modes satellite et relief) | extrait régional `.pmtiles` hébergé sur S3/MinIO (Arthur B., « tuiles offline » du PBS) + stratégie hors ligne ; garder Esri seulement si ses conditions d'utilisation le permettent                                                                                                               |
