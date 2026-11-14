@@ -5,6 +5,7 @@ import {
     HikeActionBar,
     HikeStatusCard,
     selectHikeTrail,
+    useHikeSession,
 } from "@/features/hike-session";
 import { CORNER_BUTTON_SIZE, MapControls, TrailyMap } from "@/features/map";
 import { TrailResults } from "@/features/trails";
@@ -29,19 +30,30 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 }
 
 // Full-bleed map: the controls handle the safe areas themselves. The hike
-// bar comes before MapControls so the search panel covers it. Picking a
-// trail in the search sets the trail of the next hike and closes the
-// search.
+// bar comes before MapControls so the search panel covers it. Choosing a
+// trail from its sheet in the search sets the trail of the next hike and
+// closes the search.
 export default function MapScreen() {
+    const hike = useHikeSession();
+
     return (
         <View style={styles.container}>
             <TrailyMap bottomOffset={CORNER_BUTTON_SIZE} />
             <HikeActionBar cornerButtonSize={CORNER_BUTTON_SIZE} />
             <MapControls
                 belowSearch={<HikeStatusCard />}
-                renderSearchResults={(query, closeSearch) => (
+                renderSearchResults={({
+                    query,
+                    closeSearch,
+                    focusCount,
+                    coverProgress,
+                }) => (
                     <TrailResults
                         query={query}
+                        searchFocusCount={focusCount}
+                        sheetOpenness={coverProgress}
+                        selectedTrailId={hike.trail?.id}
+                        selectionLocked={hike.status !== "idle"}
                         onSelectTrail={(trail) => {
                             selectHikeTrail(trail);
                             closeSearch();

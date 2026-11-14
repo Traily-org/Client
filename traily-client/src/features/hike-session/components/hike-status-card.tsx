@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import type { AndroidSymbol, SFSymbol } from "expo-symbols";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Pressable,
     StyleSheet,
@@ -10,10 +10,18 @@ import {
     type ViewStyle,
 } from "react-native";
 import Animated, {
+    cancelAnimation,
     FadeIn,
     FadeInUp,
     FadeOut,
+    interpolate,
     LinearTransition,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withDelay,
+    withRepeat,
+    withTiming,
 } from "react-native-reanimated";
 
 import { GlassButton } from "@/components/glass-button";
@@ -40,6 +48,11 @@ const COMPACT_HEIGHT = 40;
 const STOP_WIDTH = 44;
 const DANGER = "#C9391A";
 const RESIZE_MS = 240;
+const PULSE_MS = 1800;
+/** How far the pulse ring spreads around the pill. */
+const PULSE_SPREAD = 7;
+// Orange of the Démarrer button: the pill pulses towards it before the start.
+const ACCENT = "#E0733F";
 
 // The time turns amber while paused, so a glance tells whether it counts.
 const STATUS: Record<
@@ -99,172 +112,260 @@ export function HikeStatusCard() {
     // Expanded, the card is a plain glass pane rather than one big button:
     // its header collapses it and the actions are buttons of their own.
     return (
-        <Animated.View
-            entering={FadeInUp.duration(ENTER_DURATION)}
-            exiting={FadeOut.duration(RESIZE_MS)}
-            layout={RESIZE}
-        >
-            {expanded ? (
-                <Animated.View
-                    entering={FadeIn.duration(RESIZE_MS)}
-                    style={styles.expanded}
-                >
-                    <GlassSurface
-                        style={[StyleSheet.absoluteFill, styles.expandedRadius]}
-                    />
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`${summary}. Masquer les détails`}
-                        onPress={() => {
-                            setExpanded(false);
-                            setConfirmingEnd(false);
-                        }}
-                        style={styles.header}
-                    >
-                        <Icon
-                            ios={status.ios}
-                            material={status.material}
-                            size={18}
-                            color={status.color}
-                        />
-                        <Text style={styles.title} numberOfLines={2}>
-                            {trail.name}
-                        </Text>
-                        <Icon
-                            ios="chevron.up"
-                            material="expand_less"
-                            size={16}
-                            color={ON_GLASS_MUTED}
-                        />
-                    </Pressable>
-                    <Text style={[styles.status, { color: status.color }]}>
-                        {status.label}
-                    </Text>
-
-                    <View style={styles.stats}>
-                        <Stat label="Temps" value={time} color={status.color} />
-                        <Stat label="Parcouru" value={distance} />
-                        <Stat
-                            label="Restant"
-                            value={formatDistanceKm(
-                                trail.distanceKm - distanceKm,
-                            )}
-                        />
-                    </View>
-
-                    <View style={styles.track}>
-                        <View
-                            style={[
-                                styles.progress,
-                                {
-                                    width: `${(distanceKm / trail.distanceKm) * 100}%`,
-                                    backgroundColor: status.color,
-                                },
-                            ]}
-                        />
-                    </View>
-                    <Text style={styles.note}>
-                        Parcours : {formatDistanceKm(trail.distanceKm)} ·{" "}
-                        {trail.elevationGainM} m D+
-                    </Text>
-
-                    {session.status !== "idle" &&
-                        (confirmingEnd ? (
-                            <Animated.View
-                                entering={FadeIn.duration(RESIZE_MS)}
-                                style={styles.confirm}
-                            >
-                                <Text style={styles.confirmText}>
-                                    Terminer la randonnée ?
-                                </Text>
-                                <View style={styles.actionRow}>
-                                    <ActionButton
-                                        label="Annuler"
-                                        onPress={() => setConfirmingEnd(false)}
-                                        style={styles.grow}
-                                    />
-                                    <ActionButton
-                                        label="Terminer"
-                                        tone="danger"
-                                        onPress={handleEnd}
-                                        style={styles.grow}
-                                    />
-                                </View>
-                            </Animated.View>
-                        ) : (
-                            // Stop joined to the end of the pause button.
-                            <View style={styles.joinedRow}>
-                                <ActionButton
-                                    label={
-                                        session.status === "running"
-                                            ? "Pause"
-                                            : "Reprendre"
-                                    }
-                                    onPress={() =>
-                                        session.status === "running"
-                                            ? pauseHike()
-                                            : resumeHike()
-                                    }
-                                    style={[styles.grow, styles.joinedStart]}
-                                />
-                                <Pressable
-                                    accessibilityRole="button"
-                                    accessibilityLabel="Terminer la randonnée"
-                                    onPress={() => setConfirmingEnd(true)}
-                                    style={({ pressed }) => [
-                                        styles.action,
-                                        styles.stop,
-                                        pressed && styles.actionPressed,
-                                    ]}
-                                >
-                                    <View style={styles.stopSquare} />
-                                </Pressable>
-                            </View>
-                        ))}
-                    {session.status === "idle" && (
-                        <>
-                            <Text style={styles.note}>
-                                Appuie sur Démarrer pour lancer le chrono.
-                            </Text>
-                            <ActionButton
-                                label="Retirer ce sentier"
-                                onPress={clearHikeTrail}
-                            />
-                        </>
-                    )}
-                    {/* TODO(gps): drop once the distance comes from the GPS. */}
-                    <Text style={styles.note}>
-                        Distance estimée, GPS à venir.
-                    </Text>
-                </Animated.View>
-            ) : (
-                <GlassButton
-                    accessibilityLabel={`${summary}. Afficher les détails`}
-                    radius={COMPACT_HEIGHT / 2}
-                    pressedScale={0.94}
-                    transformOrigin="left top"
-                    onPress={() => setExpanded(true)}
-                    style={styles.compact}
-                >
+        <>
+            {/* Invisible layer behind the open card: a tap anywhere else
+                folds it back. */}
+            {expanded && (
+                <Pressable
+                    onPress={() => {
+                        setExpanded(false);
+                        setConfirmingEnd(false);
+                    }}
+                    accessible={false}
+                    importantForAccessibility="no"
+                    style={StyleSheet.absoluteFill}
+                />
+            )}
+            <Animated.View
+                entering={FadeInUp.duration(ENTER_DURATION)}
+                exiting={FadeOut.duration(RESIZE_MS)}
+                layout={RESIZE}
+            >
+                {expanded ? (
                     <Animated.View
                         entering={FadeIn.duration(RESIZE_MS)}
-                        style={styles.summary}
+                        style={styles.expanded}
                     >
-                        <Icon
-                            ios={status.ios}
-                            material={status.material}
-                            size={16}
-                            color={status.color}
+                        <GlassSurface
+                            style={[
+                                StyleSheet.absoluteFill,
+                                styles.expandedRadius,
+                            ]}
                         />
-                        <Text style={[styles.time, { color: status.color }]}>
-                            {time}
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`${summary}. Masquer les détails`}
+                            onPress={() => {
+                                setExpanded(false);
+                                setConfirmingEnd(false);
+                            }}
+                            style={styles.header}
+                        >
+                            <Icon
+                                ios={status.ios}
+                                material={status.material}
+                                size={18}
+                                color={status.color}
+                            />
+                            <Text style={styles.title} numberOfLines={2}>
+                                {trail.name}
+                            </Text>
+                            <Icon
+                                ios="chevron.up"
+                                material="expand_less"
+                                size={16}
+                                color={ON_GLASS_MUTED}
+                            />
+                        </Pressable>
+                        <Text style={[styles.status, { color: status.color }]}>
+                            {status.label}
                         </Text>
-                        <Text style={styles.separator}>·</Text>
-                        <Text style={styles.distance}>{distance}</Text>
+
+                        <View style={styles.stats}>
+                            <Stat
+                                label="Temps"
+                                value={time}
+                                color={status.color}
+                            />
+                            <Stat label="Parcouru" value={distance} />
+                            <Stat
+                                label="Restant"
+                                value={formatDistanceKm(
+                                    trail.distanceKm - distanceKm,
+                                )}
+                            />
+                        </View>
+
+                        <View style={styles.track}>
+                            <View
+                                style={[
+                                    styles.progress,
+                                    {
+                                        width: `${(distanceKm / trail.distanceKm) * 100}%`,
+                                        backgroundColor: status.color,
+                                    },
+                                ]}
+                            />
+                        </View>
+                        <Text style={styles.note}>
+                            Parcours : {formatDistanceKm(trail.distanceKm)} ·{" "}
+                            {trail.elevationGainM} m D+
+                        </Text>
+
+                        {session.status !== "idle" &&
+                            (confirmingEnd ? (
+                                <Animated.View
+                                    entering={FadeIn.duration(RESIZE_MS)}
+                                    style={styles.confirm}
+                                >
+                                    <Text style={styles.confirmText}>
+                                        Terminer la randonnée ?
+                                    </Text>
+                                    <View style={styles.actionRow}>
+                                        <ActionButton
+                                            label="Annuler"
+                                            onPress={() =>
+                                                setConfirmingEnd(false)
+                                            }
+                                            style={styles.grow}
+                                        />
+                                        <ActionButton
+                                            label="Terminer"
+                                            tone="danger"
+                                            onPress={handleEnd}
+                                            style={styles.grow}
+                                        />
+                                    </View>
+                                </Animated.View>
+                            ) : (
+                                // Stop joined to the end of the pause button.
+                                <View style={styles.joinedRow}>
+                                    <ActionButton
+                                        label={
+                                            session.status === "running"
+                                                ? "Pause"
+                                                : "Reprendre"
+                                        }
+                                        onPress={() =>
+                                            session.status === "running"
+                                                ? pauseHike()
+                                                : resumeHike()
+                                        }
+                                        style={[
+                                            styles.grow,
+                                            styles.joinedStart,
+                                        ]}
+                                    />
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Terminer la randonnée"
+                                        onPress={() => setConfirmingEnd(true)}
+                                        style={({ pressed }) => [
+                                            styles.action,
+                                            styles.stop,
+                                            pressed && styles.actionPressed,
+                                        ]}
+                                    >
+                                        <View style={styles.stopSquare} />
+                                    </Pressable>
+                                </View>
+                            ))}
+                        {session.status === "idle" && (
+                            <>
+                                <Text style={styles.note}>
+                                    Appuie sur Démarrer pour lancer le chrono.
+                                </Text>
+                                <ActionButton
+                                    label="Retirer ce sentier"
+                                    onPress={clearHikeTrail}
+                                />
+                            </>
+                        )}
+                        {/* TODO(gps): drop once the distance comes from the GPS. */}
+                        <Text style={styles.note}>
+                            Distance estimée, GPS à venir.
+                        </Text>
                     </Animated.View>
-                </GlassButton>
-            )}
-        </Animated.View>
+                ) : (
+                    <View>
+                        {/* Still while paused: nothing is going on. */}
+                        {session.status !== "paused" && (
+                            <PillPulse
+                                color={
+                                    session.status === "idle"
+                                        ? ACCENT
+                                        : status.color
+                                }
+                            />
+                        )}
+                        <GlassButton
+                            accessibilityLabel={`${summary}. Afficher les détails`}
+                            radius={COMPACT_HEIGHT / 2}
+                            pressedScale={0.94}
+                            transformOrigin="left top"
+                            onPress={() => setExpanded(true)}
+                            style={styles.compact}
+                        >
+                            <Animated.View
+                                entering={FadeIn.duration(RESIZE_MS)}
+                                style={styles.summary}
+                            >
+                                <Icon
+                                    ios={status.ios}
+                                    material={status.material}
+                                    size={16}
+                                    color={status.color}
+                                />
+                                <Text
+                                    style={[
+                                        styles.time,
+                                        { color: status.color },
+                                    ]}
+                                >
+                                    {time}
+                                </Text>
+                                <Text style={styles.separator}>·</Text>
+                                <Text style={styles.distance}>{distance}</Text>
+                            </Animated.View>
+                        </GlassButton>
+                    </View>
+                )}
+            </Animated.View>
+        </>
+    );
+}
+
+/**
+ * Thin ring in the hike's color that spreads out from the compact pill and
+ * fades, now and then, to catch the eye. Its edges move out rather than
+ * scaling, so the gap stays even around the long pill.
+ */
+function PillPulse({ color }: { color: string }) {
+    const reducedMotion = useReducedMotion();
+    const pulse = useSharedValue(0);
+
+    useEffect(() => {
+        if (reducedMotion) return;
+        pulse.set(
+            withRepeat(
+                withDelay(
+                    PULSE_MS / 2,
+                    withTiming(1, { duration: PULSE_MS, easing: EASE_OUT }),
+                ),
+                -1,
+            ),
+        );
+        return () => cancelAnimation(pulse);
+    }, [reducedMotion, pulse]);
+
+    const ringStyle = useAnimatedStyle(() => {
+        const inset = -PULSE_SPREAD * pulse.get();
+        return {
+            top: inset,
+            right: inset,
+            bottom: inset,
+            left: inset,
+            borderRadius: COMPACT_HEIGHT / 2 - inset,
+            // Invisible at rest, between two waves.
+            opacity: interpolate(pulse.get(), [0, 0.15, 1], [0, 0.6, 0]),
+        };
+    });
+
+    if (reducedMotion) return null;
+    return (
+        <Animated.View
+            style={[styles.pulse, { borderColor: color }, ringStyle]}
+        />
     );
 }
 
@@ -317,6 +418,11 @@ function ActionButton({
 }
 
 const styles = StyleSheet.create({
+    pulse: {
+        position: "absolute",
+        borderWidth: 1.5,
+        pointerEvents: "none",
+    },
     compact: {
         height: COMPACT_HEIGHT,
         paddingHorizontal: 14,
