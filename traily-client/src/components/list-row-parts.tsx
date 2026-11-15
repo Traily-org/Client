@@ -16,8 +16,7 @@ export function ListRowIcon({ name }: { name: ListRowIconName }) {
 
     return (
         <View
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
+            aria-hidden
             className="h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-icon-tile"
         >
             <Icon

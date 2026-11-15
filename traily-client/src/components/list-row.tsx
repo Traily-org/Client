@@ -51,7 +51,7 @@ export function ListRow({
                 value,
                 description,
             )}
-            accessibilityState={{ disabled: Boolean(disabled) }}
+            aria-disabled={Boolean(disabled)}
             disabled={disabled}
             {...pressableProps}
         >
@@ -76,8 +76,7 @@ export function ListRow({
                     )}
                     {showChevron && (
                         <Text
-                            importantForAccessibility="no"
-                            accessibilityElementsHidden
+                            aria-hidden
                             className="text-xl text-foreground-muted"
                         >
                             ›

@@ -46,7 +46,7 @@ export function ListChoiceRow<T extends string>({
         <View
             accessibilityRole="radiogroup"
             accessibilityLabel={label}
-            accessibilityState={{ disabled: isDisabled }}
+            aria-disabled={isDisabled}
             className={`gap-3 px-4 py-3 ${isDisabled ? "opacity-50" : ""}`}
         >
             <View className="flex-row items-center gap-3">
@@ -61,10 +61,8 @@ export function ListChoiceRow<T extends string>({
                             key={option.value}
                             accessibilityRole="radio"
                             accessibilityLabel={option.label}
-                            accessibilityState={{
-                                checked: selected,
-                                disabled: isDisabled,
-                            }}
+                            aria-checked={selected}
+                            aria-disabled={isDisabled}
                             disabled={isDisabled}
                             onPress={() => onChange?.(option.value)}
                             // 36 px pill + 4 px of touch area on each side = 44 px target.

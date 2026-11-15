@@ -38,7 +38,8 @@ export function ListSwitchRow({
         <Pressable
             accessibilityRole="switch"
             accessibilityLabel={rowAccessibilityLabel(label, description)}
-            accessibilityState={{ checked: value, disabled: isDisabled }}
+            aria-checked={value}
+            aria-disabled={isDisabled}
             disabled={isDisabled}
             onPress={() => onValueChange?.(!value)}
             className={`${MIN_TOUCH_TARGET_CLASS} flex-row items-center gap-3 px-4 py-2.5 ${
@@ -48,11 +49,7 @@ export function ListSwitchRow({
             {icon && <ListRowIcon name={icon} />}
             <ListRowText label={label} description={description} />
             {/* Visual only: the row handles the touch and the screen reader. */}
-            <View
-                pointerEvents="none"
-                importantForAccessibility="no-hide-descendants"
-                accessibilityElementsHidden
-            >
+            <View pointerEvents="none" aria-hidden>
                 <Switch value={value} disabled={isDisabled} />
             </View>
         </Pressable>
