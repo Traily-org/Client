@@ -7,17 +7,17 @@ export default function CreditsScreen() {
     const attributions = getAllAttributions();
 
     return (
-        <SafeAreaView className="flex-1" edges={["bottom"]}>
+        <SafeAreaView className="flex-1 bg-screen" edges={["bottom"]}>
             <ScrollView
                 className="flex-1"
                 contentContainerClassName="gap-4 p-6"
             >
-                <Text className="text-base text-gray-600">
+                <Text className="text-base text-foreground-muted">
                     Traily s’appuie sur des fonds de carte et des données
                     fournis par :
                 </Text>
                 {attributions.map((attribution) => (
-                    <Text key={attribution} className="text-sm text-gray-800">
+                    <Text key={attribution} className="text-sm text-foreground">
                         {attribution}
                     </Text>
                 ))}

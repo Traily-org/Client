@@ -1,7 +1,7 @@
 import { type Href, Link } from "expo-router";
 import { Pressable, Text } from "react-native";
 
-import { MIN_TOUCH_TARGET_CLASS, uiClasses } from "@/constants/ui-classes";
+import { MIN_TOUCH_TARGET_CLASS } from "@/constants/accessibility";
 
 interface HeaderCloseButtonProps {
     /** Screen the modal was opened from: going back to it closes the modal. */
@@ -20,7 +20,7 @@ export function HeaderCloseButton({ href }: HeaderCloseButtonProps) {
                 accessibilityLabel="Fermer"
                 className={`${MIN_TOUCH_TARGET_CLASS} justify-center px-2`}
             >
-                <Text className={`text-base ${uiClasses.text}`}>Fermer</Text>
+                <Text className="text-base text-foreground">Fermer</Text>
             </Pressable>
         </Link>
     );

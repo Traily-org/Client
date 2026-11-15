@@ -15,7 +15,9 @@ export function MapModePicker() {
 
     return (
         <View className="gap-2">
-            <Text className="text-base font-semibold">Fond de carte</Text>
+            <Text className="text-base font-semibold text-foreground">
+                Fond de carte
+            </Text>
             <View className="flex-row self-start rounded-[10px] bg-gray-200 p-[3px]">
                 {OPTIONS.map((option) => {
                     const active = option.mode === mode;

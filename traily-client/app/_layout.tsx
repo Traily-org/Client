@@ -1,15 +1,13 @@
 import "@/global.css";
 
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
-import { useColorScheme } from "react-native";
+import { Stack } from "expo-router";
+
+import { ThemeRoot } from "@/components/theme-root";
 
 export default function RootLayout() {
-    const colorScheme = useColorScheme();
     return (
-        <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
+        <ThemeRoot>
             <Stack screenOptions={{ headerShown: false }} />
-        </ThemeProvider>
+        </ThemeRoot>
     );
 }
