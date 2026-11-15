@@ -1,21 +1,11 @@
-/**
- * Color roles of the theme, defined in src/constants/theme-colors.ts.
- * theme-colors.test.ts checks this list matches it.
- */
-const THEME_COLOR_ROLES = [
-    "screen",
-    "surface",
-    "surface-pressed",
-    "foreground",
-    "foreground-muted",
-    "danger",
-    "separator",
-    "icon-tile",
-    "icon",
-    "chip",
-    "chip-selected",
-    "on-chip-selected",
-];
+// Color roles come from the single source of the theme. Node 22 loads the
+// TypeScript file itself (type stripping); Tailwind falls back to jiti
+// otherwise. After adding or renaming a role, restart Metro (`expo start -c`):
+// the dev server does not reload this file.
+const {
+    cssVariableName,
+    themeColors,
+} = require("./src/constants/theme-colors.ts");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -27,9 +17,9 @@ module.exports = {
     theme: {
         extend: {
             colors: Object.fromEntries(
-                THEME_COLOR_ROLES.map((role) => [
+                Object.keys(themeColors.light).map((role) => [
                     role,
-                    `rgb(var(--color-${role}) / <alpha-value>)`,
+                    `rgb(var(${cssVariableName(role)}) / <alpha-value>)`,
                 ]),
             ),
         },

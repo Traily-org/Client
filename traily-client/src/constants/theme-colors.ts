@@ -5,8 +5,9 @@
  *
  * Each role is a Tailwind color named after its key and backed by the CSS
  * variable `--color-<role>`, set at the root of the app by `ThemeRoot`.
- * `tailwind.config.js` lists the same roles: `theme-colors.test.ts` checks
- * they stay in sync.
+ * `tailwind.config.js` reads the roles from this file, so it must not import
+ * anything (no `@/` alias, no React Native): Metro, Prettier and the CI load
+ * it outside of the app bundler.
  *
  * Light values keep the grays used before the theme, so migrating a component
  * does not change how it looks. Dark values are a first proposal.
