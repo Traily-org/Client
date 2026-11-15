@@ -3,13 +3,37 @@ import { useColorScheme, vars } from "nativewind";
 import { type ReactNode, useEffect } from "react";
 import { View } from "react-native";
 
-import { themeColors, toCssVariables } from "@/constants/theme-colors";
+import {
+    type ColorScheme,
+    themeColors,
+    toCssVariables,
+} from "@/constants/theme-colors";
 import { useResolvedColorScheme } from "@/hooks/use-theme-colors";
 import { useThemePreference } from "@/hooks/use-theme-preference";
 
 const schemeVariables = {
     light: vars(toCssVariables(themeColors.light)),
     dark: vars(toCssVariables(themeColors.dark)),
+};
+
+/** Navigation theme (headers, screen background) built from the roles. */
+function navigationTheme(scheme: ColorScheme): typeof DefaultTheme {
+    const base = scheme === "dark" ? DarkTheme : DefaultTheme;
+    const colors = themeColors[scheme];
+    return {
+        ...base,
+        colors: {
+            ...base.colors,
+            background: colors.screen,
+            card: colors.surface,
+            text: colors.foreground,
+        },
+    };
+}
+
+const navigationThemes = {
+    light: navigationTheme("light"),
+    dark: navigationTheme("dark"),
 };
 
 /**
@@ -30,7 +54,7 @@ export function ThemeRoot({ children }: { children: ReactNode }) {
 
     return (
         <View className="flex-1" style={schemeVariables[scheme]}>
-            <ThemeProvider value={scheme === "dark" ? DarkTheme : DefaultTheme}>
+            <ThemeProvider value={navigationThemes[scheme]}>
                 {children}
             </ThemeProvider>
         </View>
