@@ -10,6 +10,10 @@ import { ListRow } from "@/components/list-row";
 import { ListSection } from "@/components/list-section";
 import { ListSwitchRow } from "@/components/list-switch-row";
 import { MapModePicker } from "@/features/map";
+import {
+    setThemePreference,
+    useThemePreference,
+} from "@/hooks/use-theme-preference";
 
 /** Shown under the settings that are displayed but not wired yet. */
 const NOT_WIRED = "Bientôt disponible";
@@ -44,6 +48,8 @@ const THEME_OPTIONS = [
 
 /** Settings screen, opened from the gear button of the map (TRA-127). */
 export function SettingsScreen() {
+    const themePreference = useThemePreference();
+
     return (
         <SafeAreaView
             className="flex-1 bg-screen"
@@ -91,14 +97,14 @@ export function SettingsScreen() {
                     />
                 </ListSection>
 
-                {/* TRA-126 provides the light/dark mechanism to wire here. */}
+                {/* In memory until the app can persist settings on the device. */}
                 <ListSection title="Affichage">
                     <ListChoiceRow
                         label="Thème"
-                        description={NOT_WIRED}
                         icon={{ ios: "moon.fill", material: "dark_mode" }}
                         options={THEME_OPTIONS}
-                        value="system"
+                        value={themePreference}
+                        onChange={setThemePreference}
                     />
                 </ListSection>
 
