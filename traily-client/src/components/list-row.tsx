@@ -6,7 +6,7 @@ import {
     ListRowText,
     rowAccessibilityLabel,
 } from "./list-row-parts";
-import { MIN_TOUCH_TARGET_CLASS, uiClasses } from "@/constants/ui-classes";
+import { MIN_TOUCH_TARGET_CLASS } from "@/constants/accessibility";
 
 /** A row of a {@link ListSection} that opens a screen or triggers an action. */
 export interface ListRowProps extends Omit<
@@ -58,21 +58,19 @@ export function ListRow({
             {({ pressed }) => (
                 <View
                     className={`${MIN_TOUCH_TARGET_CLASS} flex-row items-center gap-3 px-4 py-2.5 ${
-                        pressed ? uiClasses.pressed : ""
+                        pressed ? "bg-surface-pressed" : ""
                     } ${disabled ? "opacity-50" : ""}`}
                 >
                     {icon && <ListRowIcon name={icon} />}
                     {danger ? (
-                        <Text
-                            className={`flex-1 text-center text-base font-semibold ${uiClasses.textDanger}`}
-                        >
+                        <Text className="flex-1 text-center text-base font-semibold text-danger">
                             {label}
                         </Text>
                     ) : (
                         <ListRowText label={label} description={description} />
                     )}
                     {value && (
-                        <Text className={`text-sm ${uiClasses.textMuted}`}>
+                        <Text className="text-sm text-foreground-muted">
                             {value}
                         </Text>
                     )}
@@ -80,7 +78,7 @@ export function ListRow({
                         <Text
                             importantForAccessibility="no"
                             accessibilityElementsHidden
-                            className={`text-xl ${uiClasses.textMuted}`}
+                            className="text-xl text-foreground-muted"
                         >
                             ›
                         </Text>

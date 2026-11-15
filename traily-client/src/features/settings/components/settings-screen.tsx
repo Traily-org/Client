@@ -9,7 +9,6 @@ import {
 import { ListRow } from "@/components/list-row";
 import { ListSection } from "@/components/list-section";
 import { ListSwitchRow } from "@/components/list-switch-row";
-import { uiClasses } from "@/constants/ui-classes";
 import { MapModePicker } from "@/features/map";
 
 /** Shown under the settings that are displayed but not wired yet. */
@@ -47,7 +46,7 @@ const THEME_OPTIONS = [
 export function SettingsScreen() {
     return (
         <SafeAreaView
-            className={`flex-1 ${uiClasses.screen}`}
+            className="flex-1 bg-screen"
             edges={["bottom", "left", "right"]}
         >
             <ScrollView contentContainerClassName="gap-5 p-4">

@@ -6,7 +6,7 @@ import {
     ListRowText,
     rowAccessibilityLabel,
 } from "./list-row-parts";
-import { MIN_TOUCH_TARGET_CLASS } from "@/constants/ui-classes";
+import { MIN_TOUCH_TARGET_CLASS } from "@/constants/accessibility";
 
 interface ListSwitchRowProps {
     /** Visible text, also read by the screen reader. */
