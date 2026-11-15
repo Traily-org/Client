@@ -15,10 +15,14 @@ const MAPTILER_LOGO = require("../assets/maptiler-logo.svg");
  */
 export function MapLegalNotices({
     bottomOffset = 0,
+    safeArea = true,
 }: {
     bottomOffset?: number;
+    /** Keep clear of the bottom safe area: off for a map inside a screen. */
+    safeArea?: boolean;
 }) {
     const insets = useSafeAreaInsets();
+    const bottom = (safeArea ? insets.bottom : 0) + bottomOffset;
 
     return (
         <>
@@ -27,7 +31,7 @@ export function MapLegalNotices({
                 accessibilityRole="link"
                 accessibilityLabel="MapTiler logo"
                 className="absolute left-2"
-                style={{ bottom: insets.bottom + bottomOffset + 8 }}
+                style={{ bottom: bottom + 8 }}
             >
                 <Image
                     source={MAPTILER_LOGO}
@@ -37,7 +41,7 @@ export function MapLegalNotices({
             </Pressable>
             <View
                 className="absolute right-1 rounded bg-white/80 px-1"
-                style={{ bottom: insets.bottom + bottomOffset + 2 }}
+                style={{ bottom: bottom + 2 }}
             >
                 <Text className="text-[10px] text-[#333]">
                     {MAP_ATTRIBUTIONS.map((attribution, index) => (

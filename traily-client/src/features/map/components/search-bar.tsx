@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
     Pressable,
     StyleSheet,
@@ -10,9 +10,11 @@ import {
 import Animated, {
     FadeIn,
     FadeOut,
+    useAnimatedReaction,
     useAnimatedStyle,
     type SharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 import {
     GlassSurface,
@@ -36,6 +38,10 @@ interface SearchBarProps {
     openProgress: SharedValue<number>;
     onOpen: () => void;
     onClose: () => void;
+    /** Every focus of the field, the panel open or not. */
+    onFocus?: () => void;
+    /** 0 → 1 as a panel opens over the results: hides the back arrow. */
+    coverProgress?: SharedValue<number>;
 }
 
 /**
@@ -50,6 +56,8 @@ export function SearchBar({
     openProgress,
     onOpen,
     onClose,
+    onFocus,
+    coverProgress,
 }: SearchBarProps) {
     const inputRef = useRef<TextInput>(null);
 
@@ -59,11 +67,24 @@ export function SearchBar({
     const searchIconStyle = useAnimatedStyle(() => ({
         opacity: 1 - openProgress.get(),
     }));
-    const backIconStyle = useAnimatedStyle(() => ({
-        opacity: openProgress.get(),
-    }));
+    const backIconStyle = useAnimatedStyle(() => {
+        const cover = coverProgress?.get() ?? 0;
+        return {
+            opacity: openProgress.get() * (1 - cover),
+            transform: [{ translateX: -8 * cover }, { scale: 1 - 0.3 * cover }],
+        };
+    });
+    // The hidden arrow must not close the search under the finger.
+    const [covered, setCovered] = useState(false);
+    useAnimatedReaction(
+        () => (coverProgress?.get() ?? 0) > 0.5,
+        (isCovered, wasCovered) => {
+            if (isCovered !== wasCovered) scheduleOnRN(setCovered, isCovered);
+        },
+    );
 
     function handleFocus() {
+        onFocus?.();
         if (open) return;
         void Haptics.selectionAsync();
         onOpen();
@@ -98,6 +119,7 @@ export function SearchBar({
             />
             <Pressable
                 onPress={handleLeadingPress}
+                disabled={open && covered}
                 accessibilityRole="button"
                 accessibilityLabel={open ? "Fermer la recherche" : "Rechercher"}
                 hitSlop={6}
