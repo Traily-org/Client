@@ -23,6 +23,7 @@ import type { TrailRouteMapProps } from "../types";
  */
 export function TrailRouteMap({
     route,
+    color,
     pins = [],
     onPressPin,
 }: TrailRouteMapProps) {
@@ -35,7 +36,7 @@ export function TrailRouteMap({
 
     useEffect(() => {
         let cancelled = false;
-        getMapStyle(mode, route).then(
+        getMapStyle(mode, route, color).then(
             (style) => {
                 if (cancelled) return;
                 setFailed(false);
@@ -48,7 +49,7 @@ export function TrailRouteMap({
         return () => {
             cancelled = true;
         };
-    }, [mode, route]);
+    }, [mode, route, color]);
 
     if (!mapStyle) {
         return (
@@ -96,10 +97,10 @@ export function TrailRouteMap({
                     </Marker>
                 ))}
                 <Marker lngLat={route[0]} anchor="center">
-                    <RouteStartMarker />
+                    <RouteStartMarker color={color} />
                 </Marker>
                 <Marker lngLat={route[route.length - 1]} anchor="center">
-                    <RouteEndMarker />
+                    <RouteEndMarker color={color} />
                 </Marker>
             </Map>
             {SHOW_MAPTILER_LEGAL_NOTICES && (

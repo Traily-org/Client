@@ -10,6 +10,8 @@ export interface MapTrail {
     name: string;
     /** `[longitude, latitude]` points, start first. */
     route: [number, number][];
+    /** Color of its route, e.g. by difficulty. The mode's red otherwise. */
+    color?: string;
 }
 
 /** Shared by the native and web `TrailyMap`, which must expose the same API. */
@@ -27,8 +29,15 @@ export interface TrailyMapProps {
     trails?: MapTrail[];
     /** Drawn above the others, e.g. the trail picked for the hike. */
     highlightedTrailId?: string;
-    /** Drawn on top and wider while the others fade back. */
+    /**
+     * Drawn on top and wider while the others fade back, with a cross at
+     * its end, as on the trail sheet's map.
+     */
     focusedTrailId?: string;
+    /** Photo thumbnails pinned on the map, e.g. the focused trail's spots. */
+    pins?: PhotoPin[];
+    /** Touching a pin, e.g. to show its photo in large. */
+    onPressPin?: (pinId: string) => void;
     /**
      * Touch or long press on a trail's route or start point (click or right
      * click on the web). The map frames the trail first, keeping room for
@@ -58,6 +67,8 @@ export interface PhotoPin {
 export interface TrailRouteMapProps {
     /** `[longitude, latitude]` points, start first. */
     route: [number, number][];
+    /** Color of the route and its ends. The mode's red otherwise. */
+    color?: string;
     pins?: PhotoPin[];
     /** Touching a pin, e.g. to show its photo in large. */
     onPressPin?: (pinId: string) => void;

@@ -18,6 +18,11 @@ describe("getTrailsInArea", () => {
         expect(trail.route).toBe(getTrailDetails(trail.id)?.route);
     });
 
+    it("gives each trail its difficulty, for its color", () => {
+        const [trail] = getTrailsInArea([6.2, 45.82, 6.2, 45.822]);
+        expect(trail.difficulty).toBe(getTrailDetails(trail.id)?.difficulty);
+    });
+
     it("finds nothing far from every trail", () => {
         expect(getTrailsInArea([2.2, 48.8, 2.4, 48.9])).toEqual([]);
     });

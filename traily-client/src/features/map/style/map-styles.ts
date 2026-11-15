@@ -62,7 +62,7 @@ const ROUTE_COLORS: Record<MapMode, string> = {
     topo: ROUTE_COLOR,
 };
 
-function getRouteLayers(mode: MapMode) {
+function getRouteLayers(mode: MapMode, color = ROUTE_COLORS[mode]) {
     const layout = { "line-join": "round", "line-cap": "round" };
     return [
         {
@@ -90,7 +90,7 @@ function getRouteLayers(mode: MapMode) {
             source: "route",
             layout,
             paint: {
-                "line-color": ROUTE_COLORS[mode],
+                "line-color": color,
                 "line-width": [
                     "interpolate",
                     ["linear"],
@@ -134,7 +134,7 @@ function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
 /**
  * Resolves to a plain style spec object for the given mode: the MapTiler
  * style, with `route` appended on top as a GeoJSON source and its line
- * layers when given. Fetched
+ * layers when given, in `routeColor` (the mode's red by default). Fetched
  * (rather than handing MapLibre the style URL) so the route can be part of
  * the style itself on both platforms. Not typed against either
  * `maplibre-gl`'s or `@maplibre/maplibre-react-native`'s
@@ -142,7 +142,11 @@ function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
  * incompatible versions of `@maplibre/maplibre-gl-style-spec`) — cast to the
  * right one at each platform-specific call site.
  */
-export async function getMapStyle(mode: MapMode, route?: RouteLine) {
+export async function getMapStyle(
+    mode: MapMode,
+    route?: RouteLine,
+    routeColor?: string,
+) {
     const style = await fetchMapTilerStyle(mode);
     // A fresh object each time: the cached one is shared by every map.
     if (!route) {
@@ -165,7 +169,7 @@ export async function getMapStyle(mode: MapMode, route?: RouteLine) {
                 },
             },
         },
-        layers: [...style.layers, ...getRouteLayers(mode)],
+        layers: [...style.layers, ...getRouteLayers(mode, routeColor)],
     };
 }
 
@@ -215,13 +219,14 @@ function byFocus(focused: number, dimmed: number, other: number) {
 
 /**
  * Layers drawing the trails source: each route as a line with a white
- * casing, like the trail sheet's map, and its start as a dot. Zoomed out,
+ * casing, like the trail sheet's map, and its start as a dot, in the
+ * trail's own color (its difficulty) or the mode's red. Zoomed out,
  * the dot is filled in the route color; once the routes show, it becomes a
  * ring, as on the trail sketches. While a trail has the focus, it is drawn
  * wider and the others fade back.
  */
 export function getTrailLayers(mode: MapMode): TrailLayer[] {
-    const color = ROUTE_COLORS[mode];
+    const color = ["coalesce", ["get", "color"], ROUTE_COLORS[mode]];
     const lines = ["==", ["geometry-type"], "LineString"];
     const layout = { "line-join": "round", "line-cap": "round" };
     return [

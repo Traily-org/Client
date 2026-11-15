@@ -22,6 +22,7 @@ const OUT = ZOOM_FOCUS_KEEP_ZOOM - 0.5;
 const NORTH: TrailRoute = {
     id: "north",
     name: "Nord",
+    difficulty: "easy",
     route: [
         [0, 10],
         [10, 10],
@@ -30,6 +31,7 @@ const NORTH: TrailRoute = {
 const SOUTH: TrailRoute = {
     id: "south",
     name: "Sud",
+    difficulty: "hard",
     route: [
         [0, 0],
         [10, 0],

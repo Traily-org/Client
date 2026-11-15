@@ -458,7 +458,12 @@ export function getTrailsInArea(area: Bounds): TrailRoute[] {
         if (!details || !boundsIntersect(getBounds(details.route), area)) {
             continue;
         }
-        found.push({ id, name: details.name, route: details.route });
+        found.push({
+            id,
+            name: details.name,
+            difficulty: details.difficulty,
+            route: details.route,
+        });
     }
     return found;
 }

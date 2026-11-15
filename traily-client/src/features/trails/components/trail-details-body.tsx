@@ -149,6 +149,7 @@ export function TrailDetailsBody({
                     {showMap && (
                         <TrailRouteMap
                             route={trail.route}
+                            color={difficulty.routeColor}
                             pins={pins}
                             onPressPin={(pinId) => {
                                 const point = trail.pointsOfInterest.find(

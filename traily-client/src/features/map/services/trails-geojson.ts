@@ -3,6 +3,8 @@ import type { MapTrail } from "../types";
 /** Properties of every feature of the trails source, read by its layers. */
 export interface TrailFeatureProperties {
     trailId: string;
+    /** Route color; the layers fall back to the mode's red without it. */
+    color?: string;
     /** The trail picked for the hike. */
     highlighted: boolean;
     /** The trail in focus, with its preview open. */
@@ -56,6 +58,7 @@ export function toTrailsGeoJSON(
         const focused = trail.id === focusedTrailId;
         const properties = {
             trailId: trail.id,
+            color: trail.color,
             highlighted: trail.id === highlightedTrailId,
             focused,
             dimmed: focusedTrailId !== undefined && !focused,

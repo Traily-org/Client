@@ -38,6 +38,7 @@ interface MarkerSlot {
  */
 export function TrailRouteMap({
     route,
+    color,
     pins = [],
     onPressPin,
 }: TrailRouteMapProps) {
@@ -113,7 +114,7 @@ export function TrailRouteMap({
 
     useEffect(() => {
         let cancelled = false;
-        getMapStyle(mode, route).then(
+        getMapStyle(mode, route, color).then(
             (style) => {
                 if (cancelled) return;
                 setFailed(false);
@@ -126,7 +127,7 @@ export function TrailRouteMap({
         return () => {
             cancelled = true;
         };
-    }, [mode, route]);
+    }, [mode, route, color]);
 
     return (
         <View style={styles.container}>
@@ -134,9 +135,9 @@ export function TrailRouteMap({
             {slots.map(({ key, element, marker }) =>
                 createPortal(
                     marker === "start" ? (
-                        <RouteStartMarker />
+                        <RouteStartMarker color={color} />
                     ) : marker === "end" ? (
-                        <RouteEndMarker />
+                        <RouteEndMarker color={color} />
                     ) : (
                         <PhotoPinMarker
                             photoUrl={marker.photoUrl}

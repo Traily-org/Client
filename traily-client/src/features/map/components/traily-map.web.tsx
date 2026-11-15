@@ -6,16 +6,20 @@ import {
     type LayerSpecification,
     Map,
     type Map as MapLibreMap,
+    Marker,
     type PointLike,
     type StyleSpecification,
 } from "maplibre-gl";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MAP_MIN_ZOOM } from "@/constants/config";
 import { getBounds, type Viewport } from "@/utils/bounds";
 
 import { MapLegalNotices } from "./map-legal-notices";
+import { PhotoPinMarker } from "./photo-pin-marker";
+import { RouteEndMarker } from "./route-end-marker";
 import { setupMapLibreForWeb } from "./setup-maplibre-web";
 import {
     getTrailFocusPadding,
@@ -35,10 +39,21 @@ import {
     TRAIL_TOUCH_LAYER_IDS,
     TRAILS_SOURCE_ID,
 } from "../style/map-styles";
-import type { MapTrail, TrailyMapProps } from "../types";
+import type { MapTrail, PhotoPin, TrailyMapProps } from "../types";
 
-// Shared default, so the trails data stays the same object between renders.
+// Shared defaults, so the data stays the same object between renders.
 const NO_TRAILS: MapTrail[] = [];
+const NO_PINS: PhotoPin[] = [];
+
+/**
+ * A maplibre-gl marker element, and what to portal into it: the focused
+ * trail's end, or a photo pin.
+ */
+interface MarkerSlot {
+    key: string;
+    element: HTMLElement;
+    marker: "end" | PhotoPin;
+}
 
 /** Where the map opens: Annecy, until it follows the user's position. */
 const INITIAL_VIEW = {
@@ -85,7 +100,9 @@ export function TrailyMap({
     trails = NO_TRAILS,
     highlightedTrailId,
     focusedTrailId,
+    pins = NO_PINS,
     onPressTrail,
+    onPressPin,
     onPressMap,
     onViewportChange,
 }: TrailyMapProps) {
@@ -147,6 +164,14 @@ export function TrailyMap({
         map.on("moveend", () => handleViewportChange(getViewport(map)));
 
         map.on("click", (event) => {
+            // A pin handles its own touch.
+            const target = event.originalEvent.target;
+            if (
+                target instanceof Element &&
+                target.closest(".maplibregl-marker")
+            ) {
+                return;
+            }
             const trailId = getTrailAt(map, event.point, CLICK_HIT_RADIUS);
             if (trailId) handlePressTrail(trailId);
             else handlePressMap();
@@ -229,9 +254,77 @@ export function TrailyMap({
     // mode switch just keeps the current style.
     if (styleError && !styleLoaded) throw styleError;
 
+    // As on the trail sheet's map: photo pins along the focused trail, its
+    // end above them (later markers are drawn on top).
+    const focusedTrail = trails.find((trail) => trail.id === focusedTrailId);
+    const endPoint = focusedTrail?.route[focusedTrail.route.length - 1];
+    const [slots, setSlots] = useState<MarkerSlot[]>([]);
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+        const items = [
+            ...pins.map((pin) => ({
+                key: pin.id,
+                lngLat: pin.lngLat,
+                anchor: "bottom" as const,
+                marker: pin,
+            })),
+            ...(endPoint
+                ? [
+                      {
+                          key: "end",
+                          lngLat: endPoint,
+                          anchor: "center" as const,
+                          marker: "end" as const,
+                      },
+                  ]
+                : []),
+        ];
+        const created = items.map((item) => {
+            const element = document.createElement("div");
+            const marker = new Marker({ element, anchor: item.anchor })
+                .setLngLat(item.lngLat)
+                .addTo(map);
+            return {
+                key: item.key,
+                element,
+                marker: item.marker,
+                instance: marker,
+            };
+        });
+        // The marker elements only exist once maplibre-gl has created them.
+        // Nothing to show twice in a row: keep the state as is.
+        setSlots((current) =>
+            current.length === 0 && created.length === 0 ? current : created,
+        );
+        return () => {
+            created.forEach(({ instance }) => instance.remove());
+            setSlots((current) => (current.length === 0 ? current : []));
+        };
+    }, [pins, endPoint]);
+
     return (
         <div style={{ position: "relative", display: "flex", flex: 1 }}>
             <div ref={containerRef} style={{ display: "flex", flex: 1 }} />
+            {slots.map(({ key, element, marker }) =>
+                createPortal(
+                    marker === "end" ? (
+                        <RouteEndMarker color={focusedTrail?.color} />
+                    ) : (
+                        <PhotoPinMarker
+                            photoUrl={marker.photoUrl}
+                            label={marker.label}
+                            onPress={
+                                onPressPin
+                                    ? () => onPressPin(marker.id)
+                                    : undefined
+                            }
+                        />
+                    ),
+                    element,
+                    key,
+                ),
+            )}
             {SHOW_MAPTILER_LEGAL_NOTICES && (
                 <MapLegalNotices bottomOffset={bottomOffset} />
             )}

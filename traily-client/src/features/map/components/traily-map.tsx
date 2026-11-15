@@ -6,6 +6,7 @@ import {
     type LayerProps,
     Map,
     type MapRef,
+    Marker,
     OfflineManager,
     type StyleSpecification,
 } from "@maplibre/maplibre-react-native";
@@ -18,6 +19,8 @@ import { MAP_MIN_ZOOM } from "@/constants/config";
 import { getBounds } from "@/utils/bounds";
 
 import { MapLegalNotices } from "./map-legal-notices";
+import { PhotoPinMarker } from "./photo-pin-marker";
+import { RouteEndMarker } from "./route-end-marker";
 import {
     getTrailFocusPadding,
     TRAIL_FOCUS_DURATION,
@@ -32,10 +35,11 @@ import {
     TRAIL_TOUCH_LAYER_IDS,
     TRAILS_SOURCE_ID,
 } from "../style/map-styles";
-import type { MapTrail, TrailyMapProps } from "../types";
+import type { MapTrail, PhotoPin, TrailyMapProps } from "../types";
 
-// Shared default, so the trails data stays the same object between renders.
+// Shared defaults, so the data stays the same object between renders.
 const NO_TRAILS: MapTrail[] = [];
+const NO_PINS: PhotoPin[] = [];
 
 /** Where the map opens: Annecy, until it follows the user's position. */
 const INITIAL_VIEW = {
@@ -57,7 +61,9 @@ export function TrailyMap({
     trails = NO_TRAILS,
     highlightedTrailId,
     focusedTrailId,
+    pins = NO_PINS,
     onPressTrail,
+    onPressPin,
     onPressMap,
     onViewportChange,
 }: TrailyMapProps) {
@@ -99,6 +105,8 @@ export function TrailyMap({
     // mode switch just keeps the current style.
     if (styleError && !mapStyle) throw styleError;
     if (!mapStyle) return <View style={styles.container} />;
+
+    const focusedTrail = trails.find((trail) => trail.id === focusedTrailId);
 
     // Frames the trail between the controls, then reports the press.
     function pressTrail(trailId: string, haptic: Haptics.ImpactFeedbackStyle) {
@@ -185,6 +193,31 @@ export function TrailyMap({
                         <Layer key={layer.id} {...(layer as LayerProps)} />
                     ))}
                 </GeoJSONSource>
+                {/* As on the trail sheet's map: photo pins along the focused
+                    trail, its end above them. */}
+                {pins.map((pin) => (
+                    <Marker key={pin.id} lngLat={pin.lngLat} anchor="bottom">
+                        <PhotoPinMarker
+                            photoUrl={pin.photoUrl}
+                            label={pin.label}
+                            onPress={
+                                onPressPin
+                                    ? () => onPressPin(pin.id)
+                                    : undefined
+                            }
+                        />
+                    </Marker>
+                ))}
+                {focusedTrail && focusedTrail.route.length > 0 && (
+                    <Marker
+                        lngLat={
+                            focusedTrail.route[focusedTrail.route.length - 1]
+                        }
+                        anchor="center"
+                    >
+                        <RouteEndMarker color={focusedTrail.color} />
+                    </Marker>
+                )}
             </Map>
             {SHOW_MAPTILER_LEGAL_NOTICES && (
                 <MapLegalNotices bottomOffset={bottomOffset} />

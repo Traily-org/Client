@@ -58,6 +58,14 @@ describe("toTrailsGeoJSON", () => {
         });
     });
 
+    it("carries each trail's color", () => {
+        const { features } = toTrailsGeoJSON([{ ...SEMNOZ, color: "#1E9E57" }]);
+        expect(features.map((feature) => feature.properties.color)).toEqual([
+            "#1E9E57",
+            "#1E9E57",
+        ]);
+    });
+
     it("skips a trail without route points", () => {
         const empty = { id: "empty", name: "Vide", route: [] };
         expect(toTrailsGeoJSON([empty]).features).toEqual([]);

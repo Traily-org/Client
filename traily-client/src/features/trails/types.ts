@@ -30,6 +30,7 @@ export interface TrailPhoto {
 export interface TrailRoute {
     id: string;
     name: string;
+    difficulty: TrailDifficulty;
     /** Route line, start first. */
     route: LngLat[];
 }
