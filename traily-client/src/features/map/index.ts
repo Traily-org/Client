@@ -11,4 +11,9 @@ export {
     getMapStyle,
     type MapMode,
 } from "./style/map-styles";
-export type { PhotoPin, TrailRouteMapProps, TrailyMapProps } from "./types";
+export type {
+    MapTrail,
+    PhotoPin,
+    TrailRouteMapProps,
+    TrailyMapProps,
+} from "./types";

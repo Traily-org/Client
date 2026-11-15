@@ -12,7 +12,7 @@ import { MapLegalNotices } from "./map-legal-notices";
 import { PhotoPinMarker, ROUTE_MAP_PADDING } from "./photo-pin-marker";
 import { RouteEndMarker, RouteStartMarker } from "./route-end-marker";
 import { useMapMode } from "../hooks/use-map-mode";
-import { getBounds } from "../services/route-bounds";
+import { getBounds } from "@/utils/bounds";
 import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
 import type { TrailRouteMapProps } from "../types";
 

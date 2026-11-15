@@ -52,18 +52,6 @@ type StyleJSON = {
 /** `[longitude, latitude]` points of a route line, start first. */
 export type RouteLine = [number, number][];
 
-/**
- * Sample hike near the trailhead, drawn on the home map until it shows the
- * hike in progress.
- */
-const SAMPLE_ROUTE: RouteLine = [
-    [6.1296, 45.8992],
-    [6.1324, 45.9015],
-    [6.1355, 45.9042],
-    [6.1381, 45.9071],
-    [6.1417, 45.9089],
-];
-
 /** Color of route lines, and of the markers at their ends. */
 export const ROUTE_COLOR = "#d1263f";
 
@@ -145,8 +133,8 @@ function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
 
 /**
  * Resolves to a plain style spec object for the given mode: the MapTiler
- * style with `route` (the sample route by default) appended on top as a
- * GeoJSON source and its line layers. Fetched
+ * style, with `route` appended on top as a GeoJSON source and its line
+ * layers when given. Fetched
  * (rather than handing MapLibre the style URL) so the route can be part of
  * the style itself on both platforms. Not typed against either
  * `maplibre-gl`'s or `@maplibre/maplibre-react-native`'s
@@ -154,11 +142,16 @@ function fetchMapTilerStyle(mode: MapMode): Promise<StyleJSON> {
  * incompatible versions of `@maplibre/maplibre-gl-style-spec`) — cast to the
  * right one at each platform-specific call site.
  */
-export async function getMapStyle(
-    mode: MapMode,
-    route: RouteLine = SAMPLE_ROUTE,
-) {
+export async function getMapStyle(mode: MapMode, route?: RouteLine) {
     const style = await fetchMapTilerStyle(mode);
+    // A fresh object each time: the cached one is shared by every map.
+    if (!route) {
+        return {
+            ...style,
+            sources: { ...style.sources },
+            layers: [...style.layers],
+        };
+    }
     return {
         ...style,
         sources: {
@@ -175,6 +168,153 @@ export async function getMapStyle(
         layers: [...style.layers, ...getRouteLayers(mode)],
     };
 }
+
+/** GeoJSON source of the trails drawn on the home map. */
+export const TRAILS_SOURCE_ID = "trails";
+
+/** Zoomed out further, only the start of each trail shows. */
+export const TRAIL_ROUTE_MIN_ZOOM = 10;
+/** Zoomed out further, the trails are hidden: too many dots to read. */
+const TRAIL_START_MIN_ZOOM = 7;
+
+/**
+ * Layer of the trails source, in the style spec format both platforms take.
+ * Loosely typed for the same reason as `getMapStyle`: cast at the call site.
+ */
+export interface TrailLayer {
+    id: string;
+    type: "line" | "circle";
+    source: string;
+    minzoom: number;
+    filter: unknown[];
+    layout?: Record<string, unknown>;
+    paint: Record<string, unknown>;
+}
+
+/** The highlighted or focused trail's line is wider. */
+function byEmphasis(emphasized: unknown, other: unknown) {
+    return [
+        "case",
+        ["any", ["get", "focused"], ["get", "highlighted"]],
+        emphasized,
+        other,
+    ];
+}
+
+/** Opacity of a trail: faded back while another one has the focus. */
+function byFocus(focused: number, dimmed: number, other: number) {
+    return [
+        "case",
+        ["get", "focused"],
+        focused,
+        ["get", "dimmed"],
+        dimmed,
+        other,
+    ];
+}
+
+/**
+ * Layers drawing the trails source: each route as a line with a white
+ * casing, like the trail sheet's map, and its start as a dot. Zoomed out,
+ * the dot is filled in the route color; once the routes show, it becomes a
+ * ring, as on the trail sketches. While a trail has the focus, it is drawn
+ * wider and the others fade back.
+ */
+export function getTrailLayers(mode: MapMode): TrailLayer[] {
+    const color = ROUTE_COLORS[mode];
+    const lines = ["==", ["geometry-type"], "LineString"];
+    const layout = { "line-join": "round", "line-cap": "round" };
+    return [
+        {
+            id: "trails-casing",
+            type: "line",
+            source: TRAILS_SOURCE_ID,
+            minzoom: TRAIL_ROUTE_MIN_ZOOM,
+            filter: lines,
+            layout,
+            paint: {
+                "line-color": "#ffffff",
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    byEmphasis(7, 4),
+                    16,
+                    byEmphasis(12, 8),
+                ],
+                "line-opacity": byFocus(0.95, 0.3, 0.85),
+            },
+        },
+        {
+            id: "trails-line",
+            type: "line",
+            source: TRAILS_SOURCE_ID,
+            minzoom: TRAIL_ROUTE_MIN_ZOOM,
+            filter: lines,
+            layout,
+            paint: {
+                "line-color": color,
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    byEmphasis(4, 2),
+                    16,
+                    byEmphasis(8, 5),
+                ],
+                "line-opacity": byFocus(1, 0.35, 0.85),
+            },
+        },
+        {
+            id: "trails-start",
+            type: "circle",
+            source: TRAILS_SOURCE_ID,
+            minzoom: TRAIL_START_MIN_ZOOM,
+            filter: ["==", ["geometry-type"], "Point"],
+            paint: {
+                "circle-radius": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    TRAIL_START_MIN_ZOOM,
+                    3.5,
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    5,
+                    16,
+                    6,
+                ],
+                "circle-color": [
+                    "step",
+                    ["zoom"],
+                    color,
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    "#ffffff",
+                ],
+                "circle-stroke-color": [
+                    "step",
+                    ["zoom"],
+                    "#ffffff",
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    color,
+                ],
+                "circle-stroke-width": [
+                    "step",
+                    ["zoom"],
+                    2,
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    3,
+                ],
+                "circle-opacity": byFocus(1, 0.4, 1),
+                "circle-stroke-opacity": byFocus(1, 0.4, 1),
+            },
+        },
+    ];
+}
+
+/** Layers a touch on the map can pick a trail from. */
+export const TRAIL_TOUCH_LAYER_IDS = ["trails-line", "trails-start"];
 
 /**
  * Data-source attributions for the credits screen. The map also shows

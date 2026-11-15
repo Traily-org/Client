@@ -1,33 +1,119 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
+    type GeoJSONSource,
+    type GeoJSONSourceSpecification,
+    type LayerSpecification,
     Map,
     type Map as MapLibreMap,
-    Marker,
-    Popup,
+    type PointLike,
     type StyleSpecification,
 } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MAP_MIN_ZOOM } from "@/constants/config";
+import { getBounds, type Viewport } from "@/utils/bounds";
 
 import { MapLegalNotices } from "./map-legal-notices";
 import { setupMapLibreForWeb } from "./setup-maplibre-web";
+import {
+    getTrailFocusPadding,
+    TRAIL_FOCUS_DURATION,
+    TRAIL_HIT_RADIUS,
+} from "./trail-focus-camera";
 import { useMapMode } from "../hooks/use-map-mode";
-import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
-import type { TrailyMapProps } from "../types";
+import {
+    getTrailId,
+    type TrailFeatureCollection,
+    toTrailsGeoJSON,
+} from "../services/trails-geojson";
+import {
+    getMapStyle,
+    getTrailLayers,
+    SHOW_MAPTILER_LEGAL_NOTICES,
+    TRAIL_TOUCH_LAYER_IDS,
+    TRAILS_SOURCE_ID,
+} from "../style/map-styles";
+import type { MapTrail, TrailyMapProps } from "../types";
 
-const TRAILHEAD = {
-    name: "Départ du sentier",
-    lngLat: [6.1296, 45.8992] as [number, number],
+// Shared default, so the trails data stays the same object between renders.
+const NO_TRAILS: MapTrail[] = [];
+
+/** Where the map opens: Annecy, until it follows the user's position. */
+const INITIAL_VIEW = {
+    center: [6.1296, 45.8992] as [number, number],
+    zoom: 11,
 };
 
-export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
+/** A click hits a trail a few pixels around its line. */
+const CLICK_HIT_RADIUS = 10;
+
+function getViewport(map: MapLibreMap): Viewport {
+    const bounds = map.getBounds();
+    return {
+        bounds: [
+            bounds.getWest(),
+            bounds.getSouth(),
+            bounds.getEast(),
+            bounds.getNorth(),
+        ],
+        zoom: map.getZoom(),
+    };
+}
+
+/** Trail drawn within `radius` pixels of the point, topmost first. */
+function getTrailAt(
+    map: MapLibreMap,
+    { x, y }: { x: number; y: number },
+    radius: number,
+): string | null {
+    // Before the trail layers exist, querying them is an error.
+    if (!map.getLayer(TRAIL_TOUCH_LAYER_IDS[0])) return null;
+    const box: [PointLike, PointLike] = [
+        [x - radius, y - radius],
+        [x + radius, y + radius],
+    ];
+    const features = map.queryRenderedFeatures(box, {
+        layers: TRAIL_TOUCH_LAYER_IDS,
+    });
+    return features.map(getTrailId).find((id) => id !== null) ?? null;
+}
+
+export function TrailyMap({
+    bottomOffset = 0,
+    trails = NO_TRAILS,
+    highlightedTrailId,
+    focusedTrailId,
+    onPressTrail,
+    onPressMap,
+    onViewportChange,
+}: TrailyMapProps) {
+    const insets = useSafeAreaInsets();
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const mode = useMapMode();
     const [styleError, setStyleError] = useState<Error | null>(null);
     const [styleLoaded, setStyleLoaded] = useState(false);
+    // Latest trails, for the style built on a mode switch.
+    const trailsDataRef = useRef<TrailFeatureCollection>(
+        toTrailsGeoJSON([], undefined),
+    );
+
+    // Frames the trail between the controls, then reports the press.
+    const handlePressTrail = useEffectEvent((trailId: string) => {
+        const trail = trails.find((candidate) => candidate.id === trailId);
+        if (!trail) return;
+        mapRef.current?.fitBounds(getBounds(trail.route), {
+            padding: getTrailFocusPadding(insets, bottomOffset),
+            duration: TRAIL_FOCUS_DURATION,
+        });
+        onPressTrail?.(trailId);
+    });
+    const handlePressMap = useEffectEvent(() => onPressMap?.());
+    const handleViewportChange = useEffectEvent((viewport: Viewport) => {
+        onViewportChange?.(viewport);
+    });
 
     useEffect(() => {
         setupMapLibreForWeb();
@@ -39,8 +125,8 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
             // Empty placeholder until the MapTiler style arrives (see the
             // mode effect below).
             style: { version: 8, sources: {}, layers: [] },
-            center: TRAILHEAD.lngLat,
-            zoom: 11,
+            center: INITIAL_VIEW.center,
+            zoom: INITIAL_VIEW.zoom,
             minZoom: MAP_MIN_ZOOM,
             // Keeps more already-fetched tiles around in memory, so
             // panning/zooming back to a spot you've already visited redraws
@@ -56,11 +142,35 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
         });
         mapRef.current = map;
 
-        const popup = new Popup({ offset: 24 }).setText(TRAILHEAD.name);
-        new Marker({ color: "#e0733f" })
-            .setLngLat(TRAILHEAD.lngLat)
-            .setPopup(popup)
-            .addTo(map);
+        // Once at load, then each time the map comes to rest.
+        map.on("load", () => handleViewportChange(getViewport(map)));
+        map.on("moveend", () => handleViewportChange(getViewport(map)));
+
+        map.on("click", (event) => {
+            const trailId = getTrailAt(map, event.point, CLICK_HIT_RADIUS);
+            if (trailId) handlePressTrail(trailId);
+            else handlePressMap();
+        });
+        // Right click, or a long touch in a mobile browser.
+        map.on("contextmenu", (event) => {
+            const trailId = getTrailAt(map, event.point, TRAIL_HIT_RADIUS);
+            if (!trailId) return;
+            event.originalEvent.preventDefault();
+            handlePressTrail(trailId);
+        });
+        // Listeners by layer id survive the style switches.
+        map.on("mouseenter", TRAIL_TOUCH_LAYER_IDS, () => {
+            map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", TRAIL_TOUCH_LAYER_IDS, () => {
+            map.getCanvas().style.cursor = "";
+        });
+        // A full style reload may have missed a data update made meanwhile.
+        map.on("style.load", () => {
+            map.getSource<GeoJSONSource>(TRAILS_SOURCE_ID)?.setData(
+                trailsDataRef.current as GeoJSON.FeatureCollection,
+            );
+        });
 
         return () => {
             mapRef.current = null;
@@ -76,7 +186,22 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
                 if (cancelled) return;
                 setStyleError(null);
                 setStyleLoaded(true);
-                mapRef.current?.setStyle(style as StyleSpecification);
+                // The trails are part of the style, so they come back with
+                // each mode, in that mode's colors.
+                mapRef.current?.setStyle({
+                    ...style,
+                    sources: {
+                        ...style.sources,
+                        [TRAILS_SOURCE_ID]: {
+                            type: "geojson",
+                            data: trailsDataRef.current,
+                        } as GeoJSONSourceSpecification,
+                    },
+                    layers: [
+                        ...style.layers,
+                        ...(getTrailLayers(mode) as LayerSpecification[]),
+                    ],
+                } as StyleSpecification);
             },
             (error: Error) => {
                 if (!cancelled) setStyleError(error);
@@ -86,6 +211,18 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
             cancelled = true;
         };
     }, [mode]);
+
+    const trailsData = toTrailsGeoJSON(
+        trails,
+        highlightedTrailId,
+        focusedTrailId,
+    );
+    useEffect(() => {
+        trailsDataRef.current = trailsData;
+        mapRef.current
+            ?.getSource<GeoJSONSource>(TRAILS_SOURCE_ID)
+            ?.setData(trailsData as GeoJSON.FeatureCollection);
+    }, [trailsData]);
 
     // Surface a missing/invalid MapTiler key to the error boundary instead of
     // leaving a blank map, but only before any style has loaded — a failed
