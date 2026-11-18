@@ -115,6 +115,9 @@ export const themeColors: Record<ColorScheme, ThemeColors> = {
  */
 export const mapOverlayColors: ThemeColors = themeColors.light;
 
+/** Colors of the full-screen photo viewer: always dark, around the photo. */
+export const photoViewerColors: ThemeColors = themeColors.dark;
+
 /** Name of the CSS variable that backs a role. */
 export function cssVariableName(role: ThemeColorRole): `--color-${string}` {
     return `--color-${role}`;

@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { ScrollView, View } from "react-native";
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -9,7 +9,7 @@ import {
 import { ListRow } from "@/components/list-row";
 import { ListSection } from "@/components/list-section";
 import { ListSwitchRow } from "@/components/list-switch-row";
-import { MapModePicker } from "@/features/map";
+import { MAP_MODE_OPTIONS, setMapMode, useMapMode } from "@/features/map";
 import {
     setThemePreference,
     useThemePreference,
@@ -49,6 +49,7 @@ const THEME_OPTIONS = [
 /** Settings screen, opened from the gear button of the map (TRA-127). */
 export function SettingsScreen() {
     const themePreference = useThemePreference();
+    const mapMode = useMapMode();
 
     return (
         <SafeAreaView
@@ -109,10 +110,13 @@ export function SettingsScreen() {
                 </ListSection>
 
                 <ListSection title="Carte">
-                    {/* TODO(TRA-127): move to ListChoiceRow, with Lucas. */}
-                    <View className="px-4 py-3">
-                        <MapModePicker />
-                    </View>
+                    <ListChoiceRow
+                        label="Fond de carte"
+                        icon={{ ios: "map.fill", material: "map" }}
+                        options={MAP_MODE_OPTIONS}
+                        value={mapMode}
+                        onChange={setMapMode}
+                    />
                     {/* Bonus feature 11.2 (TRA-75). */}
                     <ListSwitchRow
                         label="Afficher le compagnon"
