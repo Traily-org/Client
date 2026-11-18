@@ -1,10 +1,9 @@
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { PointOfInterest } from "../types";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
-const TEXT = "#1E1E2F";
-const MUTED = "rgba(30, 30, 47, 0.55)";
+import type { PointOfInterest } from "../types";
 
 interface PointOfInterestCardProps {
     point: PointOfInterest;
@@ -17,13 +16,25 @@ export function PointOfInterestCard({
     point,
     onPressPhoto,
 }: PointOfInterestCardProps) {
+    const colors = useThemeColors();
     return (
-        <View style={styles.card}>
+        <View
+            style={[styles.card, { backgroundColor: colors["surface-muted"] }]}
+        >
             <View style={styles.text}>
-                <Text style={styles.title} numberOfLines={1}>
+                <Text
+                    style={[styles.title, { color: colors.foreground }]}
+                    numberOfLines={1}
+                >
                     {point.title}
                 </Text>
-                <Text style={styles.description} numberOfLines={2}>
+                <Text
+                    style={[
+                        styles.description,
+                        { color: colors["foreground-muted"] },
+                    ]}
+                    numberOfLines={2}
+                >
                     {point.description}
                 </Text>
             </View>
@@ -35,7 +46,10 @@ export function PointOfInterestCard({
             >
                 <Image
                     source={{ uri: point.photo.url }}
-                    style={styles.photo}
+                    style={[
+                        styles.photo,
+                        { backgroundColor: colors.placeholder },
+                    ]}
                     contentFit="cover"
                     transition={200}
                 />
@@ -51,16 +65,14 @@ const styles = StyleSheet.create({
         gap: 12,
         padding: 10,
         borderRadius: 16,
-        backgroundColor: "#F6F5F2",
     },
     text: { flex: 1, gap: 2 },
-    title: { fontSize: 14, fontWeight: "600", color: TEXT },
-    description: { fontSize: 13, lineHeight: 18, color: MUTED },
+    title: { fontSize: 14, fontWeight: "600" },
+    description: { fontSize: 13, lineHeight: 18 },
     pressed: { opacity: 0.8 },
     photo: {
         width: 60,
         height: 60,
         borderRadius: 12,
-        backgroundColor: "#E6E6EA",
     },
 });

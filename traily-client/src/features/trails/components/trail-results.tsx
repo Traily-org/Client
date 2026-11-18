@@ -4,14 +4,13 @@ import { Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useThemeColors } from "@/hooks/use-theme-colors";
+
 import { useTrailSearch } from "../hooks/use-trail-search";
 import type { Trail } from "../types";
 import type { TrailSelectState } from "./select-trail-button";
 import { TrailCard } from "./trail-card";
 import { TrailSheetPanel } from "./trail-sheet-panel";
-
-const TEXT = "#1E1E2F";
-const MUTED = "rgba(30, 30, 47, 0.55)";
 
 interface TrailResultsProps {
     query: string;
@@ -41,6 +40,7 @@ export function TrailResults({
     selectionLocked = false,
 }: TrailResultsProps) {
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
     const { trails, isSearching } = useTrailSearch(query);
     const [openTrail, setOpenTrail] = useState<{
         id: string;
@@ -69,10 +69,15 @@ export function TrailResults({
                     { paddingBottom: insets.bottom + 24 },
                 ]}
             >
-                <Text style={styles.heading}>
+                <Text style={[styles.heading, { color: colors.foreground }]}>
                     {isSearching ? "Résultats" : "Recommandé"}
                 </Text>
-                <View style={styles.divider} />
+                <View
+                    style={[
+                        styles.divider,
+                        { backgroundColor: colors.separator },
+                    ]}
+                />
                 {trails.map((trail, index) => (
                     <Animated.View
                         key={trail.id}
@@ -87,7 +92,12 @@ export function TrailResults({
                     </Animated.View>
                 ))}
                 {isSearching && trails.length === 0 && (
-                    <Text style={styles.empty}>
+                    <Text
+                        style={[
+                            styles.empty,
+                            { color: colors["foreground-muted"] },
+                        ]}
+                    >
                         Aucun sentier ne correspond à « {query.trim()} ».
                     </Text>
                 )}
@@ -114,17 +124,14 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontSize: 20,
         fontWeight: "700",
-        color: TEXT,
     },
     divider: {
         height: StyleSheet.hairlineWidth,
-        backgroundColor: "rgba(30, 30, 47, 0.15)",
         marginBottom: 4,
     },
     empty: {
         marginTop: 24,
         textAlign: "center",
         fontSize: 15,
-        color: MUTED,
     },
 });

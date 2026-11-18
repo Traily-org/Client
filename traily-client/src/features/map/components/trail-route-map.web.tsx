@@ -11,6 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StyleSheet, Text, View } from "react-native";
 
+import { useThemeColors } from "@/hooks/use-theme-colors";
+
 import { MapLegalNotices } from "./map-legal-notices";
 import { PhotoPinMarker, ROUTE_MAP_PADDING } from "./photo-pin-marker";
 import { RouteEndMarker, RouteStartMarker } from "./route-end-marker";
@@ -41,6 +43,7 @@ export function TrailRouteMap({
     pins = [],
     onPressPin,
 }: TrailRouteMapProps) {
+    const colors = useThemeColors();
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const mode = useMapMode();
@@ -129,7 +132,9 @@ export function TrailRouteMap({
     }, [mode, route]);
 
     return (
-        <View style={styles.container}>
+        <View
+            style={[styles.container, { backgroundColor: colors.placeholder }]}
+        >
             <div ref={containerRef} style={{ display: "flex", flex: 1 }} />
             {slots.map(({ key, element, marker }) =>
                 createPortal(
@@ -154,7 +159,14 @@ export function TrailRouteMap({
             )}
             {failed && (
                 <View style={[StyleSheet.absoluteFill, styles.placeholder]}>
-                    <Text style={styles.error}>Carte indisponible</Text>
+                    <Text
+                        style={[
+                            styles.error,
+                            { color: colors["foreground-muted"] },
+                        ]}
+                    >
+                        Carte indisponible
+                    </Text>
                 </View>
             )}
             {SHOW_MAPTILER_LEGAL_NOTICES && (
@@ -165,7 +177,7 @@ export function TrailRouteMap({
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#E9E7E0" },
+    container: { flex: 1 },
     placeholder: { alignItems: "center", justifyContent: "center" },
-    error: { fontSize: 14, color: "rgba(30, 30, 47, 0.55)" },
+    error: { fontSize: 14 },
 });

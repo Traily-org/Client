@@ -25,6 +25,10 @@ const light = {
     screen: "#f4f2f8",
     /** Cards, rows and sheets. */
     surface: "#ffffff",
+    /** Block inside a sheet, such as the creator or a point of interest. */
+    "surface-muted": "#f6f5f2",
+    /** Frame shown while a map or a photo loads. */
+    placeholder: "#e9e7e0",
     /** Row under the finger. */
     "surface-pressed": "#ededee",
     /** Main text. */
@@ -47,8 +51,12 @@ const light = {
     "on-chip-selected": "#ffffff",
     /** Main action and highlights (choose a trail, start, favorite). */
     accent: "#e0733f",
-    /** Text and icons on the accent color. */
+    /** Text and icons on the accent color, and on the avatar. */
     "on-accent": "#ffffff",
+    /** Initials badge of a person. */
+    avatar: "#2f6b4f",
+    /** Shadows and dimming layers, used through `withAlpha`. */
+    shadow: "#141428",
     /** Trail difficulty: label color, then the pale background behind it. */
     "difficulty-easy": "#2f8a4f",
     "difficulty-easy-tint": "#e2f2e7",
@@ -70,6 +78,8 @@ export const themeColors: Record<ColorScheme, ThemeColors> = {
     dark: {
         screen: "#121221",
         surface: "#1e1e2f",
+        "surface-muted": "#26263a",
+        placeholder: "#2e2e44",
         "surface-pressed": "#2a2a3e",
         foreground: "#f2f1f7",
         "foreground-muted": "#a9a8b8",
@@ -82,6 +92,8 @@ export const themeColors: Record<ColorScheme, ThemeColors> = {
         "on-chip-selected": "#ffffff",
         accent: "#e0733f",
         "on-accent": "#ffffff",
+        avatar: "#357a59",
+        shadow: "#000000",
         "difficulty-easy": "#5cc27e",
         "difficulty-easy-tint": "#1c3326",
         "difficulty-medium": "#e3a73b",
@@ -109,6 +121,14 @@ export function toCssVariables(
             hexToRgbChannels(hex);
     }
     return variables;
+}
+
+/**
+ * Translucent version of a role, for shadows and dimming layers:
+ * `withAlpha(colors.shadow, 0.2)` → "rgba(20, 20, 40, 0.2)".
+ */
+export function withAlpha(hex: string, alpha: number): string {
+    return `rgba(${hexToRgbChannels(hex).replaceAll(" ", ", ")}, ${alpha})`;
 }
 
 /** "#1e1e2f" → "30 30 47". */

@@ -7,6 +7,7 @@ import {
     type ThemeColorRole,
     themeColors,
     toCssVariables,
+    withAlpha,
 } from "./theme-colors";
 
 describe("hexToRgbChannels", () => {
@@ -18,6 +19,12 @@ describe("hexToRgbChannels", () => {
     it("rejects anything but #rrggbb", () => {
         expect(() => hexToRgbChannels("#fff")).toThrow();
         expect(() => hexToRgbChannels("red")).toThrow();
+    });
+});
+
+describe("withAlpha", () => {
+    it("turns a role into a translucent rgba color", () => {
+        expect(withAlpha("#141428", 0.2)).toBe("rgba(20, 20, 40, 0.2)");
     });
 });
 
