@@ -32,6 +32,7 @@ import {
 } from "@/components/glass-surface";
 import { Icon } from "@/components/icon";
 import { EASE_OUT, ENTER_DURATION } from "@/constants/motion";
+import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
 
 import { useHikeProgress, useHikeSession } from "../hooks/use-hike-session";
 import { formatDistanceKm, formatElapsed } from "../services/hike-metrics";
@@ -46,13 +47,13 @@ import type { HikeStatus } from "../types";
 const EXPANDED_WIDTH = 270;
 const COMPACT_HEIGHT = 40;
 const STOP_WIDTH = 44;
-const DANGER = "#C9391A";
+const DANGER = mapOverlayColors.danger;
 const RESIZE_MS = 240;
 const PULSE_MS = 1800;
 /** How far the pulse ring spreads around the pill. */
 const PULSE_SPREAD = 7;
 // Orange of the Démarrer button: the pill pulses towards it before the start.
-const ACCENT = "#E0733F";
+const ACCENT = mapOverlayColors.accent;
 
 // The time turns amber while paused, so a glance tells whether it counts.
 const STATUS: Record<
@@ -61,13 +62,13 @@ const STATUS: Record<
 > = {
     running: {
         label: "En cours",
-        color: "#2F8A4F",
+        color: mapOverlayColors.success,
         ios: "figure.walk",
         material: "directions_walk",
     },
     paused: {
         label: "En pause",
-        color: "#B87400",
+        color: mapOverlayColors.warning,
         ios: "pause.fill",
         material: "pause",
     },
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     track: {
         height: 4,
         borderRadius: 2,
-        backgroundColor: "rgba(30, 30, 47, 0.1)",
+        backgroundColor: withAlpha(mapOverlayColors.foreground, 0.1),
         overflow: "hidden",
     },
     progress: { height: 4, borderRadius: 2 },
@@ -484,12 +485,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         paddingVertical: 8,
         borderRadius: 12,
-        backgroundColor: "rgba(30, 30, 47, 0.08)",
+        backgroundColor: withAlpha(mapOverlayColors.foreground, 0.08),
     },
-    actionPressed: { backgroundColor: "rgba(30, 30, 47, 0.16)" },
+    actionPressed: {
+        backgroundColor: withAlpha(mapOverlayColors.foreground, 0.16),
+    },
     actionLabel: { fontSize: 14, fontWeight: "600", color: ON_GLASS },
-    dangerAction: { backgroundColor: "rgba(201, 57, 26, 0.12)" },
-    dangerPressed: { backgroundColor: "rgba(201, 57, 26, 0.22)" },
+    dangerAction: { backgroundColor: withAlpha(DANGER, 0.12) },
+    dangerPressed: { backgroundColor: withAlpha(DANGER, 0.22) },
     dangerLabel: { color: DANGER },
     grow: { flex: 1 },
     actionRow: { flexDirection: "row", gap: 8 },

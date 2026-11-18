@@ -37,6 +37,10 @@ const light = {
     "foreground-muted": "#83838d",
     /** Destructive action, such as signing out. */
     danger: "#c9391a",
+    /** Something running fine, such as a hike in progress. */
+    success: "#2f8a4f",
+    /** Something on hold, such as a paused hike. */
+    warning: "#b87400",
     /** Line between two rows. */
     separator: "#dddde0",
     /** Square behind a row icon. */
@@ -84,6 +88,8 @@ export const themeColors: Record<ColorScheme, ThemeColors> = {
         foreground: "#f2f1f7",
         "foreground-muted": "#a9a8b8",
         danger: "#f07a62",
+        success: "#5cc27e",
+        warning: "#e3a73b",
         separator: "#2e2e44",
         "icon-tile": "#2a2a3e",
         icon: "#c3c2d2",
@@ -102,6 +108,12 @@ export const themeColors: Record<ColorScheme, ThemeColors> = {
         "difficulty-hard-tint": "#3e2019",
     },
 };
+
+/**
+ * Colors of what sits on the map (glass controls, markers, current hike card):
+ * always the light scheme, since the map underneath stays light.
+ */
+export const mapOverlayColors: ThemeColors = themeColors.light;
 
 /** Name of the CSS variable that backs a role. */
 export function cssVariableName(role: ThemeColorRole): `--color-${string}` {

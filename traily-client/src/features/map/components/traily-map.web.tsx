@@ -10,6 +10,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { MAP_MIN_ZOOM } from "@/constants/config";
+import { mapOverlayColors } from "@/constants/theme-colors";
 
 import { MapLegalNotices } from "./map-legal-notices";
 import { setupMapLibreForWeb } from "./setup-maplibre-web";
@@ -57,7 +58,7 @@ export function TrailyMap({ bottomOffset = 0 }: TrailyMapProps) {
         mapRef.current = map;
 
         const popup = new Popup({ offset: 24 }).setText(TRAILHEAD.name);
-        new Marker({ color: "#e0733f" })
+        new Marker({ color: mapOverlayColors.accent })
             .setLngLat(TRAILHEAD.lngLat)
             .setPopup(popup)
             .addTo(map);

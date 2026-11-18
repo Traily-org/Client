@@ -19,13 +19,14 @@ import { GlassButton } from "@/components/glass-button";
 import { ON_GLASS } from "@/components/glass-surface";
 import { Icon } from "@/components/icon";
 import { EASE_OUT, ENTER_DURATION } from "@/constants/motion";
+import { mapOverlayColors } from "@/constants/theme-colors";
 
 import { useHikeSession } from "../hooks/use-hike-session";
 import { startHike } from "../services/hike-session";
 
 const ROUND_SIZE = 76;
 // Same orange as the route and the trailhead marker on the map.
-const ACCENT = "#E0733F";
+const ACCENT = mapOverlayColors.accent;
 const PULSE_MS = 1600;
 
 interface HikeActionBarProps {
