@@ -109,19 +109,28 @@ describe("contrast", () => {
         }
     });
 
-    // Lucas's light palette puts these under 4.5:1 for small text (secondary
-    // text 3.75, "Moyen" 3.79, white on orange 3.14): known, see TRA-136.
+    // Lucas's light palette puts these under 4.5:1 for small text: secondary
+    // text 3.75 on surface, 3.44 on surface-muted, 3.38 on screen; "Moyen"
+    // 3.79; white on orange 3.14 in both schemes. Known, see TRA-136.
     // This floor stops them from getting worse.
-    it("keeps the light secondary colors at least at 3:1", () => {
+    it("keeps the secondary colors at least at 3:1", () => {
         const light = themeColors.light;
-        expect(
-            contrast(light["foreground-muted"], light.surface),
-        ).toBeGreaterThanOrEqual(3);
+        for (const background of [
+            "surface",
+            "surface-muted",
+            "screen",
+        ] as const) {
+            expect(
+                contrast(light["foreground-muted"], light[background]),
+            ).toBeGreaterThanOrEqual(3);
+        }
         expect(
             contrast(light["difficulty-medium"], light.surface),
         ).toBeGreaterThanOrEqual(3);
-        expect(
-            contrast(light["on-accent"], light.accent),
-        ).toBeGreaterThanOrEqual(3);
+        for (const colors of Object.values(themeColors)) {
+            expect(
+                contrast(colors["on-accent"], colors.accent),
+            ).toBeGreaterThanOrEqual(3);
+        }
     });
 });
