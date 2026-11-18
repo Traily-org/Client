@@ -27,6 +27,7 @@ import { startHike } from "../services/hike-session";
 const ROUND_SIZE = 76;
 // Same orange as the route and the trailhead marker on the map.
 const ACCENT = mapOverlayColors.accent;
+const ON_ACCENT = mapOverlayColors["on-accent"];
 const PULSE_MS = 1600;
 
 interface HikeActionBarProps {
@@ -118,9 +119,9 @@ function StartButton({ onPress }: { onPress: () => void }) {
                         ios="figure.hiking"
                         material="hiking"
                         size={28}
-                        color="white"
+                        color={ON_ACCENT}
                     />
-                    <Text style={[styles.roundLabel, { color: "white" }]}>
+                    <Text style={[styles.roundLabel, { color: ON_ACCENT }]}>
                         Démarrer
                     </Text>
                 </GlassButton>
