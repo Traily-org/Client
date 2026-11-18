@@ -10,8 +10,9 @@ const TAILWIND_PALETTE =
     "(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}";
 const RAW_COLOR_PATTERNS = [
     "#[0-9a-fA-F]{3,8}\\b",
-    "rgba?\\(",
-    `\\b(bg|text|border|divide|ring|fill|stroke|shadow|outline|from|to|via)-(${TAILWIND_PALETTE}|white|black)\\b`,
+    "(rgb|hsl)a?\\s*\\(",
+    "^(white|black)$",
+    `\\b(bg|text|border(-[xytrblse])?|divide|ring|fill|stroke|shadow|outline|from|to|via|placeholder|caret|accent|decoration)-(${TAILWIND_PALETTE}|white|black)\\b`,
 ];
 const RAW_COLOR_MESSAGE =
     "Use a theme color role (bg-surface, text-foreground...) from src/constants/theme-colors.ts instead of a raw color.";
