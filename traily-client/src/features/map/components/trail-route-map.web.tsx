@@ -18,7 +18,7 @@ import { PhotoPinMarker, ROUTE_MAP_PADDING } from "./photo-pin-marker";
 import { RouteEndMarker, RouteStartMarker } from "./route-end-marker";
 import { setupMapLibreForWeb } from "./setup-maplibre-web";
 import { useMapMode } from "../hooks/use-map-mode";
-import { getBounds } from "../services/route-bounds";
+import { getBounds } from "@/utils/bounds";
 import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
 import type { PhotoPin, TrailRouteMapProps } from "../types";
 
@@ -40,6 +40,7 @@ interface MarkerSlot {
  */
 export function TrailRouteMap({
     route,
+    color,
     pins = [],
     onPressPin,
 }: TrailRouteMapProps) {
@@ -116,7 +117,7 @@ export function TrailRouteMap({
 
     useEffect(() => {
         let cancelled = false;
-        getMapStyle(mode, route).then(
+        getMapStyle(mode, route, color).then(
             (style) => {
                 if (cancelled) return;
                 setFailed(false);
@@ -129,7 +130,7 @@ export function TrailRouteMap({
         return () => {
             cancelled = true;
         };
-    }, [mode, route]);
+    }, [mode, route, color]);
 
     return (
         <View
@@ -139,9 +140,9 @@ export function TrailRouteMap({
             {slots.map(({ key, element, marker }) =>
                 createPortal(
                     marker === "start" ? (
-                        <RouteStartMarker />
+                        <RouteStartMarker color={color} />
                     ) : marker === "end" ? (
-                        <RouteEndMarker />
+                        <RouteEndMarker color={color} />
                     ) : (
                         <PhotoPinMarker
                             photoUrl={marker.photoUrl}

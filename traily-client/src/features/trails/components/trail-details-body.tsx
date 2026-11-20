@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Icon } from "@/components/icon";
 import { PhotoViewer, type ViewedPhoto } from "@/components/photo-viewer";
+import { mapOverlayColors } from "@/constants/theme-colors";
 import { type PhotoPin, TrailRouteMap } from "@/features/map";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
@@ -176,6 +177,7 @@ export function TrailDetailsBody({
                     {showMap && (
                         <TrailRouteMap
                             route={trail.route}
+                            color={mapOverlayColors[difficulty.route]}
                             pins={pins}
                             onPressPin={(pinId) => {
                                 const point = trail.pointsOfInterest.find(

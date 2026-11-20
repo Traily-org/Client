@@ -5,17 +5,22 @@ import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
 
 import { ROUTE_COLOR } from "../style/map-styles";
 
+interface RouteMarkerProps {
+    /** Color of the route it marks. */
+    color?: string;
+}
+
 const MARKER_SHADOW = `0px 1px 3px ${withAlpha(mapOverlayColors.shadow, 0.3)}`;
 
 /** Start of a route: a ring, as on the trail sketches. */
-export function RouteStartMarker() {
-    return <View style={styles.start} />;
+export function RouteStartMarker({ color = ROUTE_COLOR }: RouteMarkerProps) {
+    return <View style={[styles.start, { borderColor: color }]} />;
 }
 
 /** End of a route: a cross. */
-export function RouteEndMarker() {
+export function RouteEndMarker({ color = ROUTE_COLOR }: RouteMarkerProps) {
     return (
-        <View style={styles.end}>
+        <View style={[styles.end, { backgroundColor: color }]}>
             <Icon
                 ios="xmark"
                 material="close"
@@ -32,7 +37,6 @@ const styles = StyleSheet.create({
         height: 16,
         borderRadius: 8,
         borderWidth: 4,
-        borderColor: ROUTE_COLOR,
         backgroundColor: mapOverlayColors.surface,
         boxShadow: MARKER_SHADOW,
     },
@@ -44,7 +48,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         borderWidth: 2,
         borderColor: mapOverlayColors.surface,
-        backgroundColor: ROUTE_COLOR,
         boxShadow: MARKER_SHADOW,
     },
 });

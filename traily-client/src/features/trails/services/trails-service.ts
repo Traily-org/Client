@@ -1,13 +1,16 @@
+import { type Bounds, boundsIntersect, getBounds } from "@/utils/bounds";
+
 import type {
     LngLat,
     Trail,
     TrailCreator,
     TrailDetails,
     TrailPhoto,
+    TrailRoute,
 } from "../types";
 import { pointAlongRoute, routeFromSketch } from "./route-geometry";
 
-// TODO(api): mock data until the trails endpoints exist (TRA-83). Real
+// TODO(api): mock data until the trails endpoints exist (search: TRA-82). Real
 // places around Annecy, where the map opens; the figures, routes and
 // creators are made up.
 
@@ -442,4 +445,31 @@ export function getTrailDetails(id: string): TrailDetails | undefined {
     };
     detailsCache.set(id, details);
     return details;
+}
+
+/**
+ * Trails whose route crosses `area`: the same trails as the search, for the
+ * home map. Stands in for the geospatial search by bbox (TRA-82).
+ */
+/** What the map needs to draw a trail, undefined for an unknown one. */
+export function getTrailRoute(id: string): TrailRoute | undefined {
+    const details = getTrailDetails(id);
+    if (!details) return undefined;
+    return {
+        id,
+        name: details.name,
+        difficulty: details.difficulty,
+        route: details.route,
+    };
+}
+
+export function getTrailsInArea(area: Bounds): TrailRoute[] {
+    const found: TrailRoute[] = [];
+    for (const { id } of TRAILS) {
+        const trail = getTrailRoute(id);
+        if (trail && boundsIntersect(getBounds(trail.route), area)) {
+            found.push(trail);
+        }
+    }
+    return found;
 }
