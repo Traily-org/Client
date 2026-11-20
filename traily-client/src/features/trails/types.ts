@@ -26,6 +26,15 @@ export interface TrailPhoto {
     credit?: string;
 }
 
+/** Just enough of a trail to draw it on a map. */
+export interface TrailRoute {
+    id: string;
+    name: string;
+    difficulty: TrailDifficulty;
+    /** Route line, start first. */
+    route: LngLat[];
+}
+
 /** Hiker who published a trail. */
 export interface TrailCreator {
     id: string;

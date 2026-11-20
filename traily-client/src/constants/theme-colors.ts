@@ -68,6 +68,14 @@ const light = {
     "difficulty-medium-tint": "#fdf0d5",
     "difficulty-hard": "#c2412b",
     "difficulty-hard-tint": "#fbe2dc",
+    /**
+     * Trail line of each difficulty on a map, brighter than the label color,
+     * over a white casing. The map stays light: read through
+     * `mapOverlayColors`, same values in both schemes.
+     */
+    "difficulty-easy-route": "#1e9e57",
+    "difficulty-medium-route": "#e8890c",
+    "difficulty-hard-route": "#d1263f",
 } as const;
 
 /** Every color role, as used in class names (`bg-<role>`, `text-<role>`). */
@@ -106,6 +114,9 @@ export const themeColors: Record<ColorScheme, ThemeColors> = {
         "difficulty-medium-tint": "#3a2e14",
         "difficulty-hard": "#f07a62",
         "difficulty-hard-tint": "#3e2019",
+        "difficulty-easy-route": light["difficulty-easy-route"],
+        "difficulty-medium-route": light["difficulty-medium-route"],
+        "difficulty-hard-route": light["difficulty-hard-route"],
     },
 };
 

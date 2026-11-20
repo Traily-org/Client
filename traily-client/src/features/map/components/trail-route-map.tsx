@@ -14,7 +14,7 @@ import { MapLegalNotices } from "./map-legal-notices";
 import { PhotoPinMarker, ROUTE_MAP_PADDING } from "./photo-pin-marker";
 import { RouteEndMarker, RouteStartMarker } from "./route-end-marker";
 import { useMapMode } from "../hooks/use-map-mode";
-import { getBounds } from "../services/route-bounds";
+import { getBounds } from "@/utils/bounds";
 import { getMapStyle, SHOW_MAPTILER_LEGAL_NOTICES } from "../style/map-styles";
 import type { TrailRouteMapProps } from "../types";
 
@@ -25,6 +25,7 @@ import type { TrailRouteMapProps } from "../types";
  */
 export function TrailRouteMap({
     route,
+    color,
     pins = [],
     onPressPin,
 }: TrailRouteMapProps) {
@@ -38,7 +39,7 @@ export function TrailRouteMap({
 
     useEffect(() => {
         let cancelled = false;
-        getMapStyle(mode, route).then(
+        getMapStyle(mode, route, color).then(
             (style) => {
                 if (cancelled) return;
                 setFailed(false);
@@ -51,7 +52,7 @@ export function TrailRouteMap({
         return () => {
             cancelled = true;
         };
-    }, [mode, route]);
+    }, [mode, route, color]);
 
     if (!mapStyle) {
         return (
@@ -114,10 +115,10 @@ export function TrailRouteMap({
                     </Marker>
                 ))}
                 <Marker lngLat={route[0]} anchor="center">
-                    <RouteStartMarker />
+                    <RouteStartMarker color={color} />
                 </Marker>
                 <Marker lngLat={route[route.length - 1]} anchor="center">
-                    <RouteEndMarker />
+                    <RouteEndMarker color={color} />
                 </Marker>
             </Map>
             {SHOW_MAPTILER_LEGAL_NOTICES && (
