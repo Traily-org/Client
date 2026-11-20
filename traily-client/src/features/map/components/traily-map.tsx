@@ -13,11 +13,12 @@ import {
 import * as Haptics from "expo-haptics";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MAP_MIN_ZOOM } from "@/constants/config";
 import { getBounds } from "@/utils/bounds";
 
+import { HikePositionMarker } from "./hike-position-marker";
 import { MapLegalNotices } from "./map-legal-notices";
 import { PhotoPinMarker } from "./photo-pin-marker";
 import { RouteEndMarker } from "./route-end-marker";
@@ -26,11 +27,15 @@ import {
     TRAIL_FOCUS_DURATION,
     TRAIL_HIT_RADIUS,
 } from "./trail-focus-camera";
+import { useHikeCamera } from "../hooks/use-hike-camera";
 import { useMapMode } from "../hooks/use-map-mode";
+import { toHikeGeoJSON } from "../services/hike-geojson";
 import { getTrailId, toTrailsGeoJSON } from "../services/trails-geojson";
 import {
+    getHikeLayers,
     getMapStyle,
     getTrailLayers,
+    HIKE_SOURCE_ID,
     SHOW_MAPTILER_LEGAL_NOTICES,
     TRAIL_TOUCH_LAYER_IDS,
     TRAILS_SOURCE_ID,
@@ -67,11 +72,15 @@ export function TrailyMap({
     onPressPin,
     onPressMap,
     onViewportChange,
+    hike,
+    onStopFollowing,
 }: TrailyMapProps) {
     const insets = useSafeAreaInsets();
     const mode = useMapMode();
     const mapRef = useRef<MapRef>(null);
     const cameraRef = useRef<CameraRef>(null);
+    // Read by the walker's arrow on every frame, without a render.
+    const mapBearing = useSharedValue(0);
     const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
     const [styleError, setStyleError] = useState<Error | null>(null);
 
@@ -119,6 +128,23 @@ export function TrailyMap({
         if (mapReady && framedTrailId) frameTrailOnce(framedTrailId);
     }, [framedTrailId, mapReady]);
 
+    const hikeCamera = useHikeCamera({
+        hike,
+        bottomOffset,
+        onStopFollowing,
+        controls: {
+            follow: (stop) => cameraRef.current?.easeTo(stop),
+            frame: (route, padding, duration) =>
+                cameraRef.current?.fitBounds(getBounds(route), {
+                    padding,
+                    bearing: 0,
+                    pitch: 0,
+                    duration,
+                    easing: "ease",
+                }),
+        },
+    });
+
     // Surface a missing/invalid MapTiler key to the error boundary instead of
     // rendering a blank map, but only before any style has loaded — a failed
     // mode switch just keeps the current style.
@@ -127,9 +153,10 @@ export function TrailyMap({
 
     const focusedTrail = trails.find((trail) => trail.id === focusedTrailId);
 
-    // Frames the trail, then reports the press.
+    // Frames the trail, then reports the press. During a hike, the camera
+    // belongs to the hike.
     function pressTrail(trailId: string, haptic: Haptics.ImpactFeedbackStyle) {
-        if (!frameTrail(trailId)) return;
+        if (hike || !frameTrail(trailId)) return;
         void Haptics.impactAsync(haptic);
         onPressTrail?.(trailId);
     }
@@ -172,9 +199,19 @@ export function TrailyMap({
                             onViewportChange?.({ bounds, zoom }),
                         );
                 }}
-                onRegionDidChange={({ nativeEvent: { bounds, zoom } }) =>
-                    onViewportChange?.({ bounds, zoom })
+                onRegionWillChange={({ nativeEvent }) =>
+                    hikeCamera.handleMoveStart(nativeEvent.userInteraction)
                 }
+                onRegionIsChanging={({ nativeEvent }) =>
+                    mapBearing.set(nativeEvent.bearing)
+                }
+                onRegionDidChange={({ nativeEvent }) => {
+                    const { bounds, zoom, bearing, userInteraction } =
+                        nativeEvent;
+                    mapBearing.set(bearing);
+                    hikeCamera.handleMoveEnd(zoom, userInteraction);
+                    onViewportChange?.({ bounds, zoom });
+                }}
                 // A touch on a trail stops at its source (below).
                 onPress={() => onPressMap?.()}
                 onLongPress={(event) =>
@@ -184,7 +221,8 @@ export function TrailyMap({
                 <Camera
                     ref={cameraRef}
                     initialViewState={INITIAL_VIEW}
-                    minZoom={MAP_MIN_ZOOM}
+                    minZoom={hikeCamera.zoomRange.min}
+                    maxZoom={hikeCamera.zoomRange.max}
                 />
                 <GeoJSONSource
                     id={TRAILS_SOURCE_ID}
@@ -203,6 +241,15 @@ export function TrailyMap({
                     }}
                 >
                     {getTrailLayers(mode).map((layer) => (
+                        <Layer key={layer.id} {...(layer as LayerProps)} />
+                    ))}
+                </GeoJSONSource>
+                {/* The part of the hike already walked, over its trail. */}
+                <GeoJSONSource
+                    id={HIKE_SOURCE_ID}
+                    data={toHikeGeoJSON(hike?.walkedRoute)}
+                >
+                    {getHikeLayers().map((layer) => (
                         <Layer key={layer.id} {...(layer as LayerProps)} />
                     ))}
                 </GeoJSONSource>
@@ -229,6 +276,15 @@ export function TrailyMap({
                         anchor="center"
                     >
                         <RouteEndMarker color={focusedTrail.color} />
+                    </Marker>
+                )}
+                {/* The walker, above everything else. */}
+                {hike && (
+                    <Marker lngLat={hike.position.lngLat} anchor="center">
+                        <HikePositionMarker
+                            heading={hike.position.heading}
+                            mapBearing={mapBearing}
+                        />
                     </Marker>
                 )}
             </Map>

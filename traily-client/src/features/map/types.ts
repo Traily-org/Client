@@ -56,6 +56,42 @@ export interface TrailyMapProps {
      * it stops moving (not on every frame of a pan or zoom).
      */
     onViewportChange?: (viewport: Viewport) => void;
+    /**
+     * Hike in progress: the map shows the walker and drives the camera
+     * (see `MapHike`). Once it goes, the map frames the route walked, north
+     * up and flat, back to the exploration view.
+     */
+    hike?: MapHike;
+    /** The map was moved by hand while the camera followed the walker. */
+    onStopFollowing?: () => void;
+}
+
+/** Where the walker is, and the way they face. */
+export interface MapHikePosition {
+    /** `[longitude, latitude]`. */
+    lngLat: [number, number];
+    /** Direction of travel, in degrees clockwise from north. */
+    heading: number;
+}
+
+/**
+ * Hike shown on the home map. Running, the camera follows the walker: map
+ * turned to their heading, tilted, the walker low on the screen to show the
+ * way ahead, zoom kept between 14 and 18. Paused, it shows the whole route,
+ * north up and flat, free to move.
+ */
+export interface MapHike {
+    /** Route of the trail followed, `[longitude, latitude]`, start first. */
+    route: [number, number][];
+    position: MapHikePosition;
+    /** Part of the route already walked, drawn faded, start first. */
+    walkedRoute: [number, number][];
+    paused: boolean;
+    /**
+     * The camera follows the walker. Ignored while paused. Turn it off when
+     * `onStopFollowing` fires, back on to recenter.
+     */
+    following: boolean;
 }
 
 /** Photo thumbnail pinned on the map, e.g. a point of interest. */

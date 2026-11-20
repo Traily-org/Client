@@ -452,15 +452,23 @@ export function getTrailDetails(id: string): TrailDetails | undefined {
  * home map. Stands in for the geospatial search by bbox (TRA-82).
  */
 /** What the map needs to draw a trail, undefined for an unknown one. */
+// Same object for the same trail: during a hike, the home screen asks for
+// the picked trail's route every second.
+const routeCache = new Map<string, TrailRoute>();
+
 export function getTrailRoute(id: string): TrailRoute | undefined {
+    const cached = routeCache.get(id);
+    if (cached) return cached;
     const details = getTrailDetails(id);
     if (!details) return undefined;
-    return {
+    const route: TrailRoute = {
         id,
         name: details.name,
         difficulty: details.difficulty,
         route: details.route,
     };
+    routeCache.set(id, route);
+    return route;
 }
 
 export function getTrailsInArea(area: Bounds): TrailRoute[] {

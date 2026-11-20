@@ -12,6 +12,8 @@ export {
     type MapMode,
 } from "./style/map-styles";
 export type {
+    MapHike,
+    MapHikePosition,
     MapTrail,
     PhotoPin,
     TrailRouteMapProps,

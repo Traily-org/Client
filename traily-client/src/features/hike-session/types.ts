@@ -1,5 +1,8 @@
 export type HikeStatus = "idle" | "running" | "paused";
 
+/** `[longitude, latitude]`, the GeoJSON and MapLibre order. */
+export type LngLat = [number, number];
+
 /** Trail followed by the hike, picked in the search. */
 export interface HikeTrail {
     id: string;

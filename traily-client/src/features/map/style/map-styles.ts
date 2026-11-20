@@ -182,7 +182,8 @@ export const TRAIL_ROUTE_MIN_ZOOM = 10;
 const TRAIL_START_MIN_ZOOM = 7;
 
 /**
- * Layer of the trails source, in the style spec format both platforms take.
+ * Layer of the trails or hike source, in the style spec format both
+ * platforms take.
  * Loosely typed for the same reason as `getMapStyle`: cast at the call site.
  */
 export interface TrailLayer {
@@ -320,6 +321,42 @@ export function getTrailLayers(mode: MapMode): TrailLayer[] {
 
 /** Layers a touch on the map can pick a trail from. */
 export const TRAIL_TOUCH_LAYER_IDS = ["trails-line", "trails-start"];
+
+/** GeoJSON source of the hike in progress: the part already walked. */
+export const HIKE_SOURCE_ID = "hike";
+
+/** Part of the route already walked: faded, whatever the trail's color. */
+const WALKED_COLOR = "#9d9daa";
+
+/**
+ * Layers drawing the hike source above the trails: the part of the route
+ * already walked, as wide as the picked trail's line so it covers it
+ * exactly, over the same white casing.
+ */
+export function getHikeLayers(): TrailLayer[] {
+    return [
+        {
+            id: "hike-walked",
+            type: "line",
+            source: HIKE_SOURCE_ID,
+            minzoom: TRAIL_ROUTE_MIN_ZOOM,
+            filter: ["==", ["geometry-type"], "LineString"],
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+                "line-color": WALKED_COLOR,
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    4,
+                    16,
+                    8,
+                ],
+            },
+        },
+    ];
+}
 
 /**
  * Data-source attributions for the credits screen. The map also shows

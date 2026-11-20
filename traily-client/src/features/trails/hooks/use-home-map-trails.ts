@@ -155,6 +155,8 @@ export function useHomeMapTrails({
 
     return {
         trails: toMapTrails(selected ? [selected] : state.trails),
+        /** Route of the trail picked for the hike, followed by the walker. */
+        selectedRoute: selected?.route,
         focusedTrailId,
         /** Trail whose preview card shows, none while a trail is picked. */
         previewTrailId,

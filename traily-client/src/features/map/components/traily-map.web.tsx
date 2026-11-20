@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MAP_MIN_ZOOM } from "@/constants/config";
 import { getBounds, type Viewport } from "@/utils/bounds";
 
+import { HikePositionMarker } from "./hike-position-marker";
 import { MapLegalNotices } from "./map-legal-notices";
 import { PhotoPinMarker } from "./photo-pin-marker";
 import { RouteEndMarker } from "./route-end-marker";
@@ -26,15 +27,22 @@ import {
     TRAIL_FOCUS_DURATION,
     TRAIL_HIT_RADIUS,
 } from "./trail-focus-camera";
+import { useHikeCamera } from "../hooks/use-hike-camera";
 import { useMapMode } from "../hooks/use-map-mode";
+import {
+    type HikeFeatureCollection,
+    toHikeGeoJSON,
+} from "../services/hike-geojson";
 import {
     getTrailId,
     type TrailFeatureCollection,
     toTrailsGeoJSON,
 } from "../services/trails-geojson";
 import {
+    getHikeLayers,
     getMapStyle,
     getTrailLayers,
+    HIKE_SOURCE_ID,
     SHOW_MAPTILER_LEGAL_NOTICES,
     TRAIL_TOUCH_LAYER_IDS,
     TRAILS_SOURCE_ID,
@@ -106,6 +114,8 @@ export function TrailyMap({
     onPressPin,
     onPressMap,
     onViewportChange,
+    hike,
+    onStopFollowing,
 }: TrailyMapProps) {
     const insets = useSafeAreaInsets();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -113,28 +123,63 @@ export function TrailyMap({
     const mode = useMapMode();
     const [styleError, setStyleError] = useState<Error | null>(null);
     const [styleLoaded, setStyleLoaded] = useState(false);
-    // Latest trails, for the style built on a mode switch.
+    // Latest trails and hike, for the style built on a mode switch.
     const trailsDataRef = useRef<TrailFeatureCollection>(
         toTrailsGeoJSON([], undefined),
     );
+    const hikeDataRef = useRef<HikeFeatureCollection>(toHikeGeoJSON(undefined));
 
     // Fits the trail between the controls. False for a trail not on the map.
+    // The padding replaces the one left by following a hike.
     const frameTrail = useEffectEvent((trailId: string): boolean => {
         const trail = trails.find((candidate) => candidate.id === trailId);
         if (!trail) return false;
         mapRef.current?.fitBounds(getBounds(trail.route), {
             padding: getTrailFocusPadding(insets, bottomOffset),
+            absolutePadding: true,
             duration: TRAIL_FOCUS_DURATION,
         });
         return true;
     });
-    // Frames the trail, then reports the press.
+    // Frames the trail, then reports the press. During a hike, the camera
+    // belongs to the hike.
     const handlePressTrail = useEffectEvent((trailId: string) => {
-        if (frameTrail(trailId)) onPressTrail?.(trailId);
+        if (!hike && frameTrail(trailId)) onPressTrail?.(trailId);
     });
     const handlePressMap = useEffectEvent(() => onPressMap?.());
     const handleViewportChange = useEffectEvent((viewport: Viewport) => {
         onViewportChange?.(viewport);
+    });
+
+    const hikeCamera = useHikeCamera({
+        hike,
+        bottomOffset,
+        onStopFollowing,
+        controls: {
+            // maplibre-gl eases by default, but only when `easing` is left
+            // out: set to undefined, it is called anyway and throws.
+            follow: ({ easing, ...stop }) =>
+                mapRef.current?.easeTo(
+                    easing === "linear"
+                        ? { ...stop, easing: (t: number) => t }
+                        : stop,
+                ),
+            frame: (route, padding, duration) =>
+                mapRef.current?.fitBounds(getBounds(route), {
+                    padding,
+                    absolutePadding: true,
+                    bearing: 0,
+                    pitch: 0,
+                    duration,
+                }),
+        },
+    });
+    // Only a move made by hand carries the browser event behind it.
+    const handleMoveStart = useEffectEvent((byHand: boolean) => {
+        hikeCamera.handleMoveStart(byHand);
+    });
+    const handleMoveEnd = useEffectEvent((zoom: number, byHand: boolean) => {
+        hikeCamera.handleMoveEnd(zoom, byHand);
     });
 
     useEffect(() => {
@@ -166,7 +211,13 @@ export function TrailyMap({
 
         // Once at load, then each time the map comes to rest.
         map.on("load", () => handleViewportChange(getViewport(map)));
-        map.on("moveend", () => handleViewportChange(getViewport(map)));
+        map.on("moveend", (event) => {
+            handleMoveEnd(map.getZoom(), event.originalEvent !== undefined);
+            handleViewportChange(getViewport(map));
+        });
+        map.on("movestart", (event) =>
+            handleMoveStart(event.originalEvent !== undefined),
+        );
 
         map.on("click", (event) => {
             // A pin handles its own touch.
@@ -200,6 +251,9 @@ export function TrailyMap({
             map.getSource<GeoJSONSource>(TRAILS_SOURCE_ID)?.setData(
                 trailsDataRef.current as GeoJSON.FeatureCollection,
             );
+            map.getSource<GeoJSONSource>(HIKE_SOURCE_ID)?.setData(
+                hikeDataRef.current as GeoJSON.FeatureCollection,
+            );
         });
 
         return () => {
@@ -216,8 +270,8 @@ export function TrailyMap({
                 if (cancelled) return;
                 setStyleError(null);
                 setStyleLoaded(true);
-                // The trails are part of the style, so they come back with
-                // each mode, in that mode's colors.
+                // The trails and the hike are part of the style, so they come
+                // back with each mode, in that mode's colors.
                 mapRef.current?.setStyle({
                     ...style,
                     sources: {
@@ -226,10 +280,15 @@ export function TrailyMap({
                             type: "geojson",
                             data: trailsDataRef.current,
                         } as GeoJSONSourceSpecification,
+                        [HIKE_SOURCE_ID]: {
+                            type: "geojson",
+                            data: hikeDataRef.current,
+                        } as GeoJSONSourceSpecification,
                     },
                     layers: [
                         ...style.layers,
                         ...(getTrailLayers(mode) as LayerSpecification[]),
+                        ...(getHikeLayers() as LayerSpecification[]),
                     ],
                 } as StyleSpecification);
             },
@@ -254,9 +313,57 @@ export function TrailyMap({
             ?.setData(trailsData as GeoJSON.FeatureCollection);
     }, [trailsData]);
 
+    const hikeData = toHikeGeoJSON(hike?.walkedRoute);
+    useEffect(() => {
+        hikeDataRef.current = hikeData;
+        mapRef.current
+            ?.getSource<GeoJSONSource>(HIKE_SOURCE_ID)
+            ?.setData(hikeData as GeoJSON.FeatureCollection);
+    }, [hikeData]);
+
     useEffect(() => {
         if (framedTrailId) frameTrail(framedTrailId);
     }, [framedTrailId]);
+
+    const { min: minZoom, max: maxZoom } = hikeCamera.zoomRange;
+    useEffect(() => {
+        mapRef.current?.setMinZoom(minZoom).setMaxZoom(maxZoom);
+    }, [minZoom, maxZoom]);
+
+    // The walker, turned and laid flat by maplibre-gl with the map: the
+    // arrow inside points north.
+    const hikeActive = hike !== undefined;
+    const [walkerElement, setWalkerElement] = useState<HTMLElement | null>(
+        null,
+    );
+    const walkerMarkerRef = useRef<Marker | null>(null);
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !hikeActive) return;
+        const element = document.createElement("div");
+        const marker = new Marker({
+            element,
+            rotationAlignment: "map",
+            pitchAlignment: "map",
+        });
+        walkerMarkerRef.current = marker;
+        setWalkerElement(element);
+        return () => {
+            marker.remove();
+            walkerMarkerRef.current = null;
+            setWalkerElement(null);
+        };
+    }, [hikeActive]);
+    const walkerLngLat = hike?.position.lngLat;
+    const walkerHeading = hike?.position.heading ?? 0;
+    useEffect(() => {
+        const marker = walkerMarkerRef.current;
+        const map = mapRef.current;
+        if (!marker || !map || !walkerLngLat) return;
+        marker.setLngLat(walkerLngLat).setRotation(walkerHeading);
+        // Added once it has a position: maplibre-gl needs one to draw it.
+        if (!marker.getElement().isConnected) marker.addTo(map);
+    }, [walkerLngLat, walkerHeading, walkerElement]);
 
     // Surface a missing/invalid MapTiler key to the error boundary instead of
     // leaving a blank map, but only before any style has loaded — a failed
@@ -334,6 +441,8 @@ export function TrailyMap({
                     key,
                 ),
             )}
+            {walkerElement &&
+                createPortal(<HikePositionMarker heading={0} />, walkerElement)}
             {SHOW_MAPTILER_LEGAL_NOTICES && (
                 <MapLegalNotices bottomOffset={bottomOffset} />
             )}

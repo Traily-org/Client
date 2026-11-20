@@ -5,8 +5,10 @@ import { PhotoViewer } from "@/components/photo-viewer";
 
 import {
     HikeActionBar,
+    HikeRecenterButton,
     HikeStatusCard,
     selectHikeTrail,
+    useHikeMap,
     useHikeSession,
 } from "@/features/hike-session";
 import { CORNER_BUTTON_SIZE, MapControls, TrailyMap } from "@/features/map";
@@ -46,7 +48,10 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 // photo. During a hike, zooming no longer focuses trails. Once a trail is
 // picked for the hike (search or sheet), the map frames it and shows it
 // alone, focused, without a preview, until the trail is removed or the hike
-// ends.
+// ends. Once the hike starts, the map switches to the hike view (TRA-140):
+// the camera follows the walker, turned to their heading, until the map is
+// moved by hand (a button recenters it); on pause it shows the whole trail,
+// and the trail walked once the hike ends.
 export default function MapScreen() {
     const router = useRouter();
     const hike = useHikeSession();
@@ -54,6 +59,7 @@ export default function MapScreen() {
         zoomFocus: hike.status === "idle",
         selectedTrailId: hike.trail?.id,
     });
+    const hikeMap = useHikeMap(mapTrails.selectedRoute);
 
     function openTrail(trailId: string) {
         router.push({ pathname: "/trail/[trailId]", params: { trailId } });
@@ -72,8 +78,15 @@ export default function MapScreen() {
                 onViewportChange={mapTrails.updateViewport}
                 onPressTrail={mapTrails.focusTrail}
                 onPressMap={mapTrails.closeFocus}
+                hike={hikeMap.hike}
+                onStopFollowing={hikeMap.stopFollowing}
             />
             <HikeActionBar cornerButtonSize={CORNER_BUTTON_SIZE} />
+            <HikeRecenterButton
+                visible={hikeMap.canRecenter}
+                cornerButtonSize={CORNER_BUTTON_SIZE}
+                onPress={hikeMap.recenter}
+            />
             <TrailPreview
                 trailId={mapTrails.previewTrailId}
                 cornerButtonSize={CORNER_BUTTON_SIZE}
