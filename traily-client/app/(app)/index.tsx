@@ -43,11 +43,17 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 // it, focuses it and shows its preview, which opens its sheet; zooming in on
 // a single trail focuses it too, without moving the map. The focused trail
 // shows its points of interest, as on its sheet: touching one shows its
-// photo. During a hike, zooming no longer focuses trails.
+// photo. During a hike, zooming no longer focuses trails. Once a trail is
+// picked for the hike (search or sheet), the map frames it and shows it
+// alone, focused, without a preview, until the trail is removed or the hike
+// ends.
 export default function MapScreen() {
     const router = useRouter();
     const hike = useHikeSession();
-    const mapTrails = useHomeMapTrails({ zoomFocus: hike.status === "idle" });
+    const mapTrails = useHomeMapTrails({
+        zoomFocus: hike.status === "idle",
+        selectedTrailId: hike.trail?.id,
+    });
 
     function openTrail(trailId: string) {
         router.push({ pathname: "/trail/[trailId]", params: { trailId } });
@@ -60,6 +66,7 @@ export default function MapScreen() {
                 trails={mapTrails.trails}
                 highlightedTrailId={hike.trail?.id}
                 focusedTrailId={mapTrails.focusedTrailId}
+                framedTrailId={hike.trail?.id}
                 pins={mapTrails.pins}
                 onPressPin={mapTrails.viewPin}
                 onViewportChange={mapTrails.updateViewport}
@@ -68,7 +75,7 @@ export default function MapScreen() {
             />
             <HikeActionBar cornerButtonSize={CORNER_BUTTON_SIZE} />
             <TrailPreview
-                trailId={mapTrails.focusedTrailId}
+                trailId={mapTrails.previewTrailId}
                 cornerButtonSize={CORNER_BUTTON_SIZE}
                 onOpen={openTrail}
                 onClose={mapTrails.closeFocus}

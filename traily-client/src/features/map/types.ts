@@ -34,6 +34,11 @@ export interface TrailyMapProps {
      * its end, as on the trail sheet's map.
      */
     focusedTrailId?: string;
+    /**
+     * Framed each time it changes, e.g. the trail picked for the hike, which
+     * may be anywhere when picked from the search.
+     */
+    framedTrailId?: string;
     /** Photo thumbnails pinned on the map, e.g. the focused trail's spots. */
     pins?: PhotoPin[];
     /** Touching a pin, e.g. to show its photo in large. */

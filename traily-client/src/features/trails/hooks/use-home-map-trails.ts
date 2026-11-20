@@ -14,7 +14,11 @@ import {
     NO_FOCUS,
     type TrailFocusState,
 } from "../services/trail-focus";
-import { getTrailDetails, getTrailsInArea } from "../services/trails-service";
+import {
+    getTrailDetails,
+    getTrailRoute,
+    getTrailsInArea,
+} from "../services/trails-service";
 import type { PointOfInterest, TrailRoute } from "../types";
 
 /**
@@ -45,6 +49,12 @@ const INITIAL: HomeMapTrails = {
 interface UseHomeMapTrailsOptions {
     /** Lets zooming in on a trail focus it. Off during a hike. */
     zoomFocus: boolean;
+    /**
+     * Trail picked for the hike. While there is one, it is the only trail on
+     * the map and keeps the focus, without a preview: the hike card stands
+     * for it.
+     */
+    selectedTrailId?: string;
 }
 
 /** Each trail in the color of its difficulty. */
@@ -60,11 +70,24 @@ function toMapTrails(trails: TrailRoute[]): MapTrail[] {
  * as photo pins (as on the trail sheet) and the photo opened from one. Fed
  * with the map's viewport each time it settles: loads the screen plus a
  * margin (again only once the screen leaves that area), then updates the
- * focus (see trail-focus).
+ * focus (see trail-focus). A trail picked for the hike replaces all that.
  */
-export function useHomeMapTrails({ zoomFocus }: UseHomeMapTrailsOptions) {
+export function useHomeMapTrails({
+    zoomFocus,
+    selectedTrailId,
+}: UseHomeMapTrailsOptions) {
     const [state, setState] = useState(INITIAL);
     const [viewedPhoto, setViewedPhoto] = useState<ViewedPhoto | null>(null);
+    // A trail picked or dropped resets the focus: a preview left from before
+    // must not come back once the hike's trail is removed.
+    const [lastSelectedId, setLastSelectedId] = useState(selectedTrailId);
+    if (selectedTrailId !== lastSelectedId) {
+        setLastSelectedId(selectedTrailId);
+        setState((current) => ({ ...current, focus: NO_FOCUS }));
+    }
+    const selected = selectedTrailId
+        ? getTrailRoute(selectedTrailId)
+        : undefined;
 
     function updateViewport(viewport: Viewport) {
         setState((current) => {
@@ -74,7 +97,7 @@ export function useHomeMapTrails({ zoomFocus }: UseHomeMapTrailsOptions) {
                 current.focus,
                 viewport,
                 trails,
-                zoomFocus,
+                zoomFocus && !selected,
             );
             if (
                 !area &&
@@ -93,6 +116,7 @@ export function useHomeMapTrails({ zoomFocus }: UseHomeMapTrailsOptions) {
     }
 
     function focusTrail(trailId: string) {
+        if (selected) return;
         setState((current) => ({ ...current, focus: focusByPress(trailId) }));
     }
 
@@ -103,7 +127,8 @@ export function useHomeMapTrails({ zoomFocus }: UseHomeMapTrailsOptions) {
         });
     }
 
-    const focusedTrailId = state.focus.focus?.trailId;
+    const previewTrailId = selected ? undefined : state.focus.focus?.trailId;
+    const focusedTrailId = selected?.id ?? previewTrailId;
     const focused = focusedTrailId
         ? getTrailDetails(focusedTrailId)
         : undefined;
@@ -129,8 +154,10 @@ export function useHomeMapTrails({ zoomFocus }: UseHomeMapTrailsOptions) {
     }
 
     return {
-        trails: toMapTrails(state.trails),
+        trails: toMapTrails(selected ? [selected] : state.trails),
         focusedTrailId,
+        /** Trail whose preview card shows, none while a trail is picked. */
+        previewTrailId,
         pins,
         viewedPhoto,
         updateViewport,

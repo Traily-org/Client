@@ -1,6 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { getTrailDetails, getTrailsInArea } from "./trails-service";
+import {
+    getTrailDetails,
+    getTrailRoute,
+    getTrailsInArea,
+} from "./trails-service";
+
+describe("getTrailRoute", () => {
+    it("gives the map what it draws, wherever the trail is", () => {
+        const trail = getTrailRoute("lac-de-la-thuile");
+        const details = getTrailDetails("lac-de-la-thuile");
+        expect(trail?.route).toBe(details?.route);
+        expect(trail?.difficulty).toBe(details?.difficulty);
+        expect(trail?.name).toBe(details?.name);
+    });
+
+    it("is undefined for an unknown trail", () => {
+        expect(getTrailRoute("nowhere")).toBeUndefined();
+    });
+});
 
 describe("getTrailsInArea", () => {
     it("finds the trails whose route crosses the area", () => {

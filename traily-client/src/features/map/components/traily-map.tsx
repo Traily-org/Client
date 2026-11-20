@@ -11,7 +11,7 @@ import {
     type StyleSpecification,
 } from "@maplibre/maplibre-react-native";
 import * as Haptics from "expo-haptics";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -61,6 +61,7 @@ export function TrailyMap({
     trails = NO_TRAILS,
     highlightedTrailId,
     focusedTrailId,
+    framedTrailId,
     pins = NO_PINS,
     onPressTrail,
     onPressPin,
@@ -100,6 +101,24 @@ export function TrailyMap({
         };
     }, [mode]);
 
+    // Fits the trail between the controls. False for a trail not on the map.
+    function frameTrail(trailId: string): boolean {
+        const trail = trails.find((candidate) => candidate.id === trailId);
+        if (!trail) return false;
+        cameraRef.current?.fitBounds(getBounds(trail.route), {
+            padding: getTrailFocusPadding(insets, bottomOffset),
+            duration: TRAIL_FOCUS_DURATION,
+            easing: "ease",
+        });
+        return true;
+    }
+
+    const frameTrailOnce = useEffectEvent(frameTrail);
+    const mapReady = mapStyle !== null;
+    useEffect(() => {
+        if (mapReady && framedTrailId) frameTrailOnce(framedTrailId);
+    }, [framedTrailId, mapReady]);
+
     // Surface a missing/invalid MapTiler key to the error boundary instead of
     // rendering a blank map, but only before any style has loaded — a failed
     // mode switch just keeps the current style.
@@ -108,17 +127,11 @@ export function TrailyMap({
 
     const focusedTrail = trails.find((trail) => trail.id === focusedTrailId);
 
-    // Frames the trail between the controls, then reports the press.
+    // Frames the trail, then reports the press.
     function pressTrail(trailId: string, haptic: Haptics.ImpactFeedbackStyle) {
-        const trail = trails.find((candidate) => candidate.id === trailId);
-        if (!trail) return;
+        if (!frameTrail(trailId)) return;
         void Haptics.impactAsync(haptic);
-        cameraRef.current?.fitBounds(getBounds(trail.route), {
-            padding: getTrailFocusPadding(insets, bottomOffset),
-            duration: TRAIL_FOCUS_DURATION,
-            easing: "ease",
-        });
-        onPressTrail?.(trail.id);
+        onPressTrail?.(trailId);
     }
 
     // A finger is wider than a line: look for a trail around the press.

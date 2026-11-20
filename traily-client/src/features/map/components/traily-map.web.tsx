@@ -100,6 +100,7 @@ export function TrailyMap({
     trails = NO_TRAILS,
     highlightedTrailId,
     focusedTrailId,
+    framedTrailId,
     pins = NO_PINS,
     onPressTrail,
     onPressPin,
@@ -117,15 +118,19 @@ export function TrailyMap({
         toTrailsGeoJSON([], undefined),
     );
 
-    // Frames the trail between the controls, then reports the press.
-    const handlePressTrail = useEffectEvent((trailId: string) => {
+    // Fits the trail between the controls. False for a trail not on the map.
+    const frameTrail = useEffectEvent((trailId: string): boolean => {
         const trail = trails.find((candidate) => candidate.id === trailId);
-        if (!trail) return;
+        if (!trail) return false;
         mapRef.current?.fitBounds(getBounds(trail.route), {
             padding: getTrailFocusPadding(insets, bottomOffset),
             duration: TRAIL_FOCUS_DURATION,
         });
-        onPressTrail?.(trailId);
+        return true;
+    });
+    // Frames the trail, then reports the press.
+    const handlePressTrail = useEffectEvent((trailId: string) => {
+        if (frameTrail(trailId)) onPressTrail?.(trailId);
     });
     const handlePressMap = useEffectEvent(() => onPressMap?.());
     const handleViewportChange = useEffectEvent((viewport: Viewport) => {
@@ -248,6 +253,10 @@ export function TrailyMap({
             ?.getSource<GeoJSONSource>(TRAILS_SOURCE_ID)
             ?.setData(trailsData as GeoJSON.FeatureCollection);
     }, [trailsData]);
+
+    useEffect(() => {
+        if (framedTrailId) frameTrail(framedTrailId);
+    }, [framedTrailId]);
 
     // Surface a missing/invalid MapTiler key to the error boundary instead of
     // leaving a blank map, but only before any style has loaded — a failed

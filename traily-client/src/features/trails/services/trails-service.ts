@@ -451,19 +451,25 @@ export function getTrailDetails(id: string): TrailDetails | undefined {
  * Trails whose route crosses `area`: the same trails as the search, for the
  * home map. Stands in for the geospatial search by bbox (TRA-82).
  */
+/** What the map needs to draw a trail, undefined for an unknown one. */
+export function getTrailRoute(id: string): TrailRoute | undefined {
+    const details = getTrailDetails(id);
+    if (!details) return undefined;
+    return {
+        id,
+        name: details.name,
+        difficulty: details.difficulty,
+        route: details.route,
+    };
+}
+
 export function getTrailsInArea(area: Bounds): TrailRoute[] {
     const found: TrailRoute[] = [];
     for (const { id } of TRAILS) {
-        const details = getTrailDetails(id);
-        if (!details || !boundsIntersect(getBounds(details.route), area)) {
-            continue;
+        const trail = getTrailRoute(id);
+        if (trail && boundsIntersect(getBounds(trail.route), area)) {
+            found.push(trail);
         }
-        found.push({
-            id,
-            name: details.name,
-            difficulty: details.difficulty,
-            route: details.route,
-        });
     }
     return found;
 }
