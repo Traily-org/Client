@@ -35,7 +35,11 @@ import { EASE_OUT, ENTER_DURATION } from "@/constants/motion";
 import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
 
 import { useHikeProgress, useHikeSession } from "../hooks/use-hike-session";
-import { formatDistanceKm, formatElapsed } from "../services/hike-metrics";
+import {
+    formatDistanceKm,
+    formatDistanceM,
+    formatElapsed,
+} from "../services/hike-metrics";
 import {
     clearHikeTrail,
     endHike,
@@ -48,6 +52,7 @@ const EXPANDED_WIDTH = 270;
 const COMPACT_HEIGHT = 40;
 const STOP_WIDTH = 44;
 const DANGER = mapOverlayColors.danger;
+const WARNING = mapOverlayColors.warning;
 const RESIZE_MS = 240;
 const PULSE_MS = 1800;
 /** How far the pulse ring spreads around the pill. */
@@ -89,7 +94,7 @@ const RESIZE = LinearTransition.duration(RESIZE_MS).easing(EASE_OUT);
  */
 export function HikeStatusCard() {
     const session = useHikeSession();
-    const { elapsedMs, distanceKm } = useHikeProgress(session);
+    const { elapsedMs, distanceKm, progressShare } = useHikeProgress(session);
     const router = useRouter();
     const [expanded, setExpanded] = useState(false);
     const [confirmingEnd, setConfirmingEnd] = useState(false);
@@ -108,7 +113,14 @@ export function HikeStatusCard() {
     const time = formatElapsed(elapsedMs);
     const distance = formatDistanceKm(distanceKm);
 
-    const summary = `Randonnée ${status.label.toLowerCase()}, ${time}, ${distance}`;
+    const offTrail =
+        session.status !== "idle" && session.tracking.offTrail
+            ? formatDistanceM(session.tracking.distanceToRouteM)
+            : null;
+
+    const summary =
+        `Randonnée ${status.label.toLowerCase()}, ${time}, ${distance}` +
+        (offTrail ? `, hors tracé à ${offTrail}` : "");
 
     // Expanded, the card is a plain glass pane rather than one big button:
     // its header collapses it and the actions are buttons of their own.
@@ -182,7 +194,7 @@ export function HikeStatusCard() {
                             <Stat
                                 label="Restant"
                                 value={formatDistanceKm(
-                                    trail.distanceKm - distanceKm,
+                                    trail.distanceKm * (1 - progressShare),
                                 )}
                             />
                         </View>
@@ -192,7 +204,7 @@ export function HikeStatusCard() {
                                 style={[
                                     styles.progress,
                                     {
-                                        width: `${(distanceKm / trail.distanceKm) * 100}%`,
+                                        width: `${progressShare * 100}%`,
                                         backgroundColor: status.color,
                                     },
                                 ]}
@@ -272,9 +284,9 @@ export function HikeStatusCard() {
                                 />
                             </>
                         )}
-                        {/* TODO(gps): drop once the distance comes from the GPS. */}
+                        {/* TODO(gps): drop once the fixes come from the GPS. */}
                         <Text style={styles.note}>
-                            Distance estimée, GPS à venir.
+                            Position simulée, GPS à venir.
                         </Text>
                     </Animated.View>
                 ) : (
@@ -322,7 +334,33 @@ export function HikeStatusCard() {
                     </View>
                 )}
             </Animated.View>
+            {offTrail && <OffTrailBanner distance={offTrail} />}
         </>
+    );
+}
+
+/**
+ * Under the card while the walker is away from the planned route, with how
+ * far: it goes once they rejoin it.
+ */
+function OffTrailBanner({ distance }: { distance: string }) {
+    return (
+        <Animated.View
+            entering={FadeInUp.duration(RESIZE_MS)}
+            exiting={FadeOut.duration(RESIZE_MS)}
+            layout={RESIZE}
+            accessibilityRole="alert"
+            accessibilityLabel={`Hors tracé, à ${distance} du parcours`}
+            style={styles.offTrail}
+        >
+            <Icon
+                ios="exclamationmark.triangle.fill"
+                material="warning"
+                size={14}
+                color={WARNING}
+            />
+            <Text style={styles.offTrailText}>Hors tracé · {distance}</Text>
+        </Animated.View>
     );
 }
 
@@ -508,6 +546,24 @@ const styles = StyleSheet.create({
         height: 12,
         borderRadius: 2,
         backgroundColor: DANGER,
+    },
+    offTrail: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginTop: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 14,
+        backgroundColor: mapOverlayColors.surface,
+        borderWidth: 1,
+        borderColor: withAlpha(WARNING, 0.35),
+    },
+    offTrailText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: WARNING,
+        fontVariant: ["tabular-nums"],
     },
     confirm: { gap: 8 },
     confirmText: { fontSize: 13, fontWeight: "600", color: ON_GLASS },

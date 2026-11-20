@@ -127,7 +127,9 @@ export function TrailyMap({
     const trailsDataRef = useRef<TrailFeatureCollection>(
         toTrailsGeoJSON([], undefined),
     );
-    const hikeDataRef = useRef<HikeFeatureCollection>(toHikeGeoJSON(undefined));
+    const hikeDataRef = useRef<HikeFeatureCollection>(
+        toHikeGeoJSON(undefined, undefined),
+    );
 
     // Fits the trail between the controls. False for a trail not on the map.
     // The padding replaces the one left by following a hike.
@@ -313,7 +315,7 @@ export function TrailyMap({
             ?.setData(trailsData as GeoJSON.FeatureCollection);
     }, [trailsData]);
 
-    const hikeData = toHikeGeoJSON(hike?.walkedRoute);
+    const hikeData = toHikeGeoJSON(hike?.walkedRoute, hike?.track);
     useEffect(() => {
         hikeDataRef.current = hikeData;
         mapRef.current

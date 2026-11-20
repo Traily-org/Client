@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { estimateDistanceKm, getElapsedMs } from "../services/hike-metrics";
+import { getElapsedMs, getProgressShare } from "../services/hike-metrics";
 import { getHikeSession, subscribeHikeSession } from "../services/hike-session";
 import type { HikeSession } from "../types";
 
@@ -12,7 +12,11 @@ export function useHikeSession(): HikeSession {
     );
 }
 
-/** Time walked and distance covered, refreshed every second while running. */
+/**
+ * Time walked, refreshed every second while running, distance walked
+ * along the walker's own track (detours included), and share of the
+ * planned route behind them.
+ */
 export function useHikeProgress(session: HikeSession) {
     const [now, setNow] = useState(() => Date.now());
     const running = session.status === "running";
@@ -23,9 +27,9 @@ export function useHikeProgress(session: HikeSession) {
         return () => clearInterval(interval);
     }, [running]);
 
-    const elapsedMs = getElapsedMs(session, now);
     return {
-        elapsedMs,
-        distanceKm: estimateDistanceKm(elapsedMs, session.trail),
+        elapsedMs: getElapsedMs(session, now),
+        distanceKm: session.tracking.distanceM / 1000,
+        progressShare: getProgressShare(session.tracking),
     };
 }

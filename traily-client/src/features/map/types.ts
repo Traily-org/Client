@@ -86,6 +86,11 @@ export interface MapHike {
     position: MapHikePosition;
     /** Part of the route already walked, drawn faded, start first. */
     walkedRoute: [number, number][];
+    /**
+     * The walker's own track, as the GPS recorded it, detours included:
+     * a thin line over the route, start first.
+     */
+    track: [number, number][];
     paused: boolean;
     /**
      * The camera follows the walker. Ignored while paused. Turn it off when

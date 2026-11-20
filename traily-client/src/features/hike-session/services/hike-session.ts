@@ -1,5 +1,6 @@
-import type { HikeSession, HikeTrail } from "../types";
+import type { HikeSession, HikeTrail, LngLat, LocationFix } from "../types";
 import { getElapsedMs } from "./hike-metrics";
+import { addFix, NO_TRACKING } from "./hike-tracking";
 
 // Current hike, shared by the map overlay and the hike controls. In memory
 // only until the app has a persisted store: a relaunch loses the hike.
@@ -8,6 +9,7 @@ const IDLE: HikeSession = {
     status: "idle",
     elapsedBeforeMs: 0,
     runningSince: null,
+    tracking: NO_TRACKING,
 };
 
 let session = IDLE;
@@ -49,7 +51,18 @@ export function startHike(now = Date.now()) {
         status: "running",
         elapsedBeforeMs: 0,
         runningSince: now,
+        tracking: NO_TRACKING,
     });
+}
+
+/**
+ * Adds a GPS fix to the hike, matched against the trail's `route`. Ignored
+ * unless the hike runs: no track while paused.
+ */
+export function recordFix(fix: LocationFix, route: LngLat[]) {
+    if (session.status !== "running") return;
+    const tracking = addFix(session.tracking, fix, route);
+    if (tracking !== session.tracking) update({ ...session, tracking });
 }
 
 export function pauseHike(now = Date.now()) {

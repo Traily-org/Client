@@ -1,30 +1,39 @@
+/** Which line of the hike a feature draws, read by the hike layers. */
+export type HikeLineKind = "walked" | "track";
+
 export interface HikeFeatureCollection {
     type: "FeatureCollection";
     features: {
         type: "Feature";
-        properties: Record<string, never>;
+        properties: { kind: HikeLineKind };
         geometry: { type: "LineString"; coordinates: [number, number][] };
     }[];
 }
 
 /**
- * Data of the hike source: the part of the route already walked, nothing
- * before the walker has moved (a line needs two points) or without a hike.
+ * Data of the hike source: the part of the route already walked, then the
+ * walker's own track above it. A line needs two points: each one shows
+ * once the walker has moved, and nothing shows without a hike.
  */
 export function toHikeGeoJSON(
     walkedRoute: [number, number][] | undefined,
+    track: [number, number][] | undefined,
 ): HikeFeatureCollection {
-    if (!walkedRoute || walkedRoute.length < 2) {
-        return { type: "FeatureCollection", features: [] };
-    }
+    const lines: [HikeLineKind, [number, number][] | undefined][] = [
+        ["walked", walkedRoute],
+        ["track", track],
+    ];
     return {
         type: "FeatureCollection",
-        features: [
-            {
+        features: lines
+            .filter(
+                (entry): entry is [HikeLineKind, [number, number][]] =>
+                    (entry[1]?.length ?? 0) >= 2,
+            )
+            .map(([kind, coordinates]) => ({
                 type: "Feature",
-                properties: {},
-                geometry: { type: "LineString", coordinates: walkedRoute },
-            },
-        ],
+                properties: { kind },
+                geometry: { type: "LineString", coordinates },
+            })),
     };
 }

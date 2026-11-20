@@ -9,6 +9,11 @@ import {
 import { ListRow } from "@/components/list-row";
 import { ListSection } from "@/components/list-section";
 import { ListSwitchRow } from "@/components/list-switch-row";
+import {
+    setSimulationScenario,
+    SIMULATION_SCENARIO_OPTIONS,
+    useSimulationScenario,
+} from "@/features/hike-session";
 import { MAP_MODE_OPTIONS, setMapMode, useMapMode } from "@/features/map";
 import {
     setThemePreference,
@@ -50,6 +55,7 @@ const THEME_OPTIONS = [
 export function SettingsScreen() {
     const themePreference = useThemePreference();
     const mapMode = useMapMode();
+    const simulationScenario = useSimulationScenario();
 
     return (
         <SafeAreaView
@@ -125,6 +131,24 @@ export function SettingsScreen() {
                         value={false}
                     />
                 </ListSection>
+
+                {/* Development builds only. TODO(gps): keep for the web and
+                    the simulators once the GPS (TRA-76) feeds the hike. */}
+                {__DEV__ && (
+                    <ListSection title="Développement">
+                        <ListChoiceRow
+                            label="Parcours simulé"
+                            description="Comment la position simulée suit le sentier pendant une rando"
+                            icon={{
+                                ios: "location.fill",
+                                material: "my_location",
+                            }}
+                            options={SIMULATION_SCENARIO_OPTIONS}
+                            value={simulationScenario}
+                            onChange={setSimulationScenario}
+                        />
+                    </ListSection>
+                )}
 
                 <ListSection title="Informations">
                     <Link href="/settings/credits" asChild>

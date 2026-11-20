@@ -1,8 +1,4 @@
-import type { HikeSession, HikeTrail } from "../types";
-
-// TODO(gps): distance simulated from the time walked until the location
-// service exists.
-const SIMULATED_SPEED_KMH = 4;
+import type { HikeSession, HikeTracking } from "../types";
 
 /** Time walked so far, pauses excluded. */
 export function getElapsedMs(session: HikeSession, now: number): number {
@@ -13,13 +9,10 @@ export function getElapsedMs(session: HikeSession, now: number): number {
     return session.elapsedBeforeMs + running;
 }
 
-/** Distance covered, capped at the trail's length when there is one. */
-export function estimateDistanceKm(
-    elapsedMs: number,
-    trail: HikeTrail | null,
-): number {
-    const km = (elapsedMs / 3_600_000) * SIMULATED_SPEED_KMH;
-    return trail ? Math.min(km, trail.distanceKm) : km;
+/** Share of the planned route behind the walker, 0-1. */
+export function getProgressShare(tracking: HikeTracking): number {
+    if (tracking.routeLengthM <= 0) return 0;
+    return Math.min(tracking.progressM / tracking.routeLengthM, 1);
 }
 
 /** "4:07" under an hour, "1:04:07" after. */
@@ -35,4 +28,10 @@ export function formatElapsed(ms: number): string {
 /** "2,4 km", French decimal comma. */
 export function formatDistanceKm(km: number): string {
     return `${km.toFixed(1).replace(".", ",")} km`;
+}
+
+/** "35 m" under a kilometer, "1,2 km" beyond. */
+export function formatDistanceM(meters: number): string {
+    if (meters < 1000) return `${Math.round(meters)} m`;
+    return formatDistanceKm(meters / 1000);
 }

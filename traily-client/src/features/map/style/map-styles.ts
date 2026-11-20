@@ -327,21 +327,26 @@ export const HIKE_SOURCE_ID = "hike";
 
 /** Part of the route already walked: faded, whatever the trail's color. */
 const WALKED_COLOR = "#9d9daa";
+/** The walker's own track: apart from every difficulty color. */
+const TRACK_COLOR = "#2f6fe0";
 
 /**
  * Layers drawing the hike source above the trails: the part of the route
  * already walked, as wide as the picked trail's line so it covers it
- * exactly, over the same white casing.
+ * exactly, over the same white casing; then the walker's own track, a thin
+ * line with a white edge, detours included.
  */
 export function getHikeLayers(): TrailLayer[] {
+    const layout = { "line-join": "round", "line-cap": "round" };
+    const track = ["==", ["get", "kind"], "track"];
     return [
         {
             id: "hike-walked",
             type: "line",
             source: HIKE_SOURCE_ID,
             minzoom: TRAIL_ROUTE_MIN_ZOOM,
-            filter: ["==", ["geometry-type"], "LineString"],
-            layout: { "line-join": "round", "line-cap": "round" },
+            filter: ["==", ["get", "kind"], "walked"],
+            layout,
             paint: {
                 "line-color": WALKED_COLOR,
                 "line-width": [
@@ -352,6 +357,47 @@ export function getHikeLayers(): TrailLayer[] {
                     4,
                     16,
                     8,
+                ],
+            },
+        },
+        {
+            id: "hike-track-casing",
+            type: "line",
+            source: HIKE_SOURCE_ID,
+            minzoom: TRAIL_ROUTE_MIN_ZOOM,
+            filter: track,
+            layout,
+            paint: {
+                "line-color": "#ffffff",
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    3,
+                    16,
+                    6,
+                ],
+                "line-opacity": 0.9,
+            },
+        },
+        {
+            id: "hike-track",
+            type: "line",
+            source: HIKE_SOURCE_ID,
+            minzoom: TRAIL_ROUTE_MIN_ZOOM,
+            filter: track,
+            layout,
+            paint: {
+                "line-color": TRACK_COLOR,
+                "line-width": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    TRAIL_ROUTE_MIN_ZOOM,
+                    1.5,
+                    16,
+                    3,
                 ],
             },
         },

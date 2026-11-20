@@ -247,7 +247,7 @@ export function TrailyMap({
                 {/* The part of the hike already walked, over its trail. */}
                 <GeoJSONSource
                     id={HIKE_SOURCE_ID}
-                    data={toHikeGeoJSON(hike?.walkedRoute)}
+                    data={toHikeGeoJSON(hike?.walkedRoute, hike?.track)}
                 >
                     {getHikeLayers().map((layer) => (
                         <Layer key={layer.id} {...(layer as LayerProps)} />
