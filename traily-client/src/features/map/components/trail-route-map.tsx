@@ -8,6 +8,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { useThemeColors } from "@/hooks/use-theme-colors";
+
 import { MapLegalNotices } from "./map-legal-notices";
 import { PhotoPinMarker, ROUTE_MAP_PADDING } from "./photo-pin-marker";
 import { RouteEndMarker, RouteStartMarker } from "./route-end-marker";
@@ -27,6 +29,7 @@ export function TrailRouteMap({
     pins = [],
     onPressPin,
 }: TrailRouteMapProps) {
+    const colors = useThemeColors();
     const mode = useMapMode();
     const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
     const [failed, setFailed] = useState(false);
@@ -53,8 +56,23 @@ export function TrailRouteMap({
 
     if (!mapStyle) {
         return (
-            <View style={[styles.container, styles.placeholder]}>
-                {failed && <Text style={styles.error}>Carte indisponible</Text>}
+            <View
+                style={[
+                    styles.container,
+                    styles.placeholder,
+                    { backgroundColor: colors.placeholder },
+                ]}
+            >
+                {failed && (
+                    <Text
+                        style={[
+                            styles.error,
+                            { color: colors["foreground-muted"] },
+                        ]}
+                    >
+                        Carte indisponible
+                    </Text>
+                )}
             </View>
         );
     }
@@ -116,7 +134,6 @@ const styles = StyleSheet.create({
     placeholder: {
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#E9E7E0",
     },
-    error: { fontSize: 14, color: "rgba(30, 30, 47, 0.55)" },
+    error: { fontSize: 14 },
 });

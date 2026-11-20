@@ -2,6 +2,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import { useFavoriteTrail } from "../hooks/use-favorite-trail";
 import { useTrailDetails } from "../hooks/use-trail-details";
@@ -13,7 +15,6 @@ import {
 import { TrailDetailsBody } from "./trail-details-body";
 import { TrailFavoriteButton } from "./trail-favorite-button";
 
-const TEXT = "#1E1E2F";
 const BUTTON_SIZE = 40;
 const BUTTON_TOP = 16;
 const SELECT_HEIGHT = 52;
@@ -45,9 +46,14 @@ export function TrailSheetContent({
     const { isFavorite, toggleFavorite } = useFavoriteTrail(trailId);
     const selectBottom = insets.bottom + 12;
     const showSelect = trail !== undefined && onSelect !== undefined;
+    const colors = useThemeColors();
+    const floatingColors = {
+        backgroundColor: colors.surface,
+        boxShadow: `0px 2px 10px ${withAlpha(colors.shadow, 0.16)}`,
+    };
 
     return (
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
             <ScrollView
                 contentContainerStyle={[
                     styles.content,
@@ -61,7 +67,14 @@ export function TrailSheetContent({
                 {trail ? (
                     <TrailDetailsBody trail={trail} showMap={mapReady} />
                 ) : (
-                    <Text style={styles.missing}>Sentier introuvable.</Text>
+                    <Text
+                        style={[
+                            styles.missing,
+                            { color: colors["foreground-muted"] },
+                        ]}
+                    >
+                        Sentier introuvable.
+                    </Text>
                 )}
             </ScrollView>
 
@@ -69,7 +82,7 @@ export function TrailSheetContent({
                 <TrailFavoriteButton
                     isFavorite={isFavorite}
                     onPress={toggleFavorite}
-                    style={[styles.floating, styles.left]}
+                    style={[styles.floating, floatingColors, styles.left]}
                 />
             )}
             <Pressable
@@ -79,15 +92,29 @@ export function TrailSheetContent({
                 hitSlop={6}
                 style={({ pressed }) => [
                     styles.floating,
+                    floatingColors,
                     styles.right,
                     pressed && styles.pressed,
                 ]}
             >
-                <Icon ios="xmark" material="close" size={16} color={TEXT} />
+                <Icon
+                    ios="xmark"
+                    material="close"
+                    size={16}
+                    color={colors.foreground}
+                />
             </Pressable>
 
             {showSelect && (
-                <View style={[styles.select, { bottom: selectBottom }]}>
+                <View
+                    style={[
+                        styles.select,
+                        {
+                            bottom: selectBottom,
+                            boxShadow: `0px 6px 18px ${withAlpha(colors.shadow, 0.22)}`,
+                        },
+                    ]}
+                >
                     <SelectTrailButton
                         state={selectState}
                         onPress={() => onSelect(trail)}
@@ -99,7 +126,7 @@ export function TrailSheetContent({
 }
 
 const styles = StyleSheet.create({
-    sheet: { flex: 1, backgroundColor: "#FFFFFF" },
+    sheet: { flex: 1 },
     content: {
         paddingTop: BUTTON_TOP + BUTTON_SIZE + 12,
         paddingHorizontal: 16,
@@ -108,7 +135,6 @@ const styles = StyleSheet.create({
         marginTop: 48,
         textAlign: "center",
         fontSize: 15,
-        color: "rgba(30, 30, 47, 0.55)",
     },
     // Round buttons hovering over the text as it scrolls under them.
     floating: {
@@ -119,8 +145,6 @@ const styles = StyleSheet.create({
         borderRadius: BUTTON_SIZE / 2,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#FFFFFF",
-        boxShadow: "0px 2px 10px rgba(20, 20, 40, 0.16)",
     },
     left: { left: 16 },
     right: { right: 16 },
@@ -130,6 +154,5 @@ const styles = StyleSheet.create({
         left: 16,
         right: 16,
         borderRadius: SELECT_HEIGHT / 2,
-        boxShadow: "0px 6px 18px rgba(20, 20, 40, 0.22)",
     },
 });

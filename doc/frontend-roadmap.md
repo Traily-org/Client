@@ -59,7 +59,7 @@ src/
 
 ### 1.3 Design system
 
-- Une seule source de vérité pour les tokens. **Couleurs : fait (TRA-126)**, rôles clairs et sombres dans `src/constants/theme-colors.ts`, exposés à Tailwind par variables CSS. Restent : espacements, rayons, typographie.
+- Une seule source de vérité pour les tokens. **Couleurs : fait (TRA-126, migration complète et règle ESLint bloquante : TRA-136)**, rôles clairs et sombres dans `src/constants/theme-colors.ts`, exposés à Tailwind par variables CSS. Restent : espacements, rayons, typographie.
 - Composants de base dans `src/components/ui/`, avec états `disabled`, `danger` et focus, et accessibilité (libellés, cibles tactiles). Captures light et dark dans les PR.
 
 ### 1.4 Couche API

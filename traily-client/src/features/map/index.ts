@@ -3,9 +3,9 @@ export {
     MapControls,
     type SearchResultsContext,
 } from "./components/map-controls";
-export { MapModePicker } from "./components/map-mode-picker";
 export { TrailRouteMap } from "./components/trail-route-map";
 export { TrailyMap } from "./components/traily-map";
+export { MAP_MODE_OPTIONS, setMapMode, useMapMode } from "./hooks/use-map-mode";
 export {
     getAllAttributions,
     getMapStyle,

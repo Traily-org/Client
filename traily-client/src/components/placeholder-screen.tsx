@@ -58,9 +58,9 @@ export function PlaceholderScreen({
                             >
                                 <Pressable
                                     accessibilityRole="button"
-                                    className="rounded-xl bg-[#e0733f] px-4 py-3"
+                                    className="rounded-xl bg-accent px-4 py-3"
                                 >
-                                    <Text className="text-center font-semibold text-white">
+                                    <Text className="text-center font-semibold text-on-accent">
                                         {link.label}
                                     </Text>
                                 </Pressable>

@@ -16,6 +16,7 @@ import Animated, {
 
 import { GlassSurface } from "./glass-surface";
 import { PRESS_IN, PRESS_OUT } from "@/constants/motion";
+import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
 
 export interface CornerRadii {
     topLeft?: number;
@@ -110,6 +111,6 @@ const styles = StyleSheet.create({
     clip: { overflow: "hidden", pointerEvents: "none" },
     highlight: {
         ...StyleSheet.absoluteFill,
-        backgroundColor: "rgba(255, 255, 255, 0.35)",
+        backgroundColor: withAlpha(mapOverlayColors.surface, 0.35),
     },
 });

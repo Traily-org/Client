@@ -7,6 +7,7 @@ import {
     type ThemeColorRole,
     themeColors,
     toCssVariables,
+    withAlpha,
 } from "./theme-colors";
 
 describe("hexToRgbChannels", () => {
@@ -18,6 +19,12 @@ describe("hexToRgbChannels", () => {
     it("rejects anything but #rrggbb", () => {
         expect(() => hexToRgbChannels("#fff")).toThrow();
         expect(() => hexToRgbChannels("red")).toThrow();
+    });
+});
+
+describe("withAlpha", () => {
+    it("turns a role into a translucent rgba color", () => {
+        expect(withAlpha("#141428", 0.2)).toBe("rgba(20, 20, 40, 0.2)");
     });
 });
 
@@ -33,7 +40,7 @@ describe("toCssVariables", () => {
     it("names each variable after its role", () => {
         const variables = toCssVariables(themeColors.light);
         expect(variables["--color-surface"]).toBe("255 255 255");
-        expect(variables["--color-foreground-muted"]).toBe("107 114 128");
+        expect(variables["--color-foreground-muted"]).toBe("131 131 141");
     });
 });
 
@@ -54,6 +61,76 @@ describe("tailwind.config.js", () => {
                 [role],
                 `rgb(var(${variable}) / <alpha-value>)`,
             );
+        }
+    });
+});
+
+/** WCAG contrast ratio between two #rrggbb colors (1 to 21). */
+function contrast(a: string, b: string): number {
+    const luminance = (hex: string) => {
+        const [r, g, b] = hexToRgbChannels(hex)
+            .split(" ")
+            .map((channel) => {
+                const c = Number(channel) / 255;
+                return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (light + 0.05) / (dark + 0.05);
+}
+
+describe("contrast", () => {
+    it("keeps the main text readable in both schemes (WCAG AA, 4.5:1)", () => {
+        for (const colors of Object.values(themeColors)) {
+            expect(
+                contrast(colors.foreground, colors.surface),
+            ).toBeGreaterThanOrEqual(4.5);
+            expect(
+                contrast(colors.foreground, colors.screen),
+            ).toBeGreaterThanOrEqual(4.5);
+        }
+    });
+
+    it("keeps every dark text color at 4.5:1 on the surface", () => {
+        const dark = themeColors.dark;
+        const roles = [
+            "foreground-muted",
+            "danger",
+            "accent",
+            "difficulty-easy",
+            "difficulty-medium",
+            "difficulty-hard",
+        ] as const;
+        for (const role of roles) {
+            expect(contrast(dark[role], dark.surface)).toBeGreaterThanOrEqual(
+                4.5,
+            );
+        }
+    });
+
+    // Lucas's light palette puts these under 4.5:1 for small text: secondary
+    // text 3.75 on surface, 3.44 on surface-muted, 3.38 on screen; "Moyen"
+    // 3.79; white on orange 3.14 in both schemes. Known, see TRA-136.
+    // This floor stops them from getting worse.
+    it("keeps the secondary colors at least at 3:1", () => {
+        const light = themeColors.light;
+        for (const background of [
+            "surface",
+            "surface-muted",
+            "screen",
+        ] as const) {
+            expect(
+                contrast(light["foreground-muted"], light[background]),
+            ).toBeGreaterThanOrEqual(3);
+        }
+        expect(
+            contrast(light["difficulty-medium"], light.surface),
+        ).toBeGreaterThanOrEqual(3);
+        for (const colors of Object.values(themeColors)) {
+            expect(
+                contrast(colors["on-accent"], colors.accent),
+            ).toBeGreaterThanOrEqual(3);
         }
     });
 });

@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { ENTER_DURATION } from "@/constants/motion";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import { useTrailDetails } from "../hooks/use-trail-details";
 import { TrailCard } from "./trail-card";
@@ -33,6 +35,7 @@ export function TrailPreview({
     onClose,
 }: TrailPreviewProps) {
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
     const trail = useTrailDetails(trailId ?? "");
 
     return (
@@ -47,7 +50,12 @@ export function TrailPreview({
                     key={trail.id}
                     entering={FadeInDown.duration(ENTER_DURATION)}
                     exiting={FadeOutDown.duration(ENTER_DURATION / 2)}
-                    style={styles.card}
+                    style={[
+                        styles.card,
+                        {
+                            boxShadow: `0px 6px 22px ${withAlpha(colors.shadow, 0.22)}`,
+                        },
+                    ]}
                 >
                     <TrailCard trail={trail} onPress={() => onOpen(trail.id)} />
                     <Pressable
@@ -55,13 +63,19 @@ export function TrailPreview({
                         accessibilityLabel="Fermer l'aperçu"
                         hitSlop={10}
                         onPress={onClose}
-                        style={styles.close}
+                        style={[
+                            styles.close,
+                            {
+                                backgroundColor: colors.surface,
+                                boxShadow: `0px 2px 6px ${withAlpha(colors.shadow, 0.25)}`,
+                            },
+                        ]}
                     >
                         <Icon
                             ios="xmark"
                             material="close"
                             size={14}
-                            color="#1E1E2F"
+                            color={colors.foreground}
                         />
                     </Pressable>
                 </Animated.View>
@@ -78,10 +92,7 @@ const styles = StyleSheet.create({
         right: 16,
         pointerEvents: "box-none",
     },
-    card: {
-        borderRadius: 22,
-        boxShadow: "0px 6px 22px rgba(20, 20, 40, 0.22)",
-    },
+    card: { borderRadius: 22 },
     close: {
         position: "absolute",
         top: -CLOSE_SIZE / 3,
@@ -91,7 +102,5 @@ const styles = StyleSheet.create({
         borderRadius: CLOSE_SIZE / 2,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#FFFFFF",
-        boxShadow: "0px 2px 6px rgba(20, 20, 40, 0.25)",
     },
 });

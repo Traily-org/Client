@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { Icon } from "@/components/icon";
+import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
 
 import { ROUTE_COLOR } from "../style/map-styles";
 
@@ -8,6 +9,8 @@ interface RouteMarkerProps {
     /** Color of the route it marks. */
     color?: string;
 }
+
+const MARKER_SHADOW = `0px 1px 3px ${withAlpha(mapOverlayColors.shadow, 0.3)}`;
 
 /** Start of a route: a ring, as on the trail sketches. */
 export function RouteStartMarker({ color = ROUTE_COLOR }: RouteMarkerProps) {
@@ -18,7 +21,12 @@ export function RouteStartMarker({ color = ROUTE_COLOR }: RouteMarkerProps) {
 export function RouteEndMarker({ color = ROUTE_COLOR }: RouteMarkerProps) {
     return (
         <View style={[styles.end, { backgroundColor: color }]}>
-            <Icon ios="xmark" material="close" size={12} color="#FFFFFF" />
+            <Icon
+                ios="xmark"
+                material="close"
+                size={12}
+                color={mapOverlayColors.surface}
+            />
         </View>
     );
 }
@@ -29,8 +37,8 @@ const styles = StyleSheet.create({
         height: 16,
         borderRadius: 8,
         borderWidth: 4,
-        backgroundColor: "#FFFFFF",
-        boxShadow: "0px 1px 3px rgba(20, 20, 40, 0.3)",
+        backgroundColor: mapOverlayColors.surface,
+        boxShadow: MARKER_SHADOW,
     },
     end: {
         width: 20,
@@ -39,7 +47,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 2,
-        borderColor: "#FFFFFF",
-        boxShadow: "0px 1px 3px rgba(20, 20, 40, 0.3)",
+        borderColor: mapOverlayColors.surface,
+        boxShadow: MARKER_SHADOW,
     },
 });

@@ -1,30 +1,38 @@
+import type { ThemeColorRole } from "@/constants/theme-colors";
+
 import type { TrailDifficulty } from "../types";
 
 /**
- * Label and colors of each difficulty, shared by the card, the sheet and the
- * maps. `color` is for text on white; `routeColor`, brighter, draws the
- * route on a map, over a white casing.
+ * Label and color roles of each difficulty, shared by the card, the sheet and
+ * the maps. `color` is for text, `tint` the pale background behind it, and
+ * `route` the brighter line drawn on a map (a map role, see
+ * `mapOverlayColors`).
  */
 export const DIFFICULTY: Record<
     TrailDifficulty,
-    { label: string; color: string; tint: string; routeColor: string }
+    {
+        label: string;
+        color: ThemeColorRole;
+        tint: ThemeColorRole;
+        route: ThemeColorRole;
+    }
 > = {
     easy: {
         label: "Facile",
-        color: "#2F8A4F",
-        tint: "#E2F2E7",
-        routeColor: "#1E9E57",
+        color: "difficulty-easy",
+        tint: "difficulty-easy-tint",
+        route: "difficulty-easy-route",
     },
     medium: {
         label: "Moyen",
-        color: "#B87400",
-        tint: "#FDF0D5",
-        routeColor: "#E8890C",
+        color: "difficulty-medium",
+        tint: "difficulty-medium-tint",
+        route: "difficulty-medium-route",
     },
     hard: {
         label: "Difficile",
-        color: "#C2412B",
-        tint: "#FBE2DC",
-        routeColor: "#D1263F",
+        color: "difficulty-hard",
+        tint: "difficulty-hard-tint",
+        route: "difficulty-hard-route",
     },
 };

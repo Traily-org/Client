@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { ViewedPhoto } from "@/components/photo-viewer";
+import { mapOverlayColors } from "@/constants/theme-colors";
 import type { MapTrail, PhotoPin } from "@/features/map";
 import type { Bounds, Viewport } from "@/utils/bounds";
 
@@ -50,7 +51,7 @@ interface UseHomeMapTrailsOptions {
 function toMapTrails(trails: TrailRoute[]): MapTrail[] {
     return trails.map((trail) => ({
         ...trail,
-        color: DIFFICULTY[trail.difficulty].routeColor,
+        color: mapOverlayColors[DIFFICULTY[trail.difficulty].route],
     }));
 }
 

@@ -2,6 +2,8 @@ import { Image } from "expo-image";
 import { Linking, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
+
 import { MAP_ATTRIBUTIONS, MAPTILER_HOME_URL } from "../style/map-styles";
 
 const MAPTILER_LOGO = require("../assets/maptiler-logo.svg");
@@ -40,10 +42,18 @@ export function MapLegalNotices({
                 />
             </Pressable>
             <View
-                className="absolute right-1 rounded bg-white/80 px-1"
-                style={{ bottom: bottom + 2 }}
+                className="absolute right-1 rounded px-1"
+                style={{
+                    bottom: bottom + 2,
+                    backgroundColor: withAlpha(mapOverlayColors.surface, 0.8),
+                }}
             >
-                <Text className="text-[10px] text-[#333]">
+                <Text
+                    className="text-[10px]"
+                    style={{
+                        color: withAlpha(mapOverlayColors.foreground, 0.9),
+                    }}
+                >
                     {MAP_ATTRIBUTIONS.map((attribution, index) => (
                         <Text
                             key={attribution.url}
