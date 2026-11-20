@@ -2,8 +2,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { GlassButton } from "@/components/glass-button";
 import { Icon } from "@/components/icon";
-
-const ACCENT = "#E0733F";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 /** What picking the trail would do, as seen from the hike in progress. */
 export type TrailSelectState = "available" | "selected" | "locked";
@@ -27,11 +27,17 @@ interface SelectTrailButtonProps {
 export function SelectTrailButton({ state, onPress }: SelectTrailButtonProps) {
     const locked = state === "locked";
     const label = LABELS[state];
+    const colors = useThemeColors();
+    const lockedColor = withAlpha(colors.foreground, 0.45);
 
     if (locked) {
         return (
             <View
-                style={[styles.button, styles.locked]}
+                style={[
+                    styles.button,
+                    styles.locked,
+                    { backgroundColor: colors.chip },
+                ]}
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={label}
@@ -41,9 +47,11 @@ export function SelectTrailButton({ state, onPress }: SelectTrailButtonProps) {
                     ios="lock.fill"
                     material="lock"
                     size={18}
-                    color="rgba(30, 30, 47, 0.45)"
+                    color={lockedColor}
                 />
-                <Text style={[styles.label, styles.lockedLabel]}>{label}</Text>
+                <Text style={[styles.label, { color: lockedColor }]}>
+                    {label}
+                </Text>
             </View>
         );
     }
@@ -52,7 +60,7 @@ export function SelectTrailButton({ state, onPress }: SelectTrailButtonProps) {
         <GlassButton
             accessibilityLabel={label}
             radius={26}
-            tint={ACCENT}
+            tint={colors.accent}
             pressedScale={0.97}
             onPress={onPress}
             style={styles.button}
@@ -61,9 +69,11 @@ export function SelectTrailButton({ state, onPress }: SelectTrailButtonProps) {
                 ios={state === "selected" ? "checkmark" : "figure.hiking"}
                 material={state === "selected" ? "check" : "hiking"}
                 size={20}
-                color="#FFFFFF"
+                color={colors["on-accent"]}
             />
-            <Text style={styles.label}>{label}</Text>
+            <Text style={[styles.label, { color: colors["on-accent"] }]}>
+                {label}
+            </Text>
         </GlassButton>
     );
 }
@@ -79,8 +89,6 @@ const styles = StyleSheet.create({
     // Opaque: the button floats over the text.
     locked: {
         borderRadius: 26,
-        backgroundColor: "#ECECEF",
     },
-    label: { fontSize: 16, fontWeight: "700", color: "#FFFFFF" },
-    lockedLabel: { color: "rgba(30, 30, 47, 0.45)" },
+    label: { fontSize: 16, fontWeight: "700" },
 });

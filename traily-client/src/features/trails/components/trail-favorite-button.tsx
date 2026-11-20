@@ -15,9 +15,9 @@ import Animated, {
 import Svg, { Path } from "react-native-svg";
 
 import { EASE_OUT } from "@/constants/motion";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
-const ACCENT = "#E0733F";
-const IDLE = "rgba(30, 30, 47, 0.5)";
 const STAR_SIZE = 22;
 const STAR_PATH =
     "M12 2.8l2.75 5.84 6.38.78-4.69 4.4 1.2 6.32L12 17.06l-5.64 3.08 1.2-6.32-4.69-4.4 6.38-.78z";
@@ -39,6 +39,7 @@ export function TrailFavoriteButton({
     style,
 }: TrailFavoriteButtonProps) {
     const reduceMotion = useReducedMotion();
+    const colors = useThemeColors();
     const fill = useSharedValue(isFavorite ? 1 : 0);
 
     useEffect(() => {
@@ -73,14 +74,18 @@ export function TrailFavoriteButton({
         >
             <Animated.View style={[styles.layer, fillStyle]}>
                 <Svg width={STAR_SIZE} height={STAR_SIZE} viewBox="0 0 24 24">
-                    <Path d={STAR_PATH} fill={ACCENT} />
+                    <Path d={STAR_PATH} fill={colors.accent} />
                 </Svg>
             </Animated.View>
             <Svg width={STAR_SIZE} height={STAR_SIZE} viewBox="0 0 24 24">
                 <Path
                     d={STAR_PATH}
                     fill="none"
-                    stroke={isFavorite ? ACCENT : IDLE}
+                    stroke={
+                        isFavorite
+                            ? colors.accent
+                            : withAlpha(colors.foreground, 0.5)
+                    }
                     strokeWidth={1.8}
                     strokeLinejoin="round"
                 />

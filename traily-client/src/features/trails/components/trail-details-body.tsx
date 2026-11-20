@@ -6,15 +6,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Icon } from "@/components/icon";
 import { PhotoViewer, type ViewedPhoto } from "@/components/photo-viewer";
 import { type PhotoPin, TrailRouteMap } from "@/features/map";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import { formatDistance, formatDuration } from "../services/trail-format";
 import type { PointOfInterest, TrailDetails } from "../types";
 import { PointOfInterestCard } from "./point-of-interest-card";
 import { TrailCreatorLink } from "./trail-creator-link";
 import { DIFFICULTY } from "./trail-difficulty";
-
-const TEXT = "#1E1E2F";
-const MUTED = "rgba(30, 30, 47, 0.55)";
 
 /** Points of interest listed in the sheet; the map shows them all. */
 const LISTED_POINTS = 3;
@@ -35,6 +33,7 @@ export function TrailDetailsBody({
     const router = useRouter();
     const [viewedPhoto, setViewedPhoto] = useState<ViewedPhoto | null>(null);
     const difficulty = DIFFICULTY[trail.difficulty];
+    const colors = useThemeColors();
 
     function viewPoint(point: PointOfInterest) {
         setViewedPhoto({
@@ -72,7 +71,7 @@ export function TrailDetailsBody({
                     accessibilityLabel={`Agrandir la photo : ${trail.name}`}
                     style={({ pressed }) => [
                         styles.cover,
-                        { backgroundColor: difficulty.tint },
+                        { backgroundColor: colors[difficulty.tint] },
                         pressed && styles.pressed,
                     ]}
                 >
@@ -84,12 +83,20 @@ export function TrailDetailsBody({
                     />
                 </Pressable>
                 <View style={styles.summaryText}>
-                    <Text style={styles.name} accessibilityRole="header">
+                    <Text
+                        style={[styles.name, { color: colors.foreground }]}
+                        accessibilityRole="header"
+                    >
                         {trail.name}
                     </Text>
-                    <Text style={styles.location}>
+                    <Text
+                        style={[
+                            styles.location,
+                            { color: colors["foreground-muted"] },
+                        ]}
+                    >
                         {trail.location}
-                        <Text style={{ color: difficulty.color }}>
+                        <Text style={{ color: colors[difficulty.color] }}>
                             {"  ·  "}
                             {difficulty.label}
                         </Text>
@@ -114,7 +121,9 @@ export function TrailDetailsBody({
                 </View>
             </View>
 
-            <Text style={styles.description}>{trail.description}</Text>
+            <Text style={[styles.description, { color: colors.foreground }]}>
+                {trail.description}
+            </Text>
 
             <TrailCreatorLink
                 creator={trail.creator}
@@ -128,7 +137,14 @@ export function TrailDetailsBody({
 
             {trail.pointsOfInterest.length > 0 && (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Points d’intérêt</Text>
+                    <Text
+                        style={[
+                            styles.sectionTitle,
+                            { color: colors.foreground },
+                        ]}
+                    >
+                        Points d’intérêt
+                    </Text>
                     {trail.pointsOfInterest
                         .slice(0, LISTED_POINTS)
                         .map((point) => (
@@ -141,11 +157,22 @@ export function TrailDetailsBody({
                 </View>
             )}
 
-            <View style={styles.divider} />
+            <View
+                style={[styles.divider, { backgroundColor: colors.separator }]}
+            />
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Tracé</Text>
-                <View style={styles.map}>
+                <Text
+                    style={[styles.sectionTitle, { color: colors.foreground }]}
+                >
+                    Tracé
+                </Text>
+                <View
+                    style={[
+                        styles.map,
+                        { backgroundColor: colors.placeholder },
+                    ]}
+                >
                     {showMap && (
                         <TrailRouteMap
                             route={trail.route}
@@ -162,7 +189,12 @@ export function TrailDetailsBody({
             </View>
 
             {credits.length > 0 && (
-                <Text style={styles.credits}>
+                <Text
+                    style={[
+                        styles.credits,
+                        { color: colors["foreground-muted"] },
+                    ]}
+                >
                     Photos : {credits.join(" · ")}
                 </Text>
             )}
@@ -182,10 +214,19 @@ interface FigureProps {
 }
 
 function Figure({ ios, material, text }: FigureProps) {
+    const colors = useThemeColors();
+
     return (
         <View style={styles.figure}>
-            <Icon ios={ios} material={material} size={14} color={MUTED} />
-            <Text style={styles.figureText}>{text}</Text>
+            <Icon
+                ios={ios}
+                material={material}
+                size={14}
+                color={colors["foreground-muted"]}
+            />
+            <Text style={[styles.figureText, { color: colors.foreground }]}>
+                {text}
+            </Text>
         </View>
     );
 }
@@ -201,23 +242,21 @@ const styles = StyleSheet.create({
         overflow: "hidden",
     },
     summaryText: { flex: 1, gap: 6 },
-    name: { fontSize: 18, fontWeight: "700", color: TEXT, lineHeight: 23 },
-    location: { fontSize: 13, color: MUTED },
+    name: { fontSize: 18, fontWeight: "700", lineHeight: 23 },
+    location: { fontSize: 13 },
     figures: { gap: 4, marginTop: 2 },
     figure: { flexDirection: "row", alignItems: "center", gap: 6 },
-    figureText: { fontSize: 13, color: TEXT },
-    description: { fontSize: 14, lineHeight: 21, color: TEXT },
+    figureText: { fontSize: 13 },
+    description: { fontSize: 14, lineHeight: 21 },
     section: { gap: 10 },
-    sectionTitle: { fontSize: 16, fontWeight: "700", color: TEXT },
+    sectionTitle: { fontSize: 16, fontWeight: "700" },
     divider: {
         height: StyleSheet.hairlineWidth,
-        backgroundColor: "rgba(30, 30, 47, 0.15)",
     },
     map: {
         height: 240,
         borderRadius: 18,
         overflow: "hidden",
-        backgroundColor: "#E9E7E0",
     },
-    credits: { fontSize: 11, lineHeight: 15, color: MUTED },
+    credits: { fontSize: 11, lineHeight: 15 },
 });

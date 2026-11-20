@@ -10,6 +10,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MAP_MIN_ZOOM } from "@/constants/config";
+import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
 
 import { MapLegalNotices } from "./map-legal-notices";
 import { useMapMode } from "../hooks/use-map-mode";
@@ -117,9 +118,9 @@ const styles = StyleSheet.create({
         width: 18,
         height: 18,
         borderRadius: 9,
-        backgroundColor: "#e0733f",
+        backgroundColor: mapOverlayColors.accent,
         borderWidth: 2,
-        borderColor: "#f6f1e4",
+        borderColor: mapOverlayColors["surface-muted"],
     },
     popup: {
         position: "absolute",
@@ -128,8 +129,8 @@ const styles = StyleSheet.create({
         width: 160,
         padding: 8,
         borderRadius: 8,
-        backgroundColor: "white",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.15)",
+        backgroundColor: mapOverlayColors.surface,
+        boxShadow: `0px 2px 4px ${withAlpha(mapOverlayColors.shadow, 0.15)}`,
         elevation: 3,
     },
     popupTitle: {

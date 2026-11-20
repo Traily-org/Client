@@ -6,9 +6,9 @@ import Animated, {
     type SharedValue,
 } from "react-native-reanimated";
 
-// Same light tone as the glass controls, opaque: the search bar stays on top
-// and reads as part of the panel once it has risen.
-const PANEL_BACKGROUND = "#F4F2F8";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
+
 const TOP_RADIUS = 28;
 
 interface SearchPanelProps {
@@ -29,6 +29,7 @@ export function SearchPanel({
     children,
 }: SearchPanelProps) {
     const { height } = useWindowDimensions();
+    const colors = useThemeColors();
 
     const panelStyle = useAnimatedStyle(() => {
         const p = progress.get();
@@ -42,7 +43,17 @@ export function SearchPanel({
 
     return (
         <Animated.View
-            style={[styles.panel, { paddingTop: contentTop }, panelStyle]}
+            style={[
+                styles.panel,
+                {
+                    paddingTop: contentTop,
+                    // Screen color of the theme, opaque: the search bar stays
+                    // on top and reads as part of the panel once it has risen.
+                    backgroundColor: colors.screen,
+                    boxShadow: `0px -8px 28px ${withAlpha(colors.shadow, 0.18)}`,
+                },
+                panelStyle,
+            ]}
         >
             {children}
         </Animated.View>
@@ -53,7 +64,5 @@ const styles = StyleSheet.create({
     panel: {
         ...StyleSheet.absoluteFill,
         overflow: "hidden",
-        backgroundColor: PANEL_BACKGROUND,
-        boxShadow: "0px -8px 28px rgba(20, 20, 40, 0.18)",
     },
 });

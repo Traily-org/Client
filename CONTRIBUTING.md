@@ -69,9 +69,10 @@ Les règles 2, 3 et 4 sont vérifiées par ESLint (`pnpm lint`, bloquant en CI).
 
 Les composants utilisent uniquement les **rôles** de couleur du thème : `bg-surface`, `text-foreground`, `text-foreground-muted`… Jamais `gray-*`, `white` ni une couleur hexadécimale : elles ne suivent pas le mode sombre. Décision : TRA-126.
 
-- Ce qui ne prend pas de classe (icônes) lit `useThemeColors()`.
+- Ce qui ne prend pas de classe (icônes, `StyleSheet`) lit `useThemeColors()`. Ombres et voiles : `withAlpha(colors.shadow, 0.2)`.
+- Ce qui est posé sur la carte reste clair dans les 2 modes : `mapOverlayColors`.
 - Un nouveau rôle s'ajoute dans `src/constants/theme-colors.ts`, avec une valeur claire **et** une valeur sombre. Relancer ensuite Metro avec `--clear`.
-- ESLint le vérifie : erreur sur les fichiers déjà passés au thème (liste `THEMED_FILES` de `eslint.config.js`, à compléter quand on migre un fichier), avertissement ailleurs.
+- ESLint bloque toute couleur en dur dans `app/` et `src/` (CI rouge).
 
 ## Commits
 

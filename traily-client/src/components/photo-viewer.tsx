@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { photoViewerColors, withAlpha } from "@/constants/theme-colors";
+
 import { Icon } from "./icon";
 
 export interface ViewedPhoto {
@@ -76,7 +78,12 @@ export function PhotoViewer({ photo, onClose }: PhotoViewerProps) {
                 hitSlop={8}
                 style={[styles.close, { top: insets.top + 12 }]}
             >
-                <Icon ios="xmark" material="close" size={18} color="#FFFFFF" />
+                <Icon
+                    ios="xmark"
+                    material="close"
+                    size={18}
+                    color={photoViewerColors.foreground}
+                />
             </Pressable>
         </Modal>
     );
@@ -86,7 +93,7 @@ const styles = StyleSheet.create({
     backdrop: {
         flex: 1,
         justifyContent: "center",
-        backgroundColor: "rgba(8, 8, 14, 0.94)",
+        backgroundColor: withAlpha(photoViewerColors.shadow, 0.94),
     },
     photo: { width: "100%", height: "75%" },
     legend: {
@@ -97,8 +104,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         gap: 4,
     },
-    caption: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
-    credit: { fontSize: 12, color: "rgba(255, 255, 255, 0.6)" },
+    caption: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: photoViewerColors.foreground,
+    },
+    credit: {
+        fontSize: 12,
+        color: withAlpha(photoViewerColors.foreground, 0.6),
+    },
     close: {
         position: "absolute",
         right: 16,
@@ -107,6 +121,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.16)",
+        backgroundColor: withAlpha(photoViewerColors.foreground, 0.16),
     },
 });

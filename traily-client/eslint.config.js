@@ -10,13 +10,14 @@ const TAILWIND_PALETTE =
     "(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}";
 const RAW_COLOR_PATTERNS = [
     "#[0-9a-fA-F]{3,8}\\b",
-    "rgba?\\(",
-    `\\b(bg|text|border|divide|ring|fill|stroke|shadow|outline|from|to|via)-(${TAILWIND_PALETTE}|white|black)\\b`,
+    "(rgb|hsl)a?\\s*\\(",
+    "^(white|black)$",
+    `\\b(bg|text|border(-[xytrblse])?|divide|ring|fill|stroke|shadow|outline|from|to|via|placeholder|caret|accent|decoration)-(${TAILWIND_PALETTE}|white|black)\\b`,
 ];
 const RAW_COLOR_MESSAGE =
     "Use a theme color role (bg-surface, text-foreground...) from src/constants/theme-colors.ts instead of a raw color.";
-const rawColorRule = (severity) => [
-    severity,
+const RAW_COLOR_RULE = [
+    "error",
     ...RAW_COLOR_PATTERNS.flatMap((pattern) => [
         { selector: `Literal[value=/${pattern}/]`, message: RAW_COLOR_MESSAGE },
         {
@@ -24,17 +25,6 @@ const rawColorRule = (severity) => [
             message: RAW_COLOR_MESSAGE,
         },
     ]),
-];
-
-// Already on the theme: a raw color there fails the CI. Everywhere else it
-// only warns until those files move to the theme (TRA-136).
-const THEMED_FILES = [
-    "app/(app)/settings/**/*.{ts,tsx}",
-    "src/features/settings/**/*.{ts,tsx}",
-    "src/components/list-*.tsx",
-    "src/components/header-close-button.tsx",
-    "src/components/theme-root.tsx",
-    "src/hooks/**/*.{ts,tsx}",
 ];
 
 module.exports = defineConfig([
@@ -91,10 +81,6 @@ module.exports = defineConfig([
             "src/features/map/style/**",
             "**/*.test.ts",
         ],
-        rules: { "no-restricted-syntax": rawColorRule("warn") },
-    },
-    {
-        files: THEMED_FILES,
-        rules: { "no-restricted-syntax": rawColorRule("error") },
+        rules: { "no-restricted-syntax": RAW_COLOR_RULE },
     },
 ]);
