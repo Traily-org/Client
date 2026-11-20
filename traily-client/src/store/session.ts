@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { User } from "@/features/auth/types";
+import type { User } from "@/types/user";
 
 export type SessionStatus = "loading" | "authenticated" | "anonymous";
 

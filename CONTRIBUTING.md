@@ -34,6 +34,45 @@ Format : `<préfixe>/TRA-<numéro>-<description-courte>`, en anglais et en kebab
 
 Exemples : `feat/TRA-42-map-screen`, `fix/TRA-57-hide-splash-screen`.
 
+## Nommage des fichiers
+
+**kebab-case pour tous les fichiers**, composants compris : `traily-map.tsx`, `map-mode-switcher.tsx`, `map-styles.ts`. Le composant exporté reste en PascalCase dans le code (`export function TrailyMap`).
+
+C'est la norme du template Expo, les routes Expo Router sont déjà en kebab-case (ce sont des URL), et cela évite les conflits de casse Git entre macOS/Windows (insensibles à la casse) et Linux/CI. Décision : TRA-120.
+
+## Architecture
+
+Le code est rangé **par feature d'abord** : un dossier par zone du schéma de navigation (carte, rando, capture, espèces…). Décision : TRA-120.
+
+```
+app/                    routes Expo Router, fines : elles assemblent les features
+src/
+  features/<feature>/   tout le code d'une feature
+    index.ts            API publique de la feature
+    components/  hooks/  services/   créés à la demande, jamais vides
+  components/           UI générique sans métier (bouton, bottom sheet)
+  hooks/  lib/  store/  constants/  types/  utils/   partagé
+```
+
+Six règles :
+
+1. **Les routes `app/` restent fines** : elles importent un écran depuis `@/features/<x>` et le rendent, sans logique métier.
+2. **Une feature s'importe uniquement par son `index.ts`** : `@/features/species`, jamais `@/features/species/components/...`. À l'intérieur d'une feature, imports relatifs.
+3. **Le partagé n'importe jamais une feature** (`components`, `hooks`, `lib`, `store`, `constants`, `types`, `utils`).
+4. **Pas de cycle entre features** : les imports vont dans un seul sens.
+5. **Naviguer n'est pas importer** : on ouvre l'écran d'une autre feature avec `router.push(...)`, sans importer cet écran.
+6. **Un élément utilisé par 2 features reste dans la feature à laquelle il appartient**, exporté par son `index.ts`. Il ne monte dans le partagé que s'il n'a aucun métier (un bouton, un format de distance).
+
+Les règles 2, 3 et 4 sont vérifiées par ESLint (`pnpm lint`, bloquant en CI).
+
+## Couleurs
+
+Les composants utilisent uniquement les **rôles** de couleur du thème : `bg-surface`, `text-foreground`, `text-foreground-muted`… Jamais `gray-*`, `white` ni une couleur hexadécimale : elles ne suivent pas le mode sombre. Décision : TRA-126.
+
+- Ce qui ne prend pas de classe (icônes) lit `useThemeColors()`.
+- Un nouveau rôle s'ajoute dans `src/constants/theme-colors.ts`, avec une valeur claire **et** une valeur sombre. Relancer ensuite Metro avec `--clear`.
+- ESLint le vérifie : erreur sur les fichiers déjà passés au thème (liste `THEMED_FILES` de `eslint.config.js`, à compléter quand on migre un fichier), avertissement ailleurs.
+
 ## Commits
 
 La convention [Conventional Commits](https://www.conventionalcommits.org/fr/) est **obligatoire** sur toutes les branches.

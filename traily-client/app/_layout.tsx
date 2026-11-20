@@ -1,16 +1,15 @@
 import "@/global.css";
 
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useColorScheme } from "react-native";
 
+import { ThemeRoot } from "@/components/theme-root";
 import { useHydrateSession } from "@/features/auth";
 import { useSessionStore } from "@/store/session";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function TabLayout() {
-    const colorScheme = useColorScheme();
+export default function RootLayout() {
     const status = useSessionStore((s) => s.status);
     useHydrateSession();
 
@@ -19,19 +18,16 @@ export default function TabLayout() {
 
     const signedIn = status === "authenticated";
     return (
-        <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
+        <ThemeRoot>
             <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Protected guard={signedIn}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="map" />
-                    <Stack.Screen name="credits" />
+                    <Stack.Screen name="(app)" />
+                    <Stack.Screen name="onboarding" />
                 </Stack.Protected>
                 <Stack.Protected guard={!signedIn}>
-                    <Stack.Screen name="auth" />
+                    <Stack.Screen name="(public)" />
                 </Stack.Protected>
             </Stack>
-        </ThemeProvider>
+        </ThemeRoot>
     );
 }
