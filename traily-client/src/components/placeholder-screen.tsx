@@ -31,12 +31,17 @@ export function PlaceholderScreen({
     links = [],
 }: PlaceholderScreenProps) {
     return (
-        <SafeAreaView className="flex-1" edges={["bottom", "left", "right"]}>
+        <SafeAreaView
+            className="flex-1 bg-screen"
+            edges={["bottom", "left", "right"]}
+        >
             <Stack.Screen options={{ title }} />
             <View className="flex-1 items-center justify-center gap-8 p-6">
                 <View className="items-center gap-2">
-                    <Text className="text-2xl font-bold">{title}</Text>
-                    <Text className="text-sm text-gray-500">
+                    <Text className="text-2xl font-bold text-foreground">
+                        {title}
+                    </Text>
+                    <Text className="text-sm text-foreground-muted">
                         Écran à venir · story {story}
                     </Text>
                 </View>

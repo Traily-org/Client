@@ -2,7 +2,7 @@ import type { AndroidSymbol, SFSymbol } from "expo-symbols";
 import { Text, View } from "react-native";
 
 import { Icon } from "./icon";
-import { uiClasses, uiColors } from "@/constants/ui-classes";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 /** Icon of a list row: SF Symbol on iOS, Material Symbol on Android and web. */
 export interface ListRowIconName {
@@ -12,17 +12,18 @@ export interface ListRowIconName {
 
 /** Rounded square with the row icon. Decorative: hidden from the screen reader. */
 export function ListRowIcon({ name }: { name: ListRowIconName }) {
+    const colors = useThemeColors();
+
     return (
         <View
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-            className={`h-[30px] w-[30px] items-center justify-center rounded-[9px] ${uiClasses.iconTile}`}
+            aria-hidden
+            className="h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-icon-tile"
         >
             <Icon
                 ios={name.ios}
                 material={name.material}
                 size={18}
-                color={uiColors.icon}
+                color={colors.icon}
             />
         </View>
     );
@@ -39,13 +40,13 @@ interface ListRowTextProps {
 export function ListRowText({
     label,
     description,
-    labelClassName = uiClasses.text,
+    labelClassName = "text-foreground",
 }: ListRowTextProps) {
     return (
         <View className="flex-1 gap-0.5">
             <Text className={`text-base ${labelClassName}`}>{label}</Text>
             {description && (
-                <Text className={`text-sm ${uiClasses.textMuted}`}>
+                <Text className="text-sm text-foreground-muted">
                     {description}
                 </Text>
             )}

@@ -1,8 +1,6 @@
 import { Children, Fragment, type ReactNode } from "react";
 import { Text, View } from "react-native";
 
-import { uiClasses } from "@/constants/ui-classes";
-
 interface ListSectionProps {
     /** Section title. Omit it for a standalone block, such as sign out. */
     title?: string;
@@ -19,22 +17,18 @@ export function ListSection({ title, children }: ListSectionProps) {
             {title && (
                 <Text
                     accessibilityRole="header"
-                    className={`px-1 text-sm font-semibold ${uiClasses.textMuted}`}
+                    className="px-1 text-sm font-semibold text-foreground-muted"
                 >
                     {title}
                 </Text>
             )}
             {/* Shadow on the outer view: iOS clips it on a view with overflow hidden. */}
             <View className="rounded-2xl shadow-sm">
-                <View
-                    className={`overflow-hidden rounded-2xl ${uiClasses.surface}`}
-                >
+                <View className="overflow-hidden rounded-2xl bg-surface">
                     {rows.map((row, index) => (
                         <Fragment key={index}>
                             {index > 0 && (
-                                <View
-                                    className={`mx-4 h-px ${uiClasses.separator}`}
-                                />
+                                <View className="mx-4 h-px bg-separator" />
                             )}
                             {row}
                         </Fragment>
