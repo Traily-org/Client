@@ -7,10 +7,12 @@ import {
     type ViewStyle,
 } from "react-native";
 
+import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
+
 // The map underneath is light whatever the color scheme, so the glass is
-// always the light variant, with dark content on it.
-export const ON_GLASS = "#1E1E2F";
-export const ON_GLASS_MUTED = "rgba(30, 30, 47, 0.5)";
+// always the light variant (mapOverlayColors), with dark content on it.
+export const ON_GLASS = mapOverlayColors.foreground;
+export const ON_GLASS_MUTED = withAlpha(mapOverlayColors.foreground, 0.5);
 
 // Real Liquid Glass needs iOS 26+. Elsewhere it's faked with frosted white:
 // translucent fill, bright rim, soft drop shadow, plus a backdrop blur on
@@ -20,13 +22,10 @@ const NATIVE_GLASS = Platform.OS === "ios" && isLiquidGlassAvailable();
 const IS_WEB = Platform.OS === "web";
 
 const FALLBACK: ViewStyle = {
-    backgroundColor: IS_WEB
-        ? "rgba(255, 255, 255, 0.6)"
-        : "rgba(255, 255, 255, 0.9)",
+    backgroundColor: withAlpha(mapOverlayColors.surface, IS_WEB ? 0.6 : 0.9),
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.85)",
-    boxShadow:
-        "0px 4px 18px rgba(20, 20, 40, 0.16), inset 0px 1px 0px rgba(255, 255, 255, 0.9)",
+    borderColor: withAlpha(mapOverlayColors.surface, 0.85),
+    boxShadow: `0px 4px 18px ${withAlpha(mapOverlayColors.shadow, 0.16)}, inset 0px 1px 0px ${withAlpha(mapOverlayColors.surface, 0.9)}`,
 };
 
 // Not in React Native's style types, but react-native-web passes it through.
@@ -58,7 +57,7 @@ export function GlassSurface({ style, tint }: GlassSurfaceProps) {
                 IS_WEB && WEB_BLUR,
                 tint !== undefined && {
                     backgroundColor: tint,
-                    borderColor: "rgba(255, 255, 255, 0.45)",
+                    borderColor: withAlpha(mapOverlayColors.surface, 0.45),
                 },
                 style,
             ]}

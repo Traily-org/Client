@@ -2,6 +2,13 @@ import { useSyncExternalStore } from "react";
 
 import type { MapMode } from "../style/map-styles";
 
+/** Base maps offered in the settings, in display order. */
+export const MAP_MODE_OPTIONS: readonly { value: MapMode; label: string }[] = [
+    { value: "trail", label: "Sentier" },
+    { value: "satellite", label: "Satellite" },
+    { value: "topo", label: "Relief" },
+];
+
 // Shared by the map and the settings screen. In memory only: back to the
 // default on each app launch until the app has a persisted store.
 let currentMode: MapMode = "trail";

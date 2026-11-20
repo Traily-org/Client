@@ -14,16 +14,16 @@ import { TrailResults } from "@/features/trails";
 // instead of crashing the whole app. Retrying refetches the style.
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
     return (
-        <View className="flex-1 items-center justify-center gap-4 p-6">
-            <Text className="text-center text-base">
+        <View className="flex-1 items-center justify-center gap-4 bg-screen p-6">
+            <Text className="text-center text-base text-foreground">
                 Impossible de charger la carte. Vérifie ta connexion.
             </Text>
             <Pressable
                 accessibilityRole="button"
                 onPress={retry}
-                className="rounded-xl bg-[#e0733f] px-4 py-3"
+                className="rounded-xl bg-accent px-4 py-3"
             >
-                <Text className="font-semibold text-white">Réessayer</Text>
+                <Text className="font-semibold text-on-accent">Réessayer</Text>
             </Pressable>
         </View>
     );

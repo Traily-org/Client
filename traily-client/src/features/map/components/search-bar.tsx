@@ -22,6 +22,8 @@ import {
     ON_GLASS_MUTED,
 } from "@/components/glass-surface";
 import { Icon } from "@/components/icon";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 export const SEARCH_HEIGHT = 52;
 
@@ -60,6 +62,11 @@ export function SearchBar({
     coverProgress,
 }: SearchBarProps) {
     const inputRef = useRef<TextInput>(null);
+    // Light glass over the map; once the panel is open, the bar is a field
+    // on it and follows the theme.
+    const colors = useThemeColors();
+    const ink = open ? colors.foreground : ON_GLASS;
+    const inkMuted = open ? withAlpha(colors.foreground, 0.5) : ON_GLASS_MUTED;
 
     const frostStyle = useAnimatedStyle(() => ({
         opacity: openProgress.get(),
@@ -113,7 +120,7 @@ export function SearchBar({
                 style={[
                     StyleSheet.absoluteFill,
                     styles.round,
-                    styles.frost,
+                    { backgroundColor: withAlpha(colors.surface, 0.92) },
                     frostStyle,
                 ]}
             />
@@ -130,7 +137,7 @@ export function SearchBar({
                         ios="magnifyingglass"
                         material="search"
                         size={22}
-                        color={ON_GLASS_MUTED}
+                        color={inkMuted}
                     />
                 </Animated.View>
                 <Animated.View style={[styles.leadingIcon, backIconStyle]}>
@@ -138,7 +145,7 @@ export function SearchBar({
                         ios="chevron.left"
                         material="arrow_back"
                         size={22}
-                        color={ON_GLASS}
+                        color={ink}
                     />
                 </Animated.View>
             </Pressable>
@@ -148,9 +155,9 @@ export function SearchBar({
                 onChangeText={onChangeQuery}
                 onFocus={handleFocus}
                 placeholder="Rechercher un sentier, une espèce…"
-                placeholderTextColor={ON_GLASS_MUTED}
+                placeholderTextColor={inkMuted}
                 returnKeyType="search"
-                style={[styles.input, NO_WEB_OUTLINE]}
+                style={[styles.input, { color: ink }, NO_WEB_OUTLINE]}
             />
             {query.length > 0 && (
                 <Animated.View
@@ -164,14 +171,17 @@ export function SearchBar({
                         hitSlop={8}
                         style={({ pressed }) => [
                             styles.clear,
-                            { opacity: pressed ? 0.6 : 1 },
+                            {
+                                backgroundColor: withAlpha(ink, 0.08),
+                                opacity: pressed ? 0.6 : 1,
+                            },
                         ]}
                     >
                         <Icon
                             ios="xmark"
                             material="close"
                             size={16}
-                            color={ON_GLASS}
+                            color={ink}
                         />
                     </Pressable>
                 </Animated.View>
@@ -189,8 +199,6 @@ const styles = StyleSheet.create({
         paddingRight: 10,
     },
     round: { borderRadius: SEARCH_HEIGHT / 2 },
-    // Opaque white once the panel is open: the bar reads as a field on it.
-    frost: { backgroundColor: "rgba(255, 255, 255, 0.92)" },
     leading: { width: 40, height: 40 },
     leadingIcon: {
         ...StyleSheet.absoluteFill,
@@ -205,7 +213,6 @@ const styles = StyleSheet.create({
         height: "100%",
         marginLeft: 4,
         fontSize: 16,
-        color: ON_GLASS,
     },
     clear: {
         width: 28,
@@ -213,6 +220,5 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "rgba(30, 30, 47, 0.08)",
     },
 });

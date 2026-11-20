@@ -18,6 +18,8 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 
 import { SHEET_CLOSE, SHEET_OPEN, TRANSITION } from "@/constants/motion";
+import { withAlpha } from "@/constants/theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import type { TrailDetails } from "../types";
 import type { TrailSelectState } from "./select-trail-button";
@@ -61,6 +63,7 @@ export function TrailSheetPanel({
     openness,
 }: TrailSheetPanelProps) {
     const { height } = useWindowDimensions();
+    const colors = useThemeColors();
     // 0 = below the screen, 1 = open. `drag` adds the finger's pull on top.
     const progress = useSharedValue(0);
     const drag = useSharedValue(0);
@@ -156,9 +159,25 @@ export function TrailSheetPanel({
                 never shows around the panel's rounded corners. The search
                 panel clips it at the top of the screen. */}
             <Animated.View
-                style={[styles.backdrop, { top: -height }, backdropStyle]}
+                style={[
+                    styles.backdrop,
+                    {
+                        top: -height,
+                        backgroundColor: withAlpha(colors.shadow, 0.2),
+                    },
+                    backdropStyle,
+                ]}
             />
-            <Animated.View style={[styles.panel, panelStyle]}>
+            <Animated.View
+                style={[
+                    styles.panel,
+                    {
+                        backgroundColor: colors.surface,
+                        boxShadow: `0px -8px 28px ${withAlpha(colors.shadow, 0.18)}`,
+                    },
+                    panelStyle,
+                ]}
+            >
                 <TrailSheetContent
                     trailId={trailId}
                     onClose={dismiss}
@@ -168,7 +187,17 @@ export function TrailSheetPanel({
                 />
                 {/* Drag area around the bar, between the floating buttons. */}
                 <View style={styles.handle} {...pullDown.panHandlers}>
-                    <View style={styles.grabber} />
+                    <View
+                        style={[
+                            styles.grabber,
+                            {
+                                backgroundColor: withAlpha(
+                                    colors.foreground,
+                                    0.25,
+                                ),
+                            },
+                        ]}
+                    />
                 </View>
             </Animated.View>
         </>
@@ -178,15 +207,12 @@ export function TrailSheetPanel({
 const styles = StyleSheet.create({
     backdrop: {
         ...StyleSheet.absoluteFill,
-        backgroundColor: "rgba(20, 20, 40, 0.2)",
     },
     panel: {
         ...StyleSheet.absoluteFill,
         overflow: "hidden",
         borderTopLeftRadius: TOP_RADIUS,
         borderTopRightRadius: TOP_RADIUS,
-        backgroundColor: "#FFFFFF",
-        boxShadow: "0px -8px 28px rgba(20, 20, 40, 0.18)",
     },
     handle: {
         position: "absolute",
@@ -201,6 +227,5 @@ const styles = StyleSheet.create({
         width: 40,
         height: 5,
         borderRadius: 2.5,
-        backgroundColor: "rgba(30, 30, 47, 0.25)",
     },
 });
