@@ -9,6 +9,7 @@ import {
 import { ListRow } from "@/components/list-row";
 import { ListSection } from "@/components/list-section";
 import { ListSwitchRow } from "@/components/list-switch-row";
+import { session } from "@/features/auth";
 import { MAP_MODE_OPTIONS, setMapMode, useMapMode } from "@/features/map";
 import {
     setThemePreference,
@@ -145,10 +146,12 @@ export function SettingsScreen() {
                 </ListSection>
 
                 <ListSection>
-                    {/* TODO(8.1): clear the session before leaving. */}
-                    <Link href="/login" replace asChild>
-                        <ListRow label="Se déconnecter" tone="danger" />
-                    </Link>
+                    {/* The root guard then shows the login screen. */}
+                    <ListRow
+                        label="Se déconnecter"
+                        tone="danger"
+                        onPress={session.logout}
+                    />
                 </ListSection>
             </ScrollView>
         </SafeAreaView>
