@@ -7,6 +7,7 @@ import { Icon } from "@/components/icon";
 import { PhotoViewer, type ViewedPhoto } from "@/components/photo-viewer";
 import { mapOverlayColors } from "@/constants/theme-colors";
 import { type PhotoPin, TrailRouteMap } from "@/features/map";
+import { usePressed } from "@/hooks/use-pressed";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import { formatDistance, formatDuration } from "../services/trail-format";
@@ -35,6 +36,7 @@ export function TrailDetailsBody({
     const [viewedPhoto, setViewedPhoto] = useState<ViewedPhoto | null>(null);
     const difficulty = DIFFICULTY[trail.difficulty];
     const colors = useThemeColors();
+    const coverPress = usePressed();
 
     function viewPoint(point: PointOfInterest) {
         setViewedPhoto({
@@ -68,12 +70,13 @@ export function TrailDetailsBody({
                             credit: trail.cover.credit,
                         })
                     }
+                    {...coverPress.pressHandlers}
                     accessibilityRole="imagebutton"
                     accessibilityLabel={`Agrandir la photo : ${trail.name}`}
-                    style={({ pressed }) => [
+                    style={[
                         styles.cover,
                         { backgroundColor: colors[difficulty.tint] },
-                        pressed && styles.pressed,
+                        coverPress.pressed && styles.pressed,
                     ]}
                 >
                     <Image

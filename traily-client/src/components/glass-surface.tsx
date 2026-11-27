@@ -16,13 +16,14 @@ export const ON_GLASS_MUTED = withAlpha(mapOverlayColors.foreground, 0.5);
 
 // Real Liquid Glass needs iOS 26+. Elsewhere it's faked with frosted white:
 // translucent fill, bright rim, soft drop shadow, plus a backdrop blur on
-// web. Android gets a more opaque fill instead of a blur, which can't see
-// through the native map surface.
+// web. Android (and older iOS) get no blur, which can't see through the
+// native map surface: a slightly more opaque fill instead, through which
+// the map still shows, the content staying readable on it.
 const NATIVE_GLASS = Platform.OS === "ios" && isLiquidGlassAvailable();
 const IS_WEB = Platform.OS === "web";
 
 const FALLBACK: ViewStyle = {
-    backgroundColor: withAlpha(mapOverlayColors.surface, IS_WEB ? 0.6 : 0.9),
+    backgroundColor: withAlpha(mapOverlayColors.surface, IS_WEB ? 0.6 : 0.75),
     borderWidth: 1,
     borderColor: withAlpha(mapOverlayColors.surface, 0.85),
     boxShadow: `0px 4px 18px ${withAlpha(mapOverlayColors.shadow, 0.16)}, inset 0px 1px 0px ${withAlpha(mapOverlayColors.surface, 0.9)}`,

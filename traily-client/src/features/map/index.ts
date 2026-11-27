@@ -1,4 +1,4 @@
-export { CORNER_BUTTON_SIZE } from "./components/corner-button";
+export { useCornerButtonSize } from "./components/corner-button";
 export {
     MapControls,
     type SearchResultsContext,

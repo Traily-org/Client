@@ -33,6 +33,7 @@ import {
 import { Icon } from "@/components/icon";
 import { EASE_OUT, ENTER_DURATION } from "@/constants/motion";
 import { mapOverlayColors, withAlpha } from "@/constants/theme-colors";
+import { usePressed } from "@/hooks/use-pressed";
 
 import { useHikeProgress, useHikeSession } from "../hooks/use-hike-session";
 import {
@@ -259,18 +260,9 @@ export function HikeStatusCard() {
                                             styles.joinedStart,
                                         ]}
                                     />
-                                    <Pressable
-                                        accessibilityRole="button"
-                                        accessibilityLabel="Terminer la randonnée"
+                                    <StopButton
                                         onPress={() => setConfirmingEnd(true)}
-                                        style={({ pressed }) => [
-                                            styles.action,
-                                            styles.stop,
-                                            pressed && styles.actionPressed,
-                                        ]}
-                                    >
-                                        <View style={styles.stopSquare} />
-                                    </Pressable>
+                                    />
                                 </View>
                             ))}
                         {session.status === "idle" && (
@@ -425,6 +417,26 @@ function Stat({
     );
 }
 
+/** Stop square joined to the end of the pause button. */
+function StopButton({ onPress }: { onPress: () => void }) {
+    const { pressed, pressHandlers } = usePressed();
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Terminer la randonnée"
+            onPress={onPress}
+            {...pressHandlers}
+            style={[
+                styles.action,
+                styles.stop,
+                pressed && styles.actionPressed,
+            ]}
+        >
+            <View style={styles.stopSquare} />
+        </Pressable>
+    );
+}
+
 function ActionButton({
     label,
     tone = "default",
@@ -437,11 +449,13 @@ function ActionButton({
     onPress: () => void;
 }) {
     const danger = tone === "danger";
+    const { pressed, pressHandlers } = usePressed();
     return (
         <Pressable
             accessibilityRole="button"
             onPress={onPress}
-            style={({ pressed }) => [
+            {...pressHandlers}
+            style={[
                 styles.action,
                 danger && styles.dangerAction,
                 pressed &&

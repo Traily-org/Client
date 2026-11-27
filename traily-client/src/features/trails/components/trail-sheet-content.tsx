@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { withAlpha } from "@/constants/theme-colors";
+import { usePressed } from "@/hooks/use-pressed";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import { useFavoriteTrail } from "../hooks/use-favorite-trail";
@@ -47,6 +48,7 @@ export function TrailSheetContent({
     const selectBottom = insets.bottom + 12;
     const showSelect = trail !== undefined && onSelect !== undefined;
     const colors = useThemeColors();
+    const closePress = usePressed();
     const floatingColors = {
         backgroundColor: colors.surface,
         boxShadow: `0px 2px 10px ${withAlpha(colors.shadow, 0.16)}`,
@@ -87,14 +89,15 @@ export function TrailSheetContent({
             )}
             <Pressable
                 onPress={onClose}
+                {...closePress.pressHandlers}
                 accessibilityRole="button"
                 accessibilityLabel="Fermer"
                 hitSlop={6}
-                style={({ pressed }) => [
+                style={[
                     styles.floating,
                     floatingColors,
                     styles.right,
-                    pressed && styles.pressed,
+                    closePress.pressed && styles.pressed,
                 ]}
             >
                 <Icon

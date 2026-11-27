@@ -1,6 +1,7 @@
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { usePressed } from "@/hooks/use-pressed";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import type { PointOfInterest } from "../types";
@@ -17,6 +18,7 @@ export function PointOfInterestCard({
     onPressPhoto,
 }: PointOfInterestCardProps) {
     const colors = useThemeColors();
+    const { pressed, pressHandlers } = usePressed();
     return (
         <View
             style={[styles.card, { backgroundColor: colors["surface-muted"] }]}
@@ -40,9 +42,10 @@ export function PointOfInterestCard({
             </View>
             <Pressable
                 onPress={onPressPhoto}
+                {...pressHandlers}
                 accessibilityRole="imagebutton"
                 accessibilityLabel={`Agrandir la photo : ${point.title}`}
-                style={({ pressed }) => pressed && styles.pressed}
+                style={pressed && styles.pressed}
             >
                 <Image
                     source={{ uri: point.photo.url }}

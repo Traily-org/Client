@@ -11,7 +11,7 @@ import {
     useHikeMap,
     useHikeSession,
 } from "@/features/hike-session";
-import { CORNER_BUTTON_SIZE, MapControls, TrailyMap } from "@/features/map";
+import { MapControls, TrailyMap, useCornerButtonSize } from "@/features/map";
 import {
     TrailPreview,
     TrailResults,
@@ -60,6 +60,7 @@ export default function MapScreen() {
         selectedTrailId: hike.trail?.id,
     });
     const hikeMap = useHikeMap(mapTrails.selectedRoute);
+    const cornerButtonSize = useCornerButtonSize();
 
     function openTrail(trailId: string) {
         router.push({ pathname: "/trail/[trailId]", params: { trailId } });
@@ -68,7 +69,7 @@ export default function MapScreen() {
     return (
         <View style={styles.container}>
             <TrailyMap
-                bottomOffset={CORNER_BUTTON_SIZE}
+                bottomOffset={cornerButtonSize}
                 trails={mapTrails.trails}
                 highlightedTrailId={hike.trail?.id}
                 focusedTrailId={mapTrails.focusedTrailId}
@@ -81,15 +82,15 @@ export default function MapScreen() {
                 hike={hikeMap.hike}
                 onStopFollowing={hikeMap.stopFollowing}
             />
-            <HikeActionBar cornerButtonSize={CORNER_BUTTON_SIZE} />
+            <HikeActionBar cornerButtonSize={cornerButtonSize} />
             <HikeRecenterButton
                 visible={hikeMap.canRecenter}
-                cornerButtonSize={CORNER_BUTTON_SIZE}
+                cornerButtonSize={cornerButtonSize}
                 onPress={hikeMap.recenter}
             />
             <TrailPreview
                 trailId={mapTrails.previewTrailId}
-                cornerButtonSize={CORNER_BUTTON_SIZE}
+                cornerButtonSize={cornerButtonSize}
                 onOpen={openTrail}
                 onClose={mapTrails.closeFocus}
             />

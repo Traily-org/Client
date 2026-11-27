@@ -23,6 +23,7 @@ import {
 } from "@/components/glass-surface";
 import { Icon } from "@/components/icon";
 import { withAlpha } from "@/constants/theme-colors";
+import { usePressed } from "@/hooks/use-pressed";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 export const SEARCH_HEIGHT = 52;
@@ -65,6 +66,7 @@ export function SearchBar({
     // Light glass over the map; once the panel is open, the bar is a field
     // on it and follows the theme.
     const colors = useThemeColors();
+    const clearPress = usePressed();
     const ink = open ? colors.foreground : ON_GLASS;
     const inkMuted = open ? withAlpha(colors.foreground, 0.5) : ON_GLASS_MUTED;
 
@@ -166,14 +168,15 @@ export function SearchBar({
                 >
                     <Pressable
                         onPress={handleClear}
+                        {...clearPress.pressHandlers}
                         accessibilityRole="button"
                         accessibilityLabel="Effacer la recherche"
                         hitSlop={8}
-                        style={({ pressed }) => [
+                        style={[
                             styles.clear,
                             {
                                 backgroundColor: withAlpha(ink, 0.08),
-                                opacity: pressed ? 0.6 : 1,
+                                opacity: clearPress.pressed ? 0.6 : 1,
                             },
                         ]}
                     >

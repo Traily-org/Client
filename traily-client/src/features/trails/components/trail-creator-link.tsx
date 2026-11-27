@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Icon } from "@/components/icon";
+import { usePressed } from "@/hooks/use-pressed";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import { getInitials } from "../services/trail-format";
@@ -14,12 +15,14 @@ interface TrailCreatorLinkProps {
 /** "Créé par" row with the creator's avatar, opening their profile. */
 export function TrailCreatorLink({ creator, onPress }: TrailCreatorLinkProps) {
     const colors = useThemeColors();
+    const { pressed, pressHandlers } = usePressed();
     return (
         <Pressable
             onPress={onPress}
+            {...pressHandlers}
             accessibilityRole="link"
             accessibilityLabel={`Créé par ${creator.name}, voir son profil`}
-            style={({ pressed }) => [
+            style={[
                 styles.row,
                 { backgroundColor: colors["surface-muted"] },
                 pressed && styles.pressed,

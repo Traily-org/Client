@@ -16,15 +16,27 @@ const RAW_COLOR_PATTERNS = [
 ];
 const RAW_COLOR_MESSAGE =
     "Use a theme color role (bg-surface, text-foreground...) from src/constants/theme-colors.ts instead of a raw color.";
-const RAW_COLOR_RULE = [
+const RAW_COLOR_SELECTORS = RAW_COLOR_PATTERNS.flatMap((pattern) => [
+    { selector: `Literal[value=/${pattern}/]`, message: RAW_COLOR_MESSAGE },
+    {
+        selector: `TemplateElement[value.raw=/${pattern}/]`,
+        message: RAW_COLOR_MESSAGE,
+    },
+]);
+
+// On Android and iOS, NativeWind's wrapper around Pressable drops a style
+// given as a function: the whole style is lost (the web keeps it).
+const STYLE_FUNCTION_SELECTOR = {
+    selector:
+        "JSXAttribute[name.name='style'] > JSXExpressionContainer > :matches(ArrowFunctionExpression, FunctionExpression)",
+    message:
+        "A style function is dropped on native by NativeWind: use usePressed() from @/hooks/use-pressed and a plain style.",
+};
+
+const RESTRICTED_SYNTAX_RULE = [
     "error",
-    ...RAW_COLOR_PATTERNS.flatMap((pattern) => [
-        { selector: `Literal[value=/${pattern}/]`, message: RAW_COLOR_MESSAGE },
-        {
-            selector: `TemplateElement[value.raw=/${pattern}/]`,
-            message: RAW_COLOR_MESSAGE,
-        },
-    ]),
+    ...RAW_COLOR_SELECTORS,
+    STYLE_FUNCTION_SELECTOR,
 ];
 
 module.exports = defineConfig([
@@ -75,12 +87,12 @@ module.exports = defineConfig([
     {
         files: ["app/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
         // Where the colors are defined, the map style (kept out of the
-        // theme), and tests.
+        // theme), and tests: no JSX there either.
         ignores: [
             "src/constants/theme-colors.ts",
             "src/features/map/style/**",
             "**/*.test.ts",
         ],
-        rules: { "no-restricted-syntax": RAW_COLOR_RULE },
+        rules: { "no-restricted-syntax": RESTRICTED_SYNTAX_RULE },
     },
 ]);

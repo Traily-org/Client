@@ -8,9 +8,25 @@ import { GlassButton } from "@/components/glass-button";
 import { ON_GLASS } from "@/components/glass-surface";
 import { ENTER_DURATION } from "@/constants/motion";
 
-/** Height of a corner button above the bottom safe area. */
-export const CORNER_BUTTON_SIZE = 92;
+/**
+ * Full height of a corner button, bottom safe area included: the same on
+ * every device, so the button keeps its proportions where a gesture bar or
+ * home indicator takes room at the bottom (it is 0 on the web).
+ */
+const HEIGHT = 92;
+/** Room the icon and label need above the bottom safe area. */
+const MIN_CONTENT_HEIGHT = 64;
 const WIDTH = 116;
+
+/**
+ * Height of the corner buttons above the bottom safe area, for what lines up
+ * with them (hike button, preview, map chrome): their full height minus the
+ * safe area, never less than their content needs.
+ */
+export function useCornerButtonSize(): number {
+    const insets = useSafeAreaInsets();
+    return Math.max(HEIGHT - insets.bottom, MIN_CONTENT_HEIGHT);
+}
 
 // The corner facing the map gets the wider curve; the two sides against the
 // screen edges stay flat.
@@ -38,6 +54,7 @@ export function CornerButton({
     onPress,
 }: CornerButtonProps) {
     const insets = useSafeAreaInsets();
+    const contentHeight = useCornerButtonSize();
     const isLeft = corner === "left";
 
     return (
@@ -61,7 +78,7 @@ export function CornerButton({
                 onPress={onPress}
                 style={{
                     width: WIDTH,
-                    height: CORNER_BUTTON_SIZE + insets.bottom,
+                    height: contentHeight + insets.bottom,
                     paddingBottom: insets.bottom,
                     // Nudge the content away from the inner curve.
                     paddingLeft: isLeft ? 0 : 8,
