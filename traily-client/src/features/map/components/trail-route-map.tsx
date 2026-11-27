@@ -102,15 +102,20 @@ export function TrailRouteMap({
                 />
                 {/* Route ends last, so they stay above the pins. */}
                 {pins.map((pin) => (
-                    <Marker key={pin.id} lngLat={pin.lngLat} anchor="bottom">
+                    // On native, the map catches the touch and hands it to
+                    // the marker, never to a Pressable inside it.
+                    <Marker
+                        key={pin.id}
+                        lngLat={pin.lngLat}
+                        anchor="bottom"
+                        onPress={
+                            onPressPin ? () => onPressPin(pin.id) : undefined
+                        }
+                    >
                         <PhotoPinMarker
                             photoUrl={pin.photoUrl}
                             label={pin.label}
-                            onPress={
-                                onPressPin
-                                    ? () => onPressPin(pin.id)
-                                    : undefined
-                            }
+                            pressable={onPressPin !== undefined}
                         />
                     </Marker>
                 ))}

@@ -248,7 +248,9 @@ const styles = StyleSheet.create({
         pointerEvents: "box-none",
     },
     searchSlot: { flex: 1 },
-    settingsSlot: { overflow: "hidden" },
+    // Round like the button: a square clip cut its drop shadow along the
+    // square, drawing a darker square around it on Android.
+    settingsSlot: { overflow: "hidden", borderRadius: SETTINGS_SIZE / 2 },
     searchResults: { flex: 1 },
     settings: {
         width: SETTINGS_SIZE,

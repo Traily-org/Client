@@ -24,7 +24,13 @@ export const ROUTE_MAP_PADDING = {
 interface PhotoPinMarkerProps {
     photoUrl: string;
     label: string;
+    /**
+     * Touching the pin. Web only: on native, the map hands the touch to its
+     * `Marker` (`onPress` there), never to a view inside it.
+     */
     onPress?: () => void;
+    /** Read as a button by screen readers. Defaults to having `onPress`. */
+    pressable?: boolean;
 }
 
 /**
@@ -35,12 +41,13 @@ export function PhotoPinMarker({
     photoUrl,
     label,
     onPress,
+    pressable = onPress !== undefined,
 }: PhotoPinMarkerProps) {
     return (
         <Pressable
             onPress={onPress}
             disabled={!onPress}
-            accessibilityRole={onPress ? "imagebutton" : "image"}
+            accessibilityRole={pressable ? "imagebutton" : "image"}
             accessibilityLabel={label}
             style={styles.container}
         >
