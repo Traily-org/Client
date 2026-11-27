@@ -128,7 +128,7 @@ Ce qui demande de lire plusieurs fichiers :
 
 - **Sur `develop` après le merge de TRA-109** : squelette Expo Router qui rend bien ses routes (accueil, `auth/login`, `auth/register` en placeholder), NativeWind chargé, thème light/dark défini (non exposé à Tailwind), CI GitHub Actions, environnement Docker de dev, documentation.
 - **Apporté par `feat/map`** : carte MapLibre sur fonds MapTiler à trois modes (sentier, satellite, relief) avec un tracé et un marqueur de démo, obligations légales MapTiler, écran crédits, development build EAS automatisé par le Taskfile.
-- **Absent** : navigation (onglets, garde d'auth), client API, état global, auth, GPS, caméra, offline, tests. Pas d'icônes ni de splash propres à l'app : `app.json` ne référence plus de fichiers dans `assets/`, Expo affiche ses visuels par défaut.
+- **Absent** : navigation (onglets, garde d'auth), client API, état global, auth, GPS, caméra, offline, tests. Pas d'icônes ni de splash propres à l'app : Expo affiche son icône par défaut, et le splash est un fond bleu uni (`assets/images/splash-icon.png` est une image transparente, à remplacer par le logo).
 - **Vérifications** (`feat/map` après le merge de `develop`) :
 
 | Check                    | Résultat                                                                |
@@ -174,4 +174,6 @@ Simuler une fusion sans toucher au working tree : `git merge-tree --write-tree -
 - Sous Windows, cloner le repo dans un chemin court : au-delà de 260 caractères, la résolution ESM de Node échoue dans `node_modules/.pnpm` (constaté : Vitest `ERR_PACKAGE_IMPORT_NOT_DEFINED`). Les fins de ligne sont forcées en LF par `.gitattributes`.
 - Port 8081 : Metro l'utilise, et le conteneur Docker du client le publie. Si une autre stack locale (backend compris) occupe déjà ce port, changer le port publié d'un côté.
 - Les règles GitHub imposent le squash merge : après une release `develop` → `main`, resynchroniser `main` dans `develop` pour éviter des conflits à la release suivante.
+- Splash Android : le plugin `expo-splash-screen` référence toujours `@drawable/splashscreen_logo` ; sans `image` dans sa config, le build Gradle échoue (`resource drawable/splashscreen_logo not found`, à l'étape `processDebugResources`). Garder une image, même transparente.
+- EAS : le projet est `traily` de l'organisation Expo `traily-epitech` (`extra.eas.projectId` et `owner` dans `app.json`). Les logs de build téléchargés par leur URL signée sont compressés en brotli (`curl --compressed`).
 - Coordonnées : MapLibre et GeoJSON utilisent `[lng, lat]`, alors que l'API prévue prend `near=<lat,lng>`. Centraliser la conversion.

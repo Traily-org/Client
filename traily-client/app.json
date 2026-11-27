@@ -1,7 +1,7 @@
 {
     "expo": {
         "name": "traily-client",
-        "slug": "traily-client",
+        "slug": "traily",
         "version": "1.0.0",
         "orientation": "portrait",
         "scheme": "trailyclient",
@@ -21,7 +21,9 @@
             [
                 "expo-splash-screen",
                 {
-                    "backgroundColor": "#208AEF"
+                    "backgroundColor": "#208AEF",
+                    "image": "./assets/images/splash-icon.png",
+                    "imageWidth": 200
                 }
             ],
             "@maplibre/maplibre-react-native"
@@ -29,6 +31,13 @@
         "experiments": {
             "typedRoutes": true,
             "reactCompiler": true
-        }
+        },
+        "extra": {
+            "router": {},
+            "eas": {
+                "projectId": "5456da5b-5065-4521-85f8-7cbe000930b6"
+            }
+        },
+        "owner": "traily-epitech"
     }
 }
